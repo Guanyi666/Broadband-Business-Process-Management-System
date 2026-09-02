@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bbpms.order.mapper.CustomerMapper">
+
+    <resultMap id="BaseResultMap" type="com.bbpms.order.entity.Customer">
+        <id     column="id"          property="id"/>
+        <result column="name"        property="name"/>
+        <result column="id_card_no"  property="idCardNo"/>
+        <result column="phone"       property="phone"/>
+        <result column="address"     property="address"/>
+        <result column="province"    property="province"/>
+        <result column="city"        property="city"/>
+        <result column="district"    property="district"/>
+        <result column="lat"         property="lat"/>
+        <result column="lng"         property="lng"/>
+        <result column="grid_code"   property="gridCode"/>
+        <result column="status"      property="status"/>
+        <result column="create_by"   property="createBy"/>
+        <result column="update_by"   property="updateBy"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="deleted"     property="deleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, name, id_card_no, phone, address, province, city, district,
+        lat, lng, grid_code, status,
+        create_by, update_by, create_time, update_time, deleted
+    </sql>
+
+    <select id="selectByIdCardNo" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM customer
+        WHERE id_card_no = #{idCardNoCipher}
+          AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <select id="selectByPhone" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM customer
+        WHERE phone = #{phoneCipher}
+          AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <select id="selectByIds" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM customer
+        WHERE deleted = 0
+          AND id IN
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </select>
+
+</mapper>

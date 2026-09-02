@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bbpms.order.mapper.BroadbandOrderMapper">
+
+    <resultMap id="BaseResultMap" type="com.bbpms.order.entity.BroadbandOrder">
+        <id     column="id"                     property="id"/>
+        <result column="order_no"               property="orderNo"/>
+        <result column="customer_id"            property="customerId"/>
+        <result column="package_code"           property="packageCode"/>
+        <result column="package_name"           property="packageName"/>
+        <result column="install_address"        property="installAddress"/>
+        <result column="expected_install_date"  property="expectedInstallDate"/>
+        <result column="status"                 property="status"/>
+        <result column="cs_id"                  property="csId"/>
+        <result column="auditor_id"             property="auditorId"/>
+        <result column="audit_time"             property="auditTime"/>
+        <result column="audit_remark"           property="auditRemark"/>
+        <result column="dispatch_time"          property="dispatchTime"/>
+        <result column="completed_time"         property="completedTime"/>
+        <result column="cancelled_time"         property="cancelledTime"/>
+        <result column="cancel_reason"          property="cancelReason"/>
+        <result column="create_by"              property="createBy"/>
+        <result column="update_by"              property="updateBy"/>
+        <result column="create_time"            property="createTime"/>
+        <result column="update_time"            property="updateTime"/>
+        <result column="version"                property="version"/>
+        <result column="deleted"                property="deleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, order_no, customer_id, package_code, package_name, install_address,
+        expected_install_date, status, cs_id, auditor_id, audit_time, audit_remark,
+        dispatch_time, completed_time, cancelled_time, cancel_reason,
+        create_by, update_by, create_time, update_time, version, deleted
+    </sql>
+
+    <select id="selectByOrderNo" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM broadband_order
+        WHERE order_no = #{orderNo}
+          AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <!--
+        Paginated query with data-scope rewriting. The {@code DataScopeAspect}
+        (in bbpms-common) injects an additional {@code AND (...)} clause into
+        the {@code WHERE} of this statement based on the current user's
+        permissions and dept / role.
+    -->
+    <select id="selectPageWithScope" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM broadband_order o
+        <where>
+            o.deleted = 0
+            <!-- Row-level scope is appended by DataScopeInnerInterceptor (global) -->
+            <if test="ew != null">
+                <if test="ew.nonEmptyOfWhere">
+                    AND
+                </if>
+                <if test="ew.sqlSegment != null">
+                    ${ew.sqlSegment}
+                </if>
+            </if>
+        </where>
+        <!-- Ordering comes from the caller's QueryWrapper (OrderServiceImpl adds orderByDesc /
+             supports OrderQueryReq.orderBy); a hardcoded ORDER BY here would duplicate
+             wrapper-generated ORDER BY and produce invalid SQL. -->
+    </select>
+
+    <select id="selectByStatus" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM broadband_order
+        WHERE status = #{status}
+          AND deleted = 0
+          AND create_time &lt;= #{beforeTime}
+        ORDER BY create_time ASC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectByCustomer" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM broadband_order
+        WHERE customer_id = #{customerId}
+          AND deleted = 0
+        ORDER BY create_time DESC
+    </select>
+
+</mapper>

@@ -1,0 +1,51 @@
+# Production — all sensitive values come from env vars (no defaults)
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      pool-name: bbpms-pool
+      minimum-idle: 10
+      maximum-pool-size: 50
+      idle-timeout: 30000
+      connection-timeout: 30000
+      max-lifetime: 1800000
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 3000
+      lettuce:
+        pool:
+          max-active: 100
+          max-idle: 20
+          min-idle: 5
+
+# BBPMS prod — all secrets from env, no defaults
+bbpms:
+  jwt:
+    rsa-private-key: ${BBPMS_RSA_PRIVATE_KEY}
+    rsa-public-key: ${BBPMS_RSA_PUBLIC_KEY}
+    refresh-secret: ${BBPMS_REFRESH_SECRET}
+  file:
+    storage-type: ${FILE_STORAGE_TYPE:minio}
+    upload-dir: ./uploads
+    base-url: ${FILE_BASE_URL}
+  aliyun:
+    sms:
+      access-key: ${ALIYUN_ACCESS_KEY}
+      secret-key: ${ALIYUN_SECRET_KEY}
+      sign-name: ${ALIYUN_SMS_SIGN:BBPMS}
+      endpoint: dysmsapi.aliyuncs.com
+  bss:
+    mock-enabled: false
+  amap:
+    api-key: ${AMAP_API_KEY}
+
+logging:
+  level:
+    root: INFO
+    com.bbpms: INFO

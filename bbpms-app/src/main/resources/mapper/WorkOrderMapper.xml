@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bbpms.workorder.mapper.WorkOrderMapper">
+
+    <resultMap id="BaseResultMap" type="com.bbpms.workorder.entity.WorkOrder">
+        <id     column="id"              property="id"/>
+        <result column="work_no"         property="workNo"/>
+        <result column="order_id"        property="orderId"/>
+        <result column="installer_id"    property="installerId"/>
+        <result column="dispatcher_id"   property="dispatcherId"/>
+        <result column="status"          property="status"/>
+        <result column="dispatch_time"   property="dispatchTime"/>
+        <result column="accept_time"     property="acceptTime"/>
+        <result column="start_time"      property="startTime"/>
+        <result column="finish_time"     property="finishTime"/>
+        <result column="install_address" property="installAddress"/>
+        <result column="customer_phone"  property="customerPhone"/>
+        <result column="package_name"    property="packageName"/>
+        <result column="create_by"       property="createBy"/>
+        <result column="update_by"       property="updateBy"/>
+        <result column="create_time"     property="createTime"/>
+        <result column="update_time"     property="updateTime"/>
+        <result column="version"         property="version"/>
+        <result column="deleted"         property="deleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, work_no, order_id, installer_id, dispatcher_id, status,
+        dispatch_time, accept_time, start_time, finish_time,
+        install_address, customer_phone, package_name,
+        create_by, update_by, create_time, update_time, version, deleted
+    </sql>
+
+    <select id="selectByWorkNo" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM work_order
+        WHERE work_no = #{workNo}
+          AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <select id="selectByOrderId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM work_order
+        WHERE order_id = #{orderId}
+          AND deleted = 0
+        ORDER BY create_time DESC
+        LIMIT 1
+    </select>
+
+    <select id="selectByInstallerAndStatus" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM work_order
+        WHERE installer_id = #{installerId}
+          AND status = #{status}
+          AND deleted = 0
+        ORDER BY dispatch_time DESC
+    </select>
+
+    <select id="selectPageWithScope" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM work_order w
+        <where>
+            w.deleted = 0
+            <!-- Row-level scope is appended by DataScopeInnerInterceptor (global) -->
+            <if test="req.orderId != null">
+                AND w.order_id = #{req.orderId}
+            </if>
+            <if test="req.installerId != null">
+                AND w.installer_id = #{req.installerId}
+            </if>
+            <if test="req.status != null">
+                AND w.status = #{req.status}
+            </if>
+            <if test="req.workNo != null and req.workNo != ''">
+                AND w.work_no = #{req.workNo}
+            </if>
+            <if test="req.startTime != null">
+                AND w.create_time &gt;= #{req.startTime}
+            </if>
+            <if test="req.endTime != null">
+                AND w.create_time &lt;= #{req.endTime}
+            </if>
+        </where>
+        ORDER BY w.create_time DESC
+    </select>
+
+    <select id="selectPageByInstaller" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM work_order
+        <where>
+            deleted = 0
+            AND installer_id = #{installerId}
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY dispatch_time DESC
+    </select>
+
+    <select id="selectExpired" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM work_order
+        WHERE status = 'DISPATCHED'
+          AND deleted = 0
+          AND dispatch_time &lt;= #{olderThan}
+        ORDER BY dispatch_time ASC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectByIds" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM work_order
+        WHERE deleted = 0
+          AND id IN
+        <foreach collection="ids" item="i" open="(" close=")" separator=",">
+            #{i}
+        </foreach>
+    </select>
+
+</mapper>

@@ -1,0 +1,33 @@
+{
+  "name": "bbpms-installer-h5",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview --port 9002",
+    "type-check": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@amap/amap-jsapi-loader": "^1.0.1",
+    "axios": "^1.6.8",
+    "dayjs": "^1.11.10",
+    "html2canvas": "^1.4.1",
+    "jsencrypt": "^3.3.2",
+    "pinia": "^2.1.7",
+    "vant": "^4.8.6",
+    "vue": "^3.4.21",
+    "vue-router": "^4.3.0",
+    "vue-signature-pad": "^1.0.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "@vant/touch-emulator": "^1.4.0",
+    "@vitejs/plugin-vue": "^5.0.4",
+    "sass": "^1.74.1",
+    "typescript": "~5.4.5",
+    "vite": "^5.2.10",
+    "vue-tsc": "^2.0.13"
+  }
+}

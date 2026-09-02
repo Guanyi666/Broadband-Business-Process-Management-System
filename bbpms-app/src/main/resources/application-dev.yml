@@ -1,0 +1,46 @@
+# Local development — MySQL + Redis on docker compose
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/bbpms?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: bbpms_app
+    password: bbpms_pwd_2026
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      pool-name: bbpms-pool
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 30000
+      connection-timeout: 30000
+      max-lifetime: 1800000
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: "123456"
+      timeout: 3000
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 10
+          min-idle: 0
+
+# BBPMS dev overrides
+bbpms:
+  jwt:
+    # Dev-only fallback; override in prod via env vars
+    rsa-private-key: ${BBPMS_RSA_PRIVATE_KEY:}
+    rsa-public-key: ${BBPMS_RSA_PUBLIC_KEY:}
+    # 已替换为合法的 256-bit Base64 密钥
+    refresh-secret: ${BBPMS_REFRESH_SECRET:NkU4RjM4NzBBRkM2NEQzQkIwQkI3QTBENEEyMzU2QzQ=}
+  aliyun:
+    sms:
+      access-key: ${ALIYUN_ACCESS_KEY:}
+      secret-key: ${ALIYUN_SECRET_KEY:}
+      sign-name: BBPMS
+      endpoint: dysmsapi.aliyuncs.com
+  amap:
+    api-key: ${AMAP_API_KEY:}
+
+logging:
+  level:
+    com.bbpms: DEBUG

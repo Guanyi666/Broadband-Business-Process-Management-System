@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bbpms.order.mapper.AppointmentMapper">
+
+    <resultMap id="BaseResultMap" type="com.bbpms.order.entity.Appointment">
+        <id     column="id"               property="id"/>
+        <result column="order_id"         property="orderId"/>
+        <result column="appointment_time" property="appointmentTime"/>
+        <result column="contact_phone"    property="contactPhone"/>
+        <result column="remark"           property="remark"/>
+        <result column="confirmed"        property="confirmed"/>
+        <result column="create_by"        property="createBy"/>
+        <result column="update_by"        property="updateBy"/>
+        <result column="create_time"      property="createTime"/>
+        <result column="update_time"      property="updateTime"/>
+        <result column="deleted"          property="deleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, order_id, appointment_time, contact_phone, remark, confirmed,
+        create_by, update_by, create_time, update_time, deleted
+    </sql>
+
+    <select id="selectByOrderId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM appointment
+        WHERE order_id = #{orderId}
+          AND deleted = 0
+        ORDER BY appointment_time DESC
+    </select>
+
+</mapper>

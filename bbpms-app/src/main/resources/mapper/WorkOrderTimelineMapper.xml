@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bbpms.workorder.mapper.WorkOrderTimelineMapper">
+
+    <resultMap id="BaseResultMap" type="com.bbpms.workorder.entity.WorkOrderTimeline">
+        <id     column="id"              property="id"/>
+        <result column="work_order_id"   property="workOrderId"/>
+        <result column="from_status"     property="fromStatus"/>
+        <result column="to_status"       property="toStatus"/>
+        <result column="operator_id"     property="operatorId"/>
+        <result column="operator_role"   property="operatorRole"/>
+        <result column="remark"          property="remark"/>
+        <result column="create_by"       property="createBy"/>
+        <result column="update_by"       property="updateBy"/>
+        <result column="create_time"     property="createTime"/>
+        <result column="update_time"     property="updateTime"/>
+        <result column="deleted"         property="deleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, work_order_id, from_status, to_status,
+        operator_id, operator_role, remark,
+        create_by, update_by, create_time, update_time, deleted
+    </sql>
+
+    <select id="selectByWorkOrderId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM work_order_timeline
+        WHERE work_order_id = #{workOrderId}
+          AND deleted = 0
+        ORDER BY create_time ASC
+    </select>
+
+    <select id="selectByOrderId" resultMap="BaseResultMap">
+        SELECT t.<include refid="Base_Column_List"/>
+        FROM work_order_timeline t
+        INNER JOIN work_order w ON w.id = t.work_order_id
+        WHERE w.order_id = #{orderId}
+          AND t.deleted = 0
+          AND w.deleted = 0
+        ORDER BY t.create_time ASC
+    </select>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO work_order_timeline
+            (work_order_id, from_status, to_status,
+             operator_id, operator_role, remark,
+             create_by, update_by, create_time, update_time, deleted)
+        VALUES
+        <foreach collection="list" item="t" separator=",">
+            (#{t.workOrderId}, #{t.fromStatus}, #{t.toStatus},
+             #{t.operatorId}, #{t.operatorRole}, #{t.remark},
+             #{t.createBy}, #{t.updateBy}, NOW(), NOW(), 0)
+        </foreach>
+    </insert>
+
+</mapper>

@@ -1,0 +1,107 @@
+spring:
+  application:
+    name: bbpms-app
+  profiles:
+    # Override at runtime: -Dspring.profiles.active=dev|prod
+    # No profile (or "default") falls back to local-h2/dev settings below.
+    active: dev
+  main:
+    allow-bean-definition-overriding: true
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  tomcat:
+    max-threads: 200
+    accept-count: 200
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.bbpms.**.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+  global-config:
+    banner: false
+    db-config:
+      id-type: ASSIGN_ID
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# =============================================================================
+# BBPMS business config (all values are tunable per environment in *.yml)
+# =============================================================================
+bbpms:
+  jwt:
+    access-token-ttl: 1800
+    refresh-token-ttl: 604800
+    captcha-ttl: 300
+    issuer: bbpms-app
+    captcha-length: 4
+    captcha-width: 130
+    captcha-height: 48
+  file:
+    storage-type: local
+    upload-dir: ./uploads
+    max-size-mb: 20
+    base-url: http://localhost:8080/files
+  bss:
+    mock-enabled: true
+    failure-rate: 0.05
+    min-delay-ms: 200
+    max-delay-ms: 2000
+  dispatch:
+    weight-distance: 40
+    weight-load: 25
+    weight-skill: 20
+    weight-rating: 15
+    radius-km: 30
+    max-load: 5
+  install:
+    gps-threshold-meters: 200
+    photos-min-count: 3
+    signal-warn-dbm: -27
+  amap:
+    direction-url: https://restapi.amap.com/v3/direction/driving
+  # =============================================================================
+  # Attendance / Leave / Work-order SLA (Phase 3-6)
+  # =============================================================================
+  attendance:
+    auto-checkout-hours: 8
+    late-threshold-minutes: 15
+    history-retention-days: 90
+    break-max-minutes: 120
+    use-active-zset: true
+  leave:
+    annual-default-hours: 80
+    max-carry-over-hours: 40
+    sick-needs-attachment: true
+    escalation-threshold-hours: 16
+    min-notice-hours: 4
+  workorder:
+    sla:
+      scan-interval-ms: 30000
+      accept-timeout-minutes: 30
+      progress-heartbeat-timeout-hours: 4
+      stalled-recover-hours: 24
+      enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+
+logging:
+  level:
+    root: INFO
+    com.bbpms: DEBUG

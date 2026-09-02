@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bbpms.install.mapper.InstallRecordMapper">
+
+    <resultMap id="installRecordMap" type="com.bbpms.install.entity.InstallRecord">
+        <id property="id" column="id"/>
+        <result property="workOrderId" column="work_order_id"/>
+        <result property="installerId" column="installer_id"/>
+        <result property="onuMac" column="onu_mac"/>
+        <result property="onuSn" column="onu_sn"/>
+        <result property="oltPort" column="olt_port"/>
+        <result property="signalDb" column="signal_db"/>
+        <result property="startLat" column="start_lat"/>
+        <result property="startLng" column="start_lng"/>
+        <result property="completeLat" column="complete_lat"/>
+        <result property="completeLng" column="complete_lng"/>
+        <result property="photos" column="photos"/>
+        <result property="signatureUrl" column="signature_url"/>
+        <result property="customerSignatureName" column="customer_signature_name"/>
+        <result property="remark" column="remark"/>
+        <result property="submitTime" column="submit_time"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="createBy" column="create_by"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="deleted" column="deleted"/>
+        <result property="version" column="version"/>
+    </resultMap>
+
+    <sql id="cols">
+        r.id, r.work_order_id, r.installer_id, r.onu_mac, r.onu_sn, r.olt_port,
+        r.signal_db, r.start_lat, r.start_lng, r.complete_lat, r.complete_lng,
+        r.photos, r.signature_url, r.customer_signature_name, r.remark,
+        r.submit_time, r.status,
+        r.create_time, r.update_time, r.create_by, r.update_by, r.deleted, r.version
+    </sql>
+
+    <select id="selectPageWithScope" resultMap="installRecordMap">
+        SELECT
+        <include refid="cols"/>
+        FROM install_record r
+        <where>
+            r.deleted = 0
+            <if test="q.workOrderId != null">AND r.work_order_id = #{q.workOrderId}</if>
+            <if test="q.installerId != null">AND r.installer_id = #{q.installerId}</if>
+            <if test="q.status != null and q.status != ''">AND r.status = #{q.status}</if>
+            <if test="q.startTime != null">AND r.create_time &gt;= #{q.startTime}</if>
+            <if test="q.endTime != null">AND r.create_time &lt;= #{q.endTime}</if>
+        </where>
+        ORDER BY r.create_time DESC
+    </select>
+
+    <select id="selectByWorkOrderId" resultMap="installRecordMap">
+        SELECT
+        <include refid="cols"/>
+        FROM install_record r
+        WHERE r.deleted = 0 AND r.work_order_id = #{workOrderId}
+        LIMIT 1
+    </select>
+
+    <select id="selectByInstaller" resultMap="installRecordMap">
+        SELECT
+        <include refid="cols"/>
+        FROM install_record r
+        WHERE r.deleted = 0 AND r.installer_id = #{installerId}
+        ORDER BY r.create_time DESC
+    </select>
+
+    <select id="selectPending" resultMap="installRecordMap">
+        SELECT
+        <include refid="cols"/>
+        FROM install_record r
+        WHERE r.deleted = 0 AND r.status IN ('PENDING','IN_PROGRESS')
+        ORDER BY r.create_time ASC
+    </select>
+
+</mapper>

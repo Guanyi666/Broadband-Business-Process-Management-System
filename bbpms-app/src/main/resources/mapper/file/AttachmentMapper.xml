@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bbpms.file.mapper.AttachmentMapper">
+    <select id="listByBiz" resultType="com.bbpms.file.entity.Attachment">
+        SELECT * FROM attachment
+        WHERE biz_type = #{bizType} AND biz_id = #{bizId} AND deleted = 0
+        ORDER BY id DESC
+    </select>
+</mapper>

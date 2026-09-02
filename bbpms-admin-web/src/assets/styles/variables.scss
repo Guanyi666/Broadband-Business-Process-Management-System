@@ -1,0 +1,27 @@
+// theme color tokens
+$primary-color: #409eff;
+$success-color: #67c23a;
+$warning-color: #e6a23c;
+$danger-color: #f56c6c;
+$info-color: #909399;
+
+$sidebar-bg: #001529;
+$sidebar-text: #bfcbd9;
+$sidebar-active-bg: #1890ff;
+$sidebar-active-text: #ffffff;
+$sidebar-width: 220px;
+$sidebar-collapse-width: 64px;
+
+$header-height: 56px;
+$tags-view-height: 34px;
+$breadcrumb-height: 40px;
+
+$content-bg: #f0f2f5;
+
+$font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+  Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+$font-size-base: 14px;
+
+$radius-base: 4px;
+$shadow-base: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
+$shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);

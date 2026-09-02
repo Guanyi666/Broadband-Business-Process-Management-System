@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bbpms.log.mapper.OperationLogMapper">
+
+    <!--
+        Paged operation-log query. SQL was missing entirely before this file
+        was added (BindingException on any log page). Logs are admin-scoped,
+        so no data-scope clause is injected here.
+    -->
+    <select id="selectPageWithScope" resultType="com.bbpms.log.entity.OperationLog">
+        SELECT *
+        FROM operation_log
+        <where>
+            deleted = 0
+            <if test="ew != null">
+                <if test="ew.nonEmptyOfWhere">
+                    AND
+                </if>
+                <if test="ew.sqlSegment != null">
+                    ${ew.sqlSegment}
+                </if>
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+</mapper>

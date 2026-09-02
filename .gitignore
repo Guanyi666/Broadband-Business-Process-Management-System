@@ -1,0 +1,57 @@
+# =====================================================================
+# BBPMS root .gitignore
+# =====================================================================
+
+*.md
+
+# --- OS junk ---
+.DS_Store
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# --- IDEs ---
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.project
+.classpath
+.settings/
+
+# --- Maven ---
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# --- Local env / secrets ---
+.env
+.env.local
+*.local
+*.keystore
+*.jks
+
+# --- Logs / runtime ---
+*.log
+logs/
+*.pid
+*.seed
+*.pid.lock
+
+# --- Uploads (when file.storage-type=local) ---
+uploads/
+!uploads/.gitkeep
+
+# --- Docker ---
+docker-compose.override.yml
+
+# --- 清理临时归档（确认后可删除） ---
+temporary_backup/

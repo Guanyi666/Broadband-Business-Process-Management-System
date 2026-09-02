@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bbpms.notify.mapper.MessageTemplateMapper">
+    <select id="getByCode" resultType="com.bbpms.notify.entity.MessageTemplate">
+        SELECT * FROM message_template WHERE code = #{code} AND deleted = 0 LIMIT 1
+    </select>
+    <select id="listEnabled" resultType="com.bbpms.notify.entity.MessageTemplate">
+        SELECT * FROM message_template WHERE enabled = 1 AND deleted = 0 ORDER BY id DESC
+    </select>
+</mapper>

@@ -1,0 +1,14 @@
+target/
+*.class
+*.jar
+*.war
+
+# Application log files
+logs/
+*.log
+
+# Local uploads (file.storage-type=local default)
+uploads/
+
+# Spring Boot devtools
+.spring-boot-devtools.properties
