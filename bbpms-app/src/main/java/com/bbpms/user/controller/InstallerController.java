@@ -53,6 +53,7 @@ public class InstallerController {
     }
 
     @PostMapping("/location")
+    @PreAuthorize("hasAuthority('installer:view')")
     public R<Void> updateLocation(@RequestBody InstallerLocationDTO dto) {
         installerService.updateLocation(dto);
         return R.ok();
