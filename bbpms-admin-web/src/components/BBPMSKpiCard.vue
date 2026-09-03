@@ -83,7 +83,6 @@ const trendClass = computed(() => {
           <span :class="trendClass">{{ trendText }}</span>
           <span class="kpi-card__prev">上期 {{ prev }}</span>
         </div>
-        <div v-else class="kpi-card__trend kpi-card__trend--muted">较上期数据暂不可用</div>
       </template>
     </div>
   </div>

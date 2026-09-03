@@ -9,4 +9,5 @@ dist
 *.tsbuildinfo
 src/auto-imports.d.ts
 src/components.d.ts
-.eslintrc-auto-import.json
+.eslintrc-auto-import.json*.timestamp-*.mjs
+*.timestamp-*.mjs
