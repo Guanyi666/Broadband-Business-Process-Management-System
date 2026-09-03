@@ -148,7 +148,7 @@ function formatTime(t?: string | null): string {
           <el-radio-button :value="14">近 14 天</el-radio-button>
           <el-radio-button :value="30">近 30 天</el-radio-button>
         </el-radio-group>
-        <el-button :icon="Refresh" size="small" :loading="overview.loading" @click="dashboard.refreshAll()">
+        <el-button :icon="Refresh" size="small" :loading="overview.loading.value" @click="dashboard.refreshAll()">
           刷新
         </el-button>
       </div>
@@ -159,7 +159,7 @@ function formatTime(t?: string | null): string {
       <h3 class="section-title">今日态势</h3>
 
       <!-- overview 失败：仅此区块降级 + 重试，不影响下方模块 -->
-      <div v-if="overview.error" class="dash-error">
+      <div v-if="overview.error.value" class="dash-error">
         <el-icon :size="32" color="#f56c6c"><WarningFilled /></el-icon>
         <p class="dash-error__text">今日态势加载失败：{{ overview.error }}</p>
         <el-button type="primary" size="small" @click="overview.load()">重试</el-button>
@@ -174,7 +174,7 @@ function formatTime(t?: string | null): string {
             label="进行中工单"
             :value="runningWorkorders?.value ?? null"
             :unit="runningWorkorders?.unit || '个'"
-            :loading="overview.loading"
+            :loading="overview.loading.value"
           />
         </div>
         <BBPMSKpiCard
@@ -185,7 +185,7 @@ function formatTime(t?: string | null): string {
           :unit="todayOrders?.unit || '单'"
           :prev="todayOrders?.prevValue ?? null"
           :trend="todayOrders?.deltaRate ?? null"
-          :loading="overview.loading"
+          :loading="overview.loading.value"
         />
         <BBPMSKpiCard
           tone="warning"
@@ -193,7 +193,7 @@ function formatTime(t?: string | null): string {
           label="待审核订单"
           :value="pendingAuditOrders?.value ?? null"
           :unit="pendingAuditOrders?.unit || '单'"
-          :loading="overview.loading"
+          :loading="overview.loading.value"
         />
         <BBPMSKpiCard
           tone="success"
@@ -203,7 +203,7 @@ function formatTime(t?: string | null): string {
           :unit="todayFinishedWorkorders?.unit || '个'"
           :prev="todayFinishedWorkorders?.prevValue ?? null"
           :trend="todayFinishedWorkorders?.deltaRate ?? null"
-          :loading="overview.loading"
+          :loading="overview.loading.value"
         />
         <BBPMSKpiCard
           tone="danger"
@@ -211,18 +211,18 @@ function formatTime(t?: string | null): string {
           label="停滞工单"
           :value="stalledWorkorders?.value ?? null"
           :unit="stalledWorkorders?.unit || '个'"
-          :loading="overview.loading"
+          :loading="overview.loading.value"
         />
 
         <!-- 人员侧计数：counts 模块独立失败，单独降级 -->
-        <template v-if="!counts.error">
+        <template v-if="!counts.error.value">
           <BBPMSKpiCard
             tone="primary"
             icon="User"
             label="在线装维"
             :value="counts.data.value?.onlineInstallers ?? null"
             unit="人"
-            :loading="counts.loading"
+            :loading="counts.loading.value"
           />
           <BBPMSKpiCard
             tone="success"
@@ -230,7 +230,7 @@ function formatTime(t?: string | null): string {
             label="在岗人数"
             :value="counts.data.value?.onDuty ?? null"
             unit="人"
-            :loading="counts.loading"
+            :loading="counts.loading.value"
           />
           <BBPMSKpiCard
             tone="warning"
@@ -238,7 +238,7 @@ function formatTime(t?: string | null): string {
             label="待审批请假"
             :value="counts.data.value?.pendingLeaves ?? null"
             unit="人"
-            :loading="counts.loading"
+            :loading="counts.loading.value"
           />
         </template>
         <div v-else class="kpi-grid__counts-error">
@@ -256,8 +256,8 @@ function formatTime(t?: string | null): string {
           class="bbpms-col-8 panel-trend"
           :title="`近 ${days} 日趋势`"
           subtitle="订单新建 vs 工单完成"
-          :loading="trend.loading"
-          :error="trend.error"
+          :loading="trend.loading.value"
+          :error="trend.error.value"
           @retry="trend.load()"
         >
           <BBPMSChart :option="trendOption" height="100%" :empty="trendEmpty" empty-text="暂无趋势数据" />
@@ -267,8 +267,8 @@ function formatTime(t?: string | null): string {
           class="bbpms-col-4"
           title="派单策略构成"
           :subtitle="`近 ${days} 日`"
-          :loading="dispatch.loading"
-          :error="dispatch.error"
+          :loading="dispatch.loading.value"
+          :error="dispatch.error.value"
           @retry="dispatch.load()"
         >
           <BBPMSChart
@@ -283,8 +283,8 @@ function formatTime(t?: string | null): string {
           class="bbpms-col-6"
           title="订单状态分布"
           subtitle="存量全量口径"
-          :loading="overview.loading"
-          :error="overview.error"
+          :loading="overview.loading.value"
+          :error="overview.error.value"
           @retry="overview.load()"
         >
           <BBPMSChart :option="orderDistOption" height="100%" :empty="orderDistEmpty" />
@@ -294,8 +294,8 @@ function formatTime(t?: string | null): string {
           class="bbpms-col-6"
           title="工单状态分布"
           subtitle="存量全量口径"
-          :loading="overview.loading"
-          :error="overview.error"
+          :loading="overview.loading.value"
+          :error="overview.error.value"
           @retry="overview.load()"
         >
           <BBPMSChart :option="workOrderDistOption" height="100%" :empty="workOrderDistEmpty" />
@@ -305,8 +305,8 @@ function formatTime(t?: string | null): string {
           class="bbpms-col-8"
           title="派单时效分布"
           subtitle="派单 → 接单耗时"
-          :loading="buckets.loading"
-          :error="buckets.error"
+          :loading="buckets.loading.value"
+          :error="buckets.error.value"
           @retry="buckets.load()"
         >
           <BBPMSChart :option="bucketOption" height="100%" :empty="bucketEmpty" empty-text="暂无派单时效数据" />
@@ -316,8 +316,8 @@ function formatTime(t?: string | null): string {
           class="bbpms-col-4"
           title="平均派单评分"
           :subtitle="`近 ${days} 日`"
-          :loading="dispatch.loading"
-          :error="dispatch.error"
+          :loading="dispatch.loading.value"
+          :error="dispatch.error.value"
           @retry="dispatch.load()"
         >
           <BBPMSChart :option="gaugeOption" height="100%" :empty="gaugeEmpty" empty-text="暂无评分数据" />
@@ -333,8 +333,8 @@ function formatTime(t?: string | null): string {
           class="bbpms-col-6"
           title="SLA 临期预警"
           subtitle="预计完成时间 30 分钟内到期"
-          :loading="sla.loading"
-          :error="sla.error"
+          :loading="sla.loading.value"
+          :error="sla.error.value"
           :empty="slaList.length === 0"
           empty-text="暂无临期工单"
           @retry="sla.load()"
@@ -361,8 +361,8 @@ function formatTime(t?: string | null): string {
         <BBPMSPanel
           class="bbpms-col-6"
           title="最新工单动态"
-          :loading="latest.loading"
-          :error="latest.error"
+          :loading="latest.loading.value"
+          :error="latest.error.value"
           :empty="latestList.length === 0"
           empty-text="暂无工单动态"
           @retry="latest.load()"
