@@ -6,8 +6,8 @@ const router = useRouter()
 <template>
   <div class="error-page">
     <div class="error-code">404</div>
-    <div class="error-msg">The page you are looking for does not exist.</div>
-    <el-button type="primary" @click="router.push('/dashboard')">Back to dashboard</el-button>
+    <div class="error-msg">抱歉，您访问的页面不存在</div>
+    <el-button type="primary" @click="router.push('/dashboard')">返回数据看板</el-button>
   </div>
 </template>
 

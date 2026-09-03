@@ -6,8 +6,8 @@ const router = useRouter()
 <template>
   <div class="error-page">
     <div class="error-code">403</div>
-    <div class="error-msg">You do not have permission to access this page.</div>
-    <el-button type="primary" @click="router.push('/dashboard')">Back to dashboard</el-button>
+    <div class="error-msg">暂无权限访问该页面</div>
+    <el-button type="primary" @click="router.push('/dashboard')">返回数据看板</el-button>
   </div>
 </template>
 

@@ -44,7 +44,7 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'Dashboard',
         component: () => import('@/views/dashboard/index.vue'),
-        meta: { title: '数据看板', icon: 'DataLine', requiresAuth: true, affix: true }
+        meta: { title: '数据看板', icon: 'DataLine', requiresAuth: true, affix: true, permission: 'dashboard:view' }
       }
     ]
   },
@@ -58,13 +58,13 @@ const routes: RouteRecordRaw[] = [
         path: 'list',
         name: 'CustomerList',
         component: () => import('@/views/customer/list.vue'),
-        meta: { title: '客户列表', icon: 'List', requiresAuth: true }
+        meta: { title: '客户列表', icon: 'List', requiresAuth: true, permission: 'customer:view' }
       },
       {
         path: 'detail/:id',
         name: 'CustomerDetail',
         component: () => import('@/views/customer/detail.vue'),
-        meta: { title: '客户详情', requiresAuth: true, hideInMenu: true }
+        meta: { title: '客户详情', requiresAuth: true, hideInMenu: true, permission: 'customer:view' }
       }
     ]
   },
@@ -78,7 +78,7 @@ const routes: RouteRecordRaw[] = [
         path: 'list',
         name: 'OrderList',
         component: () => import('@/views/order/list.vue'),
-        meta: { title: '订单列表', icon: 'List', requiresAuth: true, keepAlive: true }
+        meta: { title: '订单列表', icon: 'List', requiresAuth: true, keepAlive: true, permission: 'order:view' }
       },
       {
         path: 'create',
@@ -90,13 +90,13 @@ const routes: RouteRecordRaw[] = [
         path: 'audit',
         name: 'OrderAudit',
         component: () => import('@/views/order/audit.vue'),
-        meta: { title: '订单审核', requiresAuth: true, hideInMenu: true }
+        meta: { title: '订单审核', requiresAuth: true, hideInMenu: true, permission: 'order:audit' }
       },
       {
         path: 'detail/:id',
         name: 'OrderDetail',
         component: () => import('@/views/order/detail.vue'),
-        meta: { title: '订单详情', requiresAuth: true, hideInMenu: true }
+        meta: { title: '订单详情', requiresAuth: true, hideInMenu: true, permission: 'order:view' }
       }
     ]
   },
@@ -110,7 +110,7 @@ const routes: RouteRecordRaw[] = [
         path: 'list',
         name: 'WorkorderList',
         component: () => import('@/views/workorder/list.vue'),
-        meta: { title: '工单列表', icon: 'List', requiresAuth: true }
+        meta: { title: '工单列表', icon: 'List', requiresAuth: true, permission: 'workorder:view' }
       },
       {
         path: 'dispatch-board',
@@ -122,7 +122,7 @@ const routes: RouteRecordRaw[] = [
         path: 'detail/:id',
         name: 'WorkorderDetail',
         component: () => import('@/views/workorder/detail.vue'),
-        meta: { title: '工单详情', requiresAuth: true, hideInMenu: true }
+        meta: { title: '工单详情', requiresAuth: true, hideInMenu: true, permission: 'workorder:view' }
       }
     ]
   },
@@ -136,19 +136,19 @@ const routes: RouteRecordRaw[] = [
         path: 'list',
         name: 'InstallerList',
         component: () => import('@/views/installer/list.vue'),
-        meta: { title: '装维列表', icon: 'List', requiresAuth: true }
+        meta: { title: '装维列表', icon: 'List', requiresAuth: true, permission: 'installer:view' }
       },
       {
         path: 'map',
         name: 'InstallerMap',
         component: () => import('@/views/installer/map.vue'),
-        meta: { title: '装维地图', icon: 'MapLocation', requiresAuth: true }
+        meta: { title: '装维地图', icon: 'MapLocation', requiresAuth: true, permission: 'installer:view' }
       },
       {
         path: 'profile/:id',
         name: 'InstallerProfile',
         component: () => import('@/views/installer/profile.vue'),
-        meta: { title: '装维档案', requiresAuth: true, hideInMenu: true }
+        meta: { title: '装维档案', requiresAuth: true, hideInMenu: true, permission: 'installer:view' }
       }
     ]
   },
@@ -194,13 +194,13 @@ const routes: RouteRecordRaw[] = [
         path: 'template',
         name: 'NotifyTemplate',
         component: () => import('@/views/notify/template.vue'),
-        meta: { title: '消息模板', icon: 'Memo', requiresAuth: true }
+        meta: { title: '消息模板', icon: 'Memo', requiresAuth: true, permission: 'notify:template:view' }
       },
       {
         path: 'record',
         name: 'NotifyRecord',
         component: () => import('@/views/notify/record.vue'),
-        meta: { title: '消息记录', icon: 'ChatLineRound', requiresAuth: true }
+        meta: { title: '消息记录', icon: 'ChatLineRound', requiresAuth: true, permission: 'notify:record:view' }
       }
     ]
   },
@@ -212,7 +212,7 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'FileManager',
         component: () => import('@/views/file/index.vue'),
-        meta: { title: '文件管理', icon: 'Folder', requiresAuth: true }
+        meta: { title: '文件管理', icon: 'Folder', requiresAuth: true, permission: 'file:view' }
       }
     ]
   },
@@ -226,33 +226,13 @@ const routes: RouteRecordRaw[] = [
         path: 'operation',
         name: 'OperationLog',
         component: () => import('@/views/log/operation.vue'),
-        meta: { title: '操作日志', icon: 'Tickets', requiresAuth: true }
+        meta: { title: '操作日志', icon: 'Tickets', requiresAuth: true, permission: 'log:view' }
       },
       {
         path: 'login',
         name: 'LoginLog',
         component: () => import('@/views/log/login.vue'),
-        meta: { title: '登录日志', icon: 'Key', requiresAuth: true }
-      }
-    ]
-  },
-  {
-    path: '/monitor',
-    component: Layout,
-    redirect: '/monitor/metrics',
-    meta: { title: '系统监控', icon: 'Monitor', requiresAuth: true, roles: ['SUPER_ADMIN'] },
-    children: [
-      {
-        path: 'metrics',
-        name: 'MonitorMetrics',
-        component: () => import('@/views/monitor/metrics.vue'),
-        meta: { title: '监控指标', icon: 'TrendCharts', requiresAuth: true }
-      },
-      {
-        path: 'health',
-        name: 'MonitorHealth',
-        component: () => import('@/views/monitor/health.vue'),
-        meta: { title: '健康检查', icon: 'FirstAidKit', requiresAuth: true }
+        meta: { title: '登录日志', icon: 'Key', requiresAuth: true, permission: 'log:view' }
       }
     ]
   },
@@ -266,7 +246,7 @@ const routes: RouteRecordRaw[] = [
         path: 'team',
         name: 'AttendanceReport',
         component: () => import('@/views/attendance/Report.vue'),
-        meta: { title: '团队报表', icon: 'DataAnalysis', requiresAuth: true }
+        meta: { title: '团队报表', icon: 'DataAnalysis', requiresAuth: true, permission: 'attendance:view-all' }
       }
     ]
   },
@@ -294,7 +274,7 @@ const routes: RouteRecordRaw[] = [
         path: 'expiring',
         name: 'SlaExpiring',
         component: () => import('@/views/sla/Expiring.vue'),
-        meta: { title: '工单时效', icon: 'AlarmClock', requiresAuth: true }
+        meta: { title: '工单时效', icon: 'AlarmClock', requiresAuth: true, permission: 'workorder:sla:view' }
       }
     ]
   },

@@ -57,8 +57,14 @@ service.interceptors.response.use(
     const status = error?.response?.status
     if (status === 401) {
       handleUnauthorized()
+    } else if (status === 403) {
+      ElMessage.error('暂无权限访问该页面')
+    } else if (status === 500) {
+      ElMessage.error('服务器暂时无法处理请求，请稍后重试')
+    } else if (!error.response) {
+      ElMessage.error('网络连接异常，请检查网络后重试')
     } else {
-      const msg = error?.response?.data?.msg || error?.response?.data?.message || error.message || 'Network error'
+      const msg = error?.response?.data?.msg || error?.response?.data?.message || `请求失败（HTTP ${status}）`
       ElMessage.error(msg)
     }
     return Promise.reject(error)
@@ -67,7 +73,7 @@ service.interceptors.response.use(
 
 function handleUnauthorized() {
   removeToken()
-  ElMessage.error('Session expired. Please log in again.')
+  ElMessage.error('登录已过期，请重新登录')
   const cur = router.currentRoute.value.fullPath
   router.replace({ path: '/login', query: { redirect: cur } })
 }

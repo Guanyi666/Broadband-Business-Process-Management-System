@@ -6,8 +6,8 @@ const router = useRouter()
 <template>
   <div class="error-page">
     <div class="error-code">500</div>
-    <div class="error-msg">Server error, please try again later.</div>
-    <el-button type="primary" @click="router.push('/dashboard')">Back to dashboard</el-button>
+    <div class="error-msg">服务器内部错误，请稍后重试</div>
+    <el-button type="primary" @click="router.push('/dashboard')">返回数据看板</el-button>
   </div>
 </template>
 
