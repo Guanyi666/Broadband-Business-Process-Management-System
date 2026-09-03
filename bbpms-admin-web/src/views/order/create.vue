@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { createOrder } from '@/api/order'
 import { createCustomer, searchCustomers } from '@/api/customer'
+import { checkResource, type CheckResult } from '@/api/resource'
 import type { Customer } from '@/api/customer'
 import PageHeader from '@/components/PageHeader.vue'
 import BBPMSMapPicker from '@/components/BBPMSMapPicker.vue'
@@ -12,6 +13,27 @@ const router = useRouter()
 
 const formRef = ref()
 const submitting = ref(false)
+const checking = ref(false)
+/** 资源核查结果（下单回写） */
+const checkResult = ref<CheckResult | null>(null)
+
+async function onCheckResource() {
+  if (!form.address.trim()) {
+    ElMessage.warning('请先输入安装地址')
+    return
+  }
+  checking.value = true
+  try {
+    checkResult.value = await checkResource(form.address)
+    const st = checkResult.value.status
+    if (st === 'RESOURCE_OK') ElMessage.success(checkResult.value.message)
+    else ElMessage.warning(checkResult.value.message)
+  } catch (e: any) {
+    ElMessage.error(e?.msg || e?.message || '核查失败')
+  } finally {
+    checking.value = false
+  }
+}
 
 const form = reactive({
   customerMode: 'EXISTING', // EXISTING | NEW
@@ -77,7 +99,11 @@ async function onSubmit() {
         expectedInstallDate: form.appointmentAt,
         appointmentTime: form.appointmentAt,
         contactPhone: form.customerMode === 'NEW' ? form.customerPhone : undefined,
-        remark: form.remark
+        remark: form.remark,
+        // 资源核查回写（ITERATION 2）
+        roomId: checkResult.value?.roomId,
+        resourceStatus: checkResult.value?.status,
+        checkRemark: checkResult.value?.message
       }
       const createdId = await createOrder(payload)
       ElMessage.success('Order created')
@@ -142,6 +168,18 @@ async function onSubmit() {
 
         <el-form-item label="地址" prop="address">
           <el-input v-model="form.address" type="textarea" :rows="2" />
+          <div style="margin-top: 6px; display: flex; gap: 8px; align-items: center">
+            <el-button size="small" type="primary" plain :loading="checking" @click="onCheckResource">
+              资源核查
+            </el-button>
+            <el-tag
+              v-if="checkResult"
+              :type="checkResult.status === 'RESOURCE_OK' ? 'success' : (checkResult.status === 'RESOURCE_INSUFFICIENT' ? 'warning' : 'danger')"
+            >
+              {{ checkResult.status === 'RESOURCE_OK' ? '可安装' : (checkResult.status === 'RESOURCE_INSUFFICIENT' ? '资源不足' : '暂无覆盖') }}
+            </el-tag>
+            <span v-if="checkResult" class="text-muted" style="font-size: 12px">{{ checkResult.message }}</span>
+          </div>
         </el-form-item>
 
         <el-form-item label="地图选点">

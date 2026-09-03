@@ -153,6 +153,20 @@ const routes: RouteRecordRaw[] = [
     ]
   },
   {
+    path: '/resource',
+    component: Layout,
+    redirect: '/resource/list',
+    meta: { title: '资源管理', icon: 'OfficeBuilding', requiresAuth: true, permission: 'resource:view' },
+    children: [
+      {
+        path: 'list',
+        name: 'ResourceList',
+        component: () => import('@/views/resource/index.vue'),
+        meta: { title: '网络资源台账', icon: 'List', requiresAuth: true, permission: 'resource:view' }
+      }
+    ]
+  },
+  {
     path: '/system',
     component: Layout,
     redirect: '/system/user',

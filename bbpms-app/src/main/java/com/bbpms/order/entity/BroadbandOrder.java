@@ -46,4 +46,9 @@ public class BroadbandOrder extends BaseDO {
     private LocalDateTime completedTime;
     private LocalDateTime cancelledTime;
     private String cancelReason;
+
+    /** ITERATION 2 — 资源核查回写 */
+    private Long roomId;
+    private String resourceStatus;
+    private String checkRemark;
 }

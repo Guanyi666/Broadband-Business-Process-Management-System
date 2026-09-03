@@ -120,6 +120,10 @@ public class OrderServiceImpl implements OrderService {
         order.setCsId(csUserId);
         order.setCreateBy(csUserId);
         order.setUpdateBy(csUserId);
+        // ITERATION 2 — 资源核查回写（可选，不阻断旧调用）
+        order.setRoomId(req.getRoomId());
+        order.setResourceStatus(req.getResourceStatus());
+        order.setCheckRemark(req.getCheckRemark());
         orderMapper.insert(order);
 
         // Optional appointment.
