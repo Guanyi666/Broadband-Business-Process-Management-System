@@ -17,12 +17,17 @@ const props = withDefaults(defineProps<Props>(), {
 
 const map: Record<string, 'primary' | 'success' | 'warning' | 'info' | 'danger'> = {
   PENDING: 'warning',
+  CREATED: 'warning',
+  AUDITED: 'primary',
+  WAIT_DISPATCH: 'warning',
   AUDIT_PASS: 'primary',
   AUDIT_REJECT: 'danger',
   DISPATCHED: 'primary',
   ACCEPTED: 'primary',
   INSTALLING: 'warning',
   DONE: 'success',
+  FINISHED: 'success',
+  CLOSED: 'info',
   COMPLETED: 'success',
   CANCELLED: 'info',
   AUTO_CANCELLED: 'info',

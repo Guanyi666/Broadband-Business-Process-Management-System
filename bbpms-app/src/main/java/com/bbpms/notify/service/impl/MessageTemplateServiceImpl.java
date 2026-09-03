@@ -1,8 +1,13 @@
 package com.bbpms.notify.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import cn.hutool.core.util.StrUtil;
 import com.bbpms.common.util.JsonUtils;
 import com.bbpms.common.util.RedisUtils;
 import com.bbpms.notify.dto.MessageTemplateCreateReq;
+import com.bbpms.notify.dto.MessageTemplatePageReq;
+import com.bbpms.common.result.PageResp;
 import com.bbpms.notify.entity.MessageTemplate;
 import com.bbpms.notify.mapper.MessageTemplateMapper;
 import com.bbpms.notify.service.MessageTemplateService;
@@ -56,5 +61,27 @@ public class MessageTemplateServiceImpl extends ServiceImpl<MessageTemplateMappe
     @Override
     public List<MessageTemplate> listEnabled() {
         return baseMapper.listEnabled();
+    }
+
+    @Override
+    public PageResp<MessageTemplate> page(MessageTemplatePageReq req) {
+        Page<MessageTemplate> page = new Page<>(req.getPageNum(), req.getPageSize());
+        LambdaQueryWrapper<MessageTemplate> query = new LambdaQueryWrapper<>();
+        if (StrUtil.isNotBlank(req.getKeyword())) {
+            query.and(q -> q.like(MessageTemplate::getCode, req.getKeyword())
+                    .or().like(MessageTemplate::getSubject, req.getKeyword())
+                    .or().like(MessageTemplate::getContent, req.getKeyword()));
+        }
+        if (StrUtil.isNotBlank(req.getChannel())) query.eq(MessageTemplate::getChannel, req.getChannel());
+        if (req.getEnabled() != null) query.eq(MessageTemplate::getEnabled, req.getEnabled());
+        query.orderByDesc(MessageTemplate::getUpdateTime);
+        Page<MessageTemplate> result = baseMapper.selectPage(page, query);
+        PageResp<MessageTemplate> response = new PageResp<>();
+        response.setRecords(result.getRecords());
+        response.setTotal(result.getTotal());
+        response.setPageNum(result.getCurrent());
+        response.setPageSize(result.getSize());
+        response.setPages(result.getPages());
+        return response;
     }
 }

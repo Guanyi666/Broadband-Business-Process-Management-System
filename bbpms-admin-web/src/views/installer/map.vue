@@ -1,34 +1,44 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
 import { listInstallerLocations } from '@/api/installer'
 import type { InstallerLocation } from '@/types/installer'
 import PageHeader from '@/components/PageHeader.vue'
 
-const router = useRouter()
 const mapEl = ref<HTMLDivElement>()
 const locations = ref<InstallerLocation[]>([])
+const loading = ref(false)
+const loadError = ref('')
+const mapError = ref('')
 let timer: ReturnType<typeof setInterval> | null = null
 let map: any = null
 let markers: any[] = []
 
 async function refresh() {
+  loading.value = true
+  loadError.value = ''
   try {
     locations.value = await listInstallerLocations()
     updateMarkers()
-  } catch {
+  } catch (error: any) {
     locations.value = []
+    loadError.value = error?.message || 'Installer locations could not be loaded.'
+  } finally {
+    loading.value = false
   }
 }
 
 async function initMap() {
   const key = import.meta.env.VITE_AMAP_KEY
-  if (!key || key.startsWith('__') || !mapEl.value) return
-  await new Promise<void>((resolve) => {
+  if (!key || key.startsWith('__') || !mapEl.value) {
+    mapError.value = 'Map key is not configured. Installer location data is shown in the list below.'
+    return
+  }
+  await new Promise<void>((resolve, reject) => {
     if ((window as any).AMap) return resolve()
     const script = document.createElement('script')
     script.src = `https://webapi.amap.com/maps?v=2.0&key=${key}`
     script.onload = () => resolve()
+    script.onerror = () => reject(new Error('Map service failed to load'))
     document.head.appendChild(script)
   })
   const AMap = (window as any).AMap
@@ -44,7 +54,7 @@ function updateMarkers() {
     markers.forEach((m) => map.remove(m))
     markers = []
   }
-  locations.value.forEach((l) => {
+  locations.value.filter((l) => Number.isFinite(l.lng) && Number.isFinite(l.lat) && (l.lng !== 0 || l.lat !== 0)).forEach((l) => {
     const marker = new AMap.Marker({
       position: [l.lng, l.lat],
       title: l.name,
@@ -77,7 +87,11 @@ function updateMarkers() {
 
 onMounted(async () => {
   await refresh()
-  await initMap()
+  try {
+    await initMap()
+  } catch (error: any) {
+    mapError.value = error?.message || 'Map service failed to load.'
+  }
   timer = setInterval(refresh, 15000)
 })
 onBeforeUnmount(() => {
@@ -87,17 +101,32 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="app-container">
+  <div class="app-container" v-loading="loading">
     <PageHeader title="Installer Map">
       <template #extra>
         <el-button @click="refresh"><el-icon><Refresh /></el-icon> Refresh</el-button>
       </template>
     </PageHeader>
-    <div class="map-wrapper">
+    <el-alert v-if="loadError" :title="loadError" type="error" show-icon :closable="false" class="map-alert" />
+    <el-alert v-if="mapError" :title="mapError" type="warning" show-icon :closable="false" class="map-alert" />
+    <div v-show="!mapError" class="map-wrapper">
       <div v-if="locations.length === 0" class="map-empty">
         <el-empty description="No installer locations to display" :image-size="80" />
       </div>
       <div ref="mapEl" class="map" />
+    </div>
+    <div class="app-card location-list">
+      <el-table :data="locations" stripe empty-text="No installer locations">
+        <el-table-column prop="name" label="Installer" min-width="140" />
+        <el-table-column prop="phone" label="Phone" min-width="130" />
+        <el-table-column label="Status" width="100">
+          <template #default="{ row }"><el-tag :type="row.online ? 'success' : 'info'">{{ row.online ? 'Online' : 'Offline' }}</el-tag></template>
+        </el-table-column>
+        <el-table-column prop="workload" label="Workload" width="100" />
+        <el-table-column label="Coordinates" min-width="180">
+          <template #default="{ row }">{{ row.lng && row.lat ? `${row.lng.toFixed(6)}, ${row.lat.toFixed(6)}` : '-' }}</template>
+        </el-table-column>
+      </el-table>
     </div>
   </div>
 </template>
@@ -122,4 +151,6 @@ onBeforeUnmount(() => {
     pointer-events: none;
   }
 }
+.map-alert { margin-bottom: 12px; }
+.location-list { margin-top: 16px; }
 </style>

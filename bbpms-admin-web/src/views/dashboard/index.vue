@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { computed, nextTick, ref, onMounted, onBeforeUnmount } from 'vue'
 import * as echarts from 'echarts'
 import {
   getDashboardKpi,
@@ -18,6 +18,14 @@ const kpi = ref<DashboardKpi>({
   runningWorkorders: 0,
   completedToday: 0
 })
+const loading = ref(false)
+const loadError = ref('')
+const trendData = ref<TrendPoint[]>([])
+const statusData = ref<StatusSlice[]>([])
+const efficiencyData = ref<EfficiencyBucket[]>([])
+const hasTrend = computed(() => trendData.value.some((item) => item.count > 0))
+const hasStatus = computed(() => statusData.value.some((item) => item.count > 0))
+const hasEfficiency = computed(() => efficiencyData.value.some((item) => item.count > 0))
 
 const trendRef = ref<HTMLDivElement>()
 const pieRef = ref<HTMLDivElement>()
@@ -29,6 +37,7 @@ let barChart: echarts.ECharts | null = null
 
 async function initTrendChart(data: TrendPoint[]) {
   if (!trendRef.value) return
+  trendChart?.dispose()
   trendChart = echarts.init(trendRef.value)
   trendChart.setOption({
     tooltip: { trigger: 'axis' },
@@ -56,6 +65,7 @@ async function initTrendChart(data: TrendPoint[]) {
 
 async function initPieChart(data: StatusSlice[]) {
   if (!pieRef.value) return
+  pieChart?.dispose()
   pieChart = echarts.init(pieRef.value)
   pieChart.setOption({
     tooltip: { trigger: 'item' },
@@ -75,6 +85,7 @@ async function initPieChart(data: StatusSlice[]) {
 
 async function initBarChart(data: EfficiencyBucket[]) {
   if (!barRef.value) return
+  barChart?.dispose()
   barChart = echarts.init(barRef.value)
   barChart.setOption({
     tooltip: { trigger: 'axis' },
@@ -104,7 +115,9 @@ function onResize() {
   barChart?.resize()
 }
 
-onMounted(async () => {
+async function loadDashboard() {
+  loading.value = true
+  loadError.value = ''
   try {
     const [k, t, s, e] = await Promise.all([
       getDashboardKpi(),
@@ -113,32 +126,25 @@ onMounted(async () => {
       getDispatchEfficiency()
     ])
     kpi.value = k
-    initTrendChart(t)
-    initPieChart(s)
-    initBarChart(e)
-  } catch (e) {
-    // chart fallback mock
-    initTrendChart(
-      Array.from({ length: 7 }).map((_, i) => ({
-        date: `D-${6 - i}`,
-        count: Math.floor(Math.random() * 50) + 10
-      }))
-    )
-    initPieChart([
-      { status: 'Pending', count: 12 },
-      { status: 'Approved', count: 24 },
-      { status: 'Installing', count: 16 },
-      { status: 'Done', count: 38 },
-      { status: 'Cancelled', count: 3 }
-    ])
-    initBarChart([
-      { bucket: '<30m', count: 8 },
-      { bucket: '30-60m', count: 14 },
-      { bucket: '1-2h', count: 22 },
-      { bucket: '2-4h', count: 9 },
-      { bucket: '>4h', count: 4 }
-    ])
+    trendData.value = t || []
+    statusData.value = s || []
+    efficiencyData.value = e || []
+    await nextTick()
+    initTrendChart(trendData.value)
+    initPieChart(statusData.value)
+    initBarChart(efficiencyData.value)
+  } catch (error: any) {
+    loadError.value = error?.message || 'Dashboard data could not be loaded.'
+    trendData.value = []
+    statusData.value = []
+    efficiencyData.value = []
+  } finally {
+    loading.value = false
   }
+}
+
+onMounted(async () => {
+  await loadDashboard()
   window.addEventListener('resize', onResize)
 })
 
@@ -151,7 +157,14 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="dashboard app-container">
+  <div class="dashboard app-container" v-loading="loading">
+    <el-alert v-if="loadError" type="error" show-icon :closable="false" class="dashboard-alert">
+      <template #title>Dashboard data failed to load</template>
+      <template #default>
+        {{ loadError }}
+        <el-button link type="primary" @click="loadDashboard">Retry</el-button>
+      </template>
+    </el-alert>
     <div class="kpi-row">
       <div class="kpi-card kpi-blue">
         <div class="kpi-label">Today's Orders</div>
@@ -179,22 +192,26 @@ onBeforeUnmount(() => {
       <div class="app-card chart-card chart-trend">
         <div class="chart-title">7-day Order Trend</div>
         <div ref="trendRef" class="chart" />
+        <el-empty v-if="!loading && !loadError && !hasTrend" class="chart-empty" description="No order data in the last 7 days" :image-size="60" />
       </div>
       <div class="app-card chart-card chart-pie">
         <div class="chart-title">Order Status Distribution</div>
         <div ref="pieRef" class="chart" />
+        <el-empty v-if="!loading && !loadError && !hasStatus" class="chart-empty" description="No order status data" :image-size="60" />
       </div>
     </div>
 
     <div class="app-card chart-card chart-bar">
       <div class="chart-title">Dispatch Efficiency (duration buckets)</div>
       <div ref="barRef" class="chart" />
+      <el-empty v-if="!loading && !loadError && !hasEfficiency" class="chart-empty" description="No dispatched workorders" :image-size="60" />
     </div>
   </div>
 </template>
 
 <style scoped lang="scss">
 .dashboard {
+  .dashboard-alert { margin-bottom: 16px; }
   .kpi-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -237,6 +254,7 @@ onBeforeUnmount(() => {
     margin-bottom: 16px;
   }
   .chart-card {
+    position: relative;
     .chart-title {
       font-weight: 600;
       margin-bottom: 8px;
@@ -244,6 +262,11 @@ onBeforeUnmount(() => {
     .chart {
       height: 320px;
     }
+  }
+  .chart-empty {
+    position: absolute;
+    inset: 48px 0 0;
+    background: #fff;
   }
   .chart-bar .chart {
     height: 280px;

@@ -34,7 +34,7 @@ export function createRole(data: Partial<RoleInfo>) {
 }
 
 export function updateRole(id: number | string, data: Partial<RoleInfo>) {
-  return request<void>({ url: `/roles/${id}`, method: 'PUT', data })
+  return request<void>({ url: '/roles', method: 'PUT', data: { ...data, id } })
 }
 
 export function deleteRole(id: number | string) {

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { pageOrders } from '@/api/order'
 import { listInstallerLocations } from '@/api/installer'
@@ -12,11 +11,10 @@ import type { InstallerLocation } from '@/types/installer'
 import PageHeader from '@/components/PageHeader.vue'
 import BBPMSStatusTag from '@/components/BBPMSStatusTag.vue'
 
-const router = useRouter()
-
 const loading = ref(false)
 const pendingOrders = ref<OrderItem[]>([])
 const onlineInstallers = ref<InstallerLocation[]>([])
+const statusSummary = ref({ pending: 0, dispatched: 0, processing: 0, completed: 0 })
 
 const dialogVisible = ref(false)
 const dialogLoading = ref(false)
@@ -26,11 +24,20 @@ const candidates = ref<DispatchCandidate[]>([])
 async function refresh() {
   loading.value = true
   try {
-    const [orders, locs] = await Promise.all([
-      pageOrders({ pageNum: 1, pageSize: 20, status: 'AUDIT_PASS' }),
+    const [orders, dispatched, processing, completed, locs] = await Promise.all([
+      pageOrders({ pageNum: 1, pageSize: 50, status: 'WAIT_DISPATCH' }),
+      pageOrders({ pageNum: 1, pageSize: 1, status: 'DISPATCHED' }),
+      pageOrders({ pageNum: 1, pageSize: 1, status: 'INSTALLING' }),
+      pageOrders({ pageNum: 1, pageSize: 1, status: 'FINISHED' }),
       listInstallerLocations().catch(() => [] as InstallerLocation[])
     ])
     pendingOrders.value = orders.list
+    statusSummary.value = {
+      pending: orders.total,
+      dispatched: dispatched.total,
+      processing: processing.total,
+      completed: completed.total
+    }
     onlineInstallers.value = (locs || []).filter((l) => l.online)
   } finally {
     loading.value = false
@@ -93,6 +100,13 @@ onBeforeUnmount(() => {
         <el-button @click="refresh"><el-icon><Refresh /></el-icon> Refresh</el-button>
       </template>
     </PageHeader>
+
+    <div class="status-row">
+      <div class="status-card"><span>Pending Dispatch</span><strong>{{ statusSummary.pending }}</strong></div>
+      <div class="status-card"><span>Dispatched</span><strong>{{ statusSummary.dispatched }}</strong></div>
+      <div class="status-card"><span>Processing</span><strong>{{ statusSummary.processing }}</strong></div>
+      <div class="status-card"><span>Completed</span><strong>{{ statusSummary.completed }}</strong></div>
+    </div>
 
     <div class="board">
       <div class="board-col">
@@ -191,6 +205,23 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
+}
+.status-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.status-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: #fff;
+  border-radius: $radius-base;
+  box-shadow: $shadow-card;
+  color: #606266;
+  strong { color: #303133; font-size: 24px; }
 }
 .board-col {
   background: #f5f7fa;

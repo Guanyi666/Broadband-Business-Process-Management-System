@@ -3,7 +3,7 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { createOrder } from '@/api/order'
-import { searchCustomers } from '@/api/customer'
+import { createCustomer, searchCustomers } from '@/api/customer'
 import type { Customer } from '@/api/customer'
 import PageHeader from '@/components/PageHeader.vue'
 import BBPMSMapPicker from '@/components/BBPMSMapPicker.vue'
@@ -47,10 +47,10 @@ const rules = {
 }
 
 const packageOptions = [
-  { value: 'PKG_100M', label: '100M Broadband - ¥99/month' },
-  { value: 'PKG_300M', label: '300M Broadband - ¥159/month' },
-  { value: 'PKG_500M', label: '500M Broadband - ¥199/month' },
-  { value: 'PKG_1G', label: '1G Broadband - ¥299/month' }
+  { value: 'PKG_100M', name: '100M Broadband', label: '100M Broadband - ¥99/month' },
+  { value: 'PKG_300M', name: '300M Broadband', label: '300M Broadband - ¥159/month' },
+  { value: 'PKG_500M', name: '500M Broadband', label: '500M Broadband - ¥199/month' },
+  { value: 'PKG_1G', name: '1G Broadband', label: '1G Broadband - ¥299/month' }
 ]
 
 async function onSubmit() {
@@ -59,26 +59,29 @@ async function onSubmit() {
     if (!valid) return
     submitting.value = true
     try {
-      const payload: any = {
-        packageId: form.packageId,
-        address: form.address,
-        appointmentAt: form.appointmentAt,
+      let customerId: number | string = form.customerId
+      if (form.customerMode === 'NEW') {
+        customerId = await createCustomer({
+          name: form.customerName,
+          phone: form.customerPhone,
+          idCardNo: form.customerIdCard,
+          address: form.address
+        })
+      }
+      const selectedPackage = packageOptions.find((p) => p.value === form.packageId)
+      const payload = {
+        customerId,
+        packageCode: form.packageId,
+        packageName: selectedPackage?.name || form.packageId,
+        installAddress: form.address,
+        expectedInstallDate: form.appointmentAt,
+        appointmentTime: form.appointmentAt,
+        contactPhone: form.customerMode === 'NEW' ? form.customerPhone : undefined,
         remark: form.remark
       }
-      if (form.location) {
-        payload.lng = form.location.lng
-        payload.lat = form.location.lat
-      }
-      if (form.customerMode === 'EXISTING') {
-        payload.customerId = form.customerId
-      } else {
-        payload.customerName = form.customerName
-        payload.customerPhone = form.customerPhone
-        payload.customerIdCard = form.customerIdCard
-      }
-      const created = await createOrder(payload)
-      ElMessage.success(`Order ${created.orderNo} created`)
-      router.push(`/order/detail/${created.id}`)
+      const createdId = await createOrder(payload)
+      ElMessage.success('Order created')
+      router.push(`/order/detail/${createdId}`)
     } finally {
       submitting.value = false
     }

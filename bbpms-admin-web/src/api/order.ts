@@ -3,17 +3,14 @@ import type { PageQuery, PageResult } from '@/types/common'
 import type { OrderItem, OrderTimelineItem, OrderStatus } from '@/types/order'
 
 export interface OrderCreatePayload {
-  customerId?: number | string
-  customerName?: string
-  customerPhone?: string
-  customerIdCard?: string
-  address: string
-  lng?: number
-  lat?: number
-  packageId: number | string
-  appointmentAt: string
+  customerId: number | string
+  packageCode: string
+  packageName?: string
+  installAddress: string
+  expectedInstallDate?: string
+  appointmentTime?: string
+  contactPhone?: string
   remark?: string
-  source?: string
 }
 
 export interface AuditPayload {
@@ -21,23 +18,85 @@ export interface AuditPayload {
   remark?: string
 }
 
-export function pageOrders(params: PageQuery & { status?: OrderStatus; csId?: number | string; dateRange?: string[] }) {
-  return request<PageResult<OrderItem>>({
+interface PageResp<T> {
+  records: T[]
+  total: number
+  pageNum: number
+  pageSize: number
+}
+
+interface BackendOrder {
+  id: number | string
+  orderNo: string
+  customerId: number | string
+  customerName?: string
+  packageCode?: string
+  packageName?: string
+  installAddress?: string
+  expectedInstallDate?: string
+  status: OrderStatus
+  csId?: number | string
+  auditorId?: number | string
+  auditTime?: string
+  auditRemark?: string
+  createTime: string
+  updateTime?: string
+}
+
+function toOrderItem(v: BackendOrder): OrderItem {
+  return {
+    ...v,
+    address: v.installAddress,
+    appointmentAt: v.expectedInstallDate,
+    auditBy: v.auditorId,
+    auditAt: v.auditTime,
+    remark: v.auditRemark,
+    createdAt: v.createTime,
+    updatedAt: v.updateTime
+  }
+}
+
+export async function pageOrders(params: PageQuery & { status?: OrderStatus; csId?: number | string; startTime?: string; endTime?: string }) {
+  const res = await request<PageResp<BackendOrder>>({
     url: '/orders/page',
     method: 'GET',
     params
   })
+  return {
+    list: (res?.records ?? []).map(toOrderItem),
+    total: res?.total ?? 0,
+    pageNum: res?.pageNum ?? 1,
+    pageSize: res?.pageSize ?? 10
+  } as PageResult<OrderItem>
 }
 
 export function createOrder(data: OrderCreatePayload) {
-  return request<OrderItem>({ url: '/orders', method: 'POST', data })
+  return request<number | string>({ url: '/orders', method: 'POST', data })
 }
 
-export function getOrderDetail(id: number | string) {
-  return request<OrderItem & { timeline: OrderTimelineItem[]; customer?: any; workorder?: any }>({
+export async function getOrderDetail(id: number | string) {
+  const detail = await request<any>({
     url: `/orders/${id}`,
     method: 'GET'
   })
+  const order = toOrderItem(detail.order)
+  return {
+    ...order,
+    customerName: detail.customer?.name || order.customerName,
+    customerPhone: detail.customer?.phone,
+    customer: detail.customer ? { ...detail.customer, idCard: detail.customer.idCardNo } : undefined,
+    appointmentAt: detail.appointment?.appointmentTime || order.appointmentAt,
+    contactPhone: detail.appointment?.contactPhone,
+    timeline: (detail.timeline || []).map((t: any, index: number) => ({
+      id: `${id}-${index}`,
+      orderId: id,
+      action: t.eventType || t.description,
+      operator: t.operatorName,
+      operatorName: t.operatorName,
+      remark: t.description,
+      createdAt: t.eventTime
+    })) as OrderTimelineItem[]
+  }
 }
 
 export function auditOrder(id: number | string, data: AuditPayload) {
@@ -45,7 +104,7 @@ export function auditOrder(id: number | string, data: AuditPayload) {
 }
 
 export function cancelOrder(id: number | string, remark?: string) {
-  return request<void>({ url: `/orders/${id}/cancel`, method: 'POST', data: { remark } })
+  return request<void>({ url: `/orders/${id}/cancel`, method: 'POST', data: { reason: remark || 'Cancelled by operator' } })
 }
 
 export function orderTimeline(id: number | string) {

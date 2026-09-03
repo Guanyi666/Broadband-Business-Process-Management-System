@@ -19,6 +19,7 @@ const menuDialogVisible = ref(false)
 const menuTarget = ref<RoleInfo | null>(null)
 const menuTree = ref<MenuNode[]>([])
 const checkedKeys = ref<any[]>([])
+const treeRef = ref<any>()
 
 async function fetchData() {
   loading.value = true
@@ -78,7 +79,9 @@ async function openAssignMenus(row: RoleInfo) {
 
 async function onSaveMenus() {
   if (!menuTarget.value) return
-  await assignMenus(menuTarget.value.id, checkedKeys.value)
+  const checked = treeRef.value?.getCheckedKeys?.() ?? checkedKeys.value
+  const halfChecked = treeRef.value?.getHalfCheckedKeys?.() ?? []
+  await assignMenus(menuTarget.value.id, [...new Set([...checked, ...halfChecked])])
   ElMessage.success('Menus updated')
   menuDialogVisible.value = false
 }
@@ -153,7 +156,7 @@ async function onSaveMenus() {
 
     <el-dialog v-model="menuDialogVisible" :title="`Assign Menus - ${menuTarget?.name || ''}`" width="520px">
       <el-tree
-        ref="(el: any) => treeRef = el"
+        ref="treeRef"
         :data="menuTree"
         :props="{ children: 'children', label: 'name' }"
         show-checkbox

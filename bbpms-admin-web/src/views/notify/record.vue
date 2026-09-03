@@ -18,8 +18,9 @@ const query = reactive({
 
 const sendDialog = ref(false)
 const sendForm = reactive({
-  phones: '',
-  content: ''
+  phone: '',
+  templateCode: '',
+  params: '{}'
 })
 
 async function fetchData() {
@@ -39,16 +40,23 @@ function onSearch() { query.pageNum = 1; fetchData() }
 function onReset() { query.channel = ''; query.status = ''; query.pageNum = 1; fetchData() }
 
 async function onSend() {
-  const phones = sendForm.phones.split(/[,;\n]/).map((s) => s.trim()).filter(Boolean)
-  if (!phones.length || !sendForm.content) {
-    ElMessage.warning('Please enter phones and content')
+  if (!sendForm.phone || !sendForm.templateCode) {
+    ElMessage.warning('Please enter a phone number and template code')
     return
   }
-  const r = await sendSms({ phones, content: sendForm.content })
-  ElMessage.success(`Sent: ${r.success}, Failed: ${r.failed}`)
+  let params: Record<string, any>
+  try {
+    params = JSON.parse(sendForm.params || '{}')
+  } catch {
+    ElMessage.warning('Template parameters must be valid JSON')
+    return
+  }
+  const r = await sendSms({ phone: sendForm.phone, templateCode: sendForm.templateCode, params })
+  ElMessage.success(`Message status: ${r.status}`)
   sendDialog.value = false
-  sendForm.phones = ''
-  sendForm.content = ''
+  sendForm.phone = ''
+  sendForm.templateCode = ''
+  sendForm.params = '{}'
   fetchData()
 }
 </script>
@@ -111,11 +119,14 @@ async function onSend() {
 
     <el-dialog v-model="sendDialog" title="Send SMS" width="520px">
       <el-form :model="sendForm" label-width="100px">
-        <el-form-item label="Phones">
-          <el-input v-model="sendForm.phones" type="textarea" :rows="3" placeholder="Comma or newline separated" />
+        <el-form-item label="Phone">
+          <el-input v-model="sendForm.phone" placeholder="Mobile phone number" />
         </el-form-item>
-        <el-form-item label="Content">
-          <el-input v-model="sendForm.content" type="textarea" :rows="5" />
+        <el-form-item label="Template">
+          <el-input v-model="sendForm.templateCode" placeholder="e.g. ORDER_CREATED" />
+        </el-form-item>
+        <el-form-item label="Parameters">
+          <el-input v-model="sendForm.params" type="textarea" :rows="5" placeholder='{"name":"Alice"}' />
         </el-form-item>
       </el-form>
       <template #footer>

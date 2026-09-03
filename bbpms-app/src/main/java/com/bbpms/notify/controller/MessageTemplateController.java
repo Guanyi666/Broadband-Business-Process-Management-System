@@ -1,8 +1,10 @@
 package com.bbpms.notify.controller;
 import com.bbpms.common.result.R;
 import com.bbpms.notify.dto.MessageTemplateCreateReq;
+import com.bbpms.notify.dto.MessageTemplatePageReq;
 import com.bbpms.notify.entity.MessageTemplate;
 import com.bbpms.notify.service.MessageTemplateService;
+import com.bbpms.common.result.PageResp;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -37,5 +39,10 @@ public class MessageTemplateController {
     @GetMapping
     public R<List<MessageTemplate>> list() {
         return R.ok(templateService.listEnabled());
+    }
+    @GetMapping("/page")
+    @PreAuthorize("hasAuthority('notify:view')")
+    public R<PageResp<MessageTemplate>> page(MessageTemplatePageReq req) {
+        return R.ok(templateService.page(req));
     }
 }

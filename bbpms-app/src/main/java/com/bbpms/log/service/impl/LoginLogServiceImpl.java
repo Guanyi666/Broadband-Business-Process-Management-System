@@ -20,6 +20,9 @@ public class LoginLogServiceImpl extends ServiceImpl<LoginLogMapper, LoginLog> i
         LambdaQueryWrapper<LoginLog> qw = new LambdaQueryWrapper<>();
         if (req.getUserId() != null) qw.eq(LoginLog::getUserId, req.getUserId());
         if (req.getUsername() != null && !req.getUsername().isBlank()) qw.like(LoginLog::getUsername, req.getUsername());
+        if (req.getStatus() != null) qw.eq(LoginLog::getStatus, req.getStatus());
+        if (req.getStartTime() != null) qw.ge(LoginLog::getCreateTime, req.getStartTime());
+        if (req.getEndTime() != null) qw.le(LoginLog::getCreateTime, req.getEndTime());
         qw.orderByDesc(LoginLog::getCreateTime);
         Page<LoginLog> result = baseMapper.selectPage(page, qw);
         PageResp<LoginLog> resp = new PageResp<>();

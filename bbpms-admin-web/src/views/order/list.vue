@@ -24,12 +24,13 @@ const query = reactive({
 })
 
 const statusOptions: { label: string; value: OrderStatus }[] = [
-  { label: 'Pending', value: 'PENDING' },
-  { label: 'Approved', value: 'AUDIT_PASS' },
-  { label: 'Rejected', value: 'AUDIT_REJECT' },
+  { label: 'Created', value: 'CREATED' },
+  { label: 'Audited', value: 'AUDITED' },
+  { label: 'Waiting Dispatch', value: 'WAIT_DISPATCH' },
   { label: 'Dispatched', value: 'DISPATCHED' },
   { label: 'Installing', value: 'INSTALLING' },
-  { label: 'Done', value: 'DONE' },
+  { label: 'Finished', value: 'FINISHED' },
+  { label: 'Closed', value: 'CLOSED' },
   { label: 'Cancelled', value: 'CANCELLED' }
 ]
 
@@ -42,7 +43,10 @@ async function fetchData() {
       keyword: query.keyword
     }
     if (activeTab.value !== 'ALL') params.status = activeTab.value
-    if (query.dateRange?.length === 2) params.dateRange = query.dateRange
+    if (query.dateRange?.length === 2) {
+      params.startTime = `${query.dateRange[0]} 00:00:00`
+      params.endTime = `${query.dateRange[1]} 23:59:59`
+    }
     const res = await pageOrders(params)
     list.value = res.list
     total.value = res.total
@@ -101,16 +105,16 @@ onMounted(fetchData)
     <div class="app-card">
       <el-tabs v-model="activeTab" class="mb-16">
         <el-tab-pane label="All" name="ALL" />
-        <el-tab-pane label="Pending" name="PENDING" />
-        <el-tab-pane label="Approved" name="AUDIT_PASS" />
+        <el-tab-pane label="Created" name="CREATED" />
+        <el-tab-pane label="Waiting Dispatch" name="WAIT_DISPATCH" />
         <el-tab-pane label="Installing" name="INSTALLING" />
-        <el-tab-pane label="Done" name="DONE" />
+        <el-tab-pane label="Finished" name="FINISHED" />
       </el-tabs>
 
       <div class="page-toolbar">
         <div class="flex" style="gap: 8px; flex-wrap: wrap">
           <el-input v-model="query.keyword" placeholder="Order No / Customer" clearable style="width: 240px" @keyup.enter="onSearch" />
-          <el-date-picker v-model="query.dateRange" type="daterange" range-separator="-" start-placeholder="From" end-placeholder="To" />
+          <el-date-picker v-model="query.dateRange" type="daterange" value-format="YYYY-MM-DD" range-separator="-" start-placeholder="From" end-placeholder="To" />
           <el-button type="primary" @click="onSearch">Search</el-button>
           <el-button @click="onReset">Reset</el-button>
         </div>
@@ -132,8 +136,8 @@ onMounted(fetchData)
         </el-table-column>
         <el-table-column label="Action" width="200" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button link type="primary" @click.stop="onAudit(row)" v-if="row.status === 'PENDING'">Audit</el-button>
-            <el-button link type="danger" @click.stop="onCancel(row)" v-if="['PENDING','AUDIT_PASS'].includes(row.status)">Cancel</el-button>
+            <el-button link type="primary" @click.stop="onAudit(row)" v-if="row.status === 'CREATED'">Audit</el-button>
+            <el-button link type="danger" @click.stop="onCancel(row)" v-if="['CREATED','AUDITED','WAIT_DISPATCH'].includes(row.status)">Cancel</el-button>
             <el-button link @click.stop="onRowClick(row)">Detail</el-button>
           </template>
         </el-table-column>

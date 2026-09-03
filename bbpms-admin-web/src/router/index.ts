@@ -3,6 +3,7 @@ import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 import { useAuthStore } from '@/stores/auth'
 import { getToken } from '@/utils/auth'
+import { ElMessage } from 'element-plus'
 
 NProgress.configure({ showSpinner: false })
 
@@ -154,29 +155,29 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/system',
     component: Layout,
-    redirect: '/user',
+    redirect: '/system/user',
     meta: { title: 'System', icon: 'Setting', requiresAuth: true, roles: ['SUPER_ADMIN'] },
     children: [
       {
-        path: '/user',
+        path: 'user',
         name: 'UserList',
         component: () => import('@/views/user/list.vue'),
         meta: { title: 'Users', icon: 'UserFilled', requiresAuth: true, permission: 'system:user:view' }
       },
       {
-        path: '/role',
+        path: 'role',
         name: 'RoleList',
         component: () => import('@/views/role/list.vue'),
         meta: { title: 'Roles', icon: 'Avatar', requiresAuth: true, permission: 'system:role:view' }
       },
       {
-        path: '/menu',
+        path: 'menu',
         name: 'MenuList',
         component: () => import('@/views/menu/list.vue'),
         meta: { title: 'Menus', icon: 'Menu', requiresAuth: true, permission: 'system:menu:view' }
       },
       {
-        path: '/dept',
+        path: 'dept',
         name: 'DeptList',
         component: () => import('@/views/dept/list.vue'),
         meta: { title: 'Departments', icon: 'OfficeBuilding', requiresAuth: true, permission: 'system:dept:view' }
@@ -310,6 +311,26 @@ const routes: RouteRecordRaw[] = [
     ]
   },
   {
+    path: '/user',
+    redirect: '/system/user',
+    meta: { requiresAuth: true, hideInMenu: true }
+  },
+  {
+    path: '/role',
+    redirect: '/system/role',
+    meta: { requiresAuth: true, hideInMenu: true }
+  },
+  {
+    path: '/menu',
+    redirect: '/system/menu',
+    meta: { requiresAuth: true, hideInMenu: true }
+  },
+  {
+    path: '/dept',
+    redirect: '/system/dept',
+    meta: { requiresAuth: true, hideInMenu: true }
+  },
+  {
     path: '/403',
     component: () => import('@/views/error/403.vue'),
     meta: { title: 'Forbidden', hideInMenu: true, requiresAuth: false }
@@ -376,6 +397,12 @@ router.beforeEach(async (to, _from, next) => {
 
 router.afterEach(() => {
   NProgress.done()
+})
+
+router.onError((error) => {
+  NProgress.done()
+  console.error('Router error', error)
+  ElMessage.error('Page resource failed to load. Please refresh and try again.')
 })
 
 export default router

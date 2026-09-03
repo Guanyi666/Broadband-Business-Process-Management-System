@@ -14,7 +14,7 @@ const query = reactive({ pageNum: 1, pageSize: 10, keyword: '' })
 const dialogVisible = ref(false)
 const editing = ref<NotifyTemplate | null>(null)
 const form = reactive<Partial<NotifyTemplate>>({
-  code: '', name: '', channel: 'SMS', subject: '', content: '', variables: '', status: 1
+  code: '', channel: 'SMS', subject: '', content: '', status: 1
 })
 
 async function fetchData() {
@@ -35,7 +35,7 @@ function onReset() { query.keyword = ''; query.pageNum = 1; fetchData() }
 
 function openCreate() {
   editing.value = null
-  Object.assign(form, { code: '', name: '', channel: 'SMS', subject: '', content: '', variables: '', status: 1 })
+  Object.assign(form, { code: '', channel: 'SMS', subject: '', content: '', status: 1 })
   dialogVisible.value = true
 }
 
@@ -59,7 +59,7 @@ async function onSave() {
 
 async function onDelete(row: NotifyTemplate) {
   try {
-    await ElMessageBox.confirm(`Delete template ${row.name}?`, 'Confirm', { type: 'warning' })
+    await ElMessageBox.confirm(`Delete template ${row.code}?`, 'Confirm', { type: 'warning' })
   } catch { return }
   await deleteTemplate(row.id)
   ElMessage.success('Deleted')
@@ -78,7 +78,7 @@ async function onDelete(row: NotifyTemplate) {
     <div class="app-card">
       <div class="page-toolbar">
         <div class="flex" style="gap: 8px">
-          <el-input v-model="query.keyword" placeholder="Code / Name" clearable style="width: 240px" @keyup.enter="onSearch" />
+          <el-input v-model="query.keyword" placeholder="Code / Subject / Content" clearable style="width: 240px" @keyup.enter="onSearch" />
           <el-button type="primary" @click="onSearch">Search</el-button>
           <el-button @click="onReset">Reset</el-button>
         </div>
@@ -86,7 +86,6 @@ async function onDelete(row: NotifyTemplate) {
 
       <el-table v-loading="loading" :data="list" stripe>
         <el-table-column prop="code" label="Code" width="160" />
-        <el-table-column prop="name" label="Name" width="160" />
         <el-table-column prop="channel" label="Channel" width="100" />
         <el-table-column prop="subject" label="Subject" width="180" show-overflow-tooltip />
         <el-table-column prop="content" label="Content" show-overflow-tooltip />
@@ -123,17 +122,15 @@ async function onDelete(row: NotifyTemplate) {
     <el-dialog v-model="dialogVisible" :title="editing ? 'Edit Template' : 'Add Template'" width="640px">
       <el-form :model="form" label-width="100px">
         <el-form-item label="Code"><el-input v-model="form.code" /></el-form-item>
-        <el-form-item label="Name"><el-input v-model="form.name" /></el-form-item>
         <el-form-item label="Channel">
           <el-select v-model="form.channel">
             <el-option value="SMS" label="SMS" />
             <el-option value="WECHAT" label="WeChat" />
-            <el-option value="APP_PUSH" label="App Push" />
+            <el-option value="INAPP" label="In-app" />
           </el-select>
         </el-form-item>
         <el-form-item label="Subject"><el-input v-model="form.subject" /></el-form-item>
         <el-form-item label="Content"><el-input v-model="form.content" type="textarea" :rows="5" /></el-form-item>
-        <el-form-item label="Variables"><el-input v-model="form.variables" placeholder="e.g. name,orderNo" /></el-form-item>
         <el-form-item label="Status">
           <el-radio-group v-model="form.status">
             <el-radio :value="1">Enabled</el-radio>

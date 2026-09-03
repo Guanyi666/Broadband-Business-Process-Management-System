@@ -10,7 +10,8 @@ import router from '@/router'
 
 export interface ApiResponse<T = unknown> {
   code: number
-  message: string
+  msg?: string
+  message?: string
   data: T
   success: boolean
 }
@@ -44,10 +45,11 @@ service.interceptors.response.use(
       }
       if (res.code === 401) {
         handleUnauthorized()
-        return Promise.reject(new Error(res.message || 'Unauthenticated'))
+        return Promise.reject(new Error(res.msg || res.message || 'Unauthenticated'))
       }
-      ElMessage.error(res.message || 'Request failed')
-      return Promise.reject(new Error(res.message || 'Request failed'))
+      const message = res.msg || res.message || 'Request failed'
+      ElMessage.error(message)
+      return Promise.reject(new Error(message))
     }
     return res as any
   },
@@ -56,7 +58,7 @@ service.interceptors.response.use(
     if (status === 401) {
       handleUnauthorized()
     } else {
-      const msg = error?.response?.data?.message || error.message || 'Network error'
+      const msg = error?.response?.data?.msg || error?.response?.data?.message || error.message || 'Network error'
       ElMessage.error(msg)
     }
     return Promise.reject(error)

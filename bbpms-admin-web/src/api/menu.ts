@@ -6,11 +6,26 @@ export function listMenuTree() {
 }
 
 export function createMenu(data: Partial<MenuNode>) {
-  return request<MenuNode>({ url: '/menus', method: 'POST', data })
+  return request<number | string>({ url: '/menus', method: 'POST', data: toBackendMenu(data) })
 }
 
 export function updateMenu(id: number | string, data: Partial<MenuNode>) {
-  return request<void>({ url: `/menus/${id}`, method: 'PUT', data })
+  return request<void>({ url: `/menus/${id}`, method: 'PUT', data: toBackendMenu(data) })
+}
+
+function toBackendMenu(data: Partial<MenuNode>) {
+  return {
+    parentId: data.parentId,
+    menuName: data.name,
+    menuType: data.type == null ? undefined : String(data.type),
+    path: data.path,
+    component: data.component,
+    perms: data.perm,
+    icon: data.icon,
+    sortOrder: data.sort,
+    visible: data.visible === false ? 0 : 1,
+    status: data.status
+  }
 }
 
 export function deleteMenu(id: number | string) {

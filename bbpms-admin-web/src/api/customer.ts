@@ -55,3 +55,7 @@ export function searchCustomers(keyword: string, limit = 20) {
     params: { keyword, limit }
   })
 }
+
+export function createCustomer(data: Pick<Customer, 'name' | 'phone'> & Partial<Customer>) {
+  return request<number | string>({ url: '/customers', method: 'POST', data })
+}

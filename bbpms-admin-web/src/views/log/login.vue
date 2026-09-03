@@ -19,7 +19,10 @@ async function fetchData() {
   loading.value = true
   try {
     const params: any = { pageNum: query.pageNum, pageSize: query.pageSize, username: query.username, status: query.status }
-    if (query.dateRange?.length === 2) params.dateRange = query.dateRange
+    if (query.dateRange?.length === 2) {
+      params.startTime = `${query.dateRange[0]} 00:00:00`
+      params.endTime = `${query.dateRange[1]} 23:59:59`
+    }
     const res = await pageLoginLogs(params)
     list.value = res.list
     total.value = res.total
@@ -48,7 +51,7 @@ function onReset() {
             <el-option value="SUCCESS" label="Success" />
             <el-option value="FAILED" label="Failed" />
           </el-select>
-          <el-date-picker v-model="query.dateRange" type="daterange" range-separator="-" start-placeholder="From" end-placeholder="To" />
+          <el-date-picker v-model="query.dateRange" type="daterange" value-format="YYYY-MM-DD" range-separator="-" start-placeholder="From" end-placeholder="To" />
           <el-button type="primary" @click="onSearch">Search</el-button>
           <el-button @click="onReset">Reset</el-button>
         </div>
@@ -57,7 +60,8 @@ function onReset() {
       <el-table v-loading="loading" :data="list" stripe>
         <el-table-column prop="username" label="Username" width="160" />
         <el-table-column prop="ip" label="IP" width="160" />
-        <el-table-column prop="userAgent" label="User-Agent" show-overflow-tooltip />
+        <el-table-column prop="location" label="Location" width="140" />
+        <el-table-column prop="terminal" label="Terminal" min-width="160" show-overflow-tooltip />
         <el-table-column label="Status" width="100">
           <template #default="{ row }">
             <el-tag :type="row.status === 'SUCCESS' ? 'success' : 'danger'">{{ row.status }}</el-tag>

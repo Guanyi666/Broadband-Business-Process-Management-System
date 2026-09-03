@@ -43,9 +43,9 @@ function onReassign() {
   router.push({ path: '/workorder/dispatch-board', query: { orderId: route.params.id } })
 }
 
-const canAudit = computed(() => detail.value?.status === 'PENDING')
-const canCancel = computed(() => ['PENDING', 'AUDIT_PASS'].includes(detail.value?.status))
-const canReassign = computed(() => detail.value?.status === 'AUDIT_PASS' && !detail.value?.workorder)
+const canAudit = computed(() => detail.value?.status === 'CREATED')
+const canCancel = computed(() => ['CREATED', 'AUDITED', 'WAIT_DISPATCH'].includes(detail.value?.status))
+const canReassign = computed(() => ['AUDITED', 'WAIT_DISPATCH'].includes(detail.value?.status))
 </script>
 
 <template>

@@ -19,6 +19,8 @@ export interface LoginLog {
   username: string
   ip?: string
   userAgent?: string
+  location?: string
+  terminal?: string
   status: 'SUCCESS' | 'FAILED'
   message?: string
   createdAt: string

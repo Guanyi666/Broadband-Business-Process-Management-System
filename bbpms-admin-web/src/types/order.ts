@@ -1,4 +1,4 @@
-export type OrderStatus = 'PENDING' | 'AUDIT_PASS' | 'AUDIT_REJECT' | 'DISPATCHED' | 'INSTALLING' | 'DONE' | 'CANCELLED'
+export type OrderStatus = 'CREATED' | 'AUDITED' | 'WAIT_DISPATCH' | 'DISPATCHED' | 'INSTALLING' | 'FINISHED' | 'CLOSED' | 'CANCELLED'
 
 export interface OrderItem {
   id: number | string

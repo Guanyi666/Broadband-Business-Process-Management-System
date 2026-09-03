@@ -264,6 +264,51 @@ INSERT IGNORE INTO `customer` (`id`, `name`, `phone`, `address`, `province`, `ci
 (1, '张三', '13900000001', '北京市朝阳区建国路1号', '北京市', '北京市', '朝阳区', 39.929000, 116.430000, 'BJ-CY-001'),
 (2, '李四', '13900000002', '北京市海淀区中关村大街1号', '北京市', '北京市', '海淀区', 39.984000, 116.310000, 'BJ-HD-001');
 
+INSERT IGNORE INTO `customer` (`id`, `name`, `phone`, `address`, `province`, `city`, `district`, `lat`, `lng`, `grid_code`) VALUES
+(3, '王芳', '13900000003', '北京市朝阳区望京街10号', '北京市', '北京市', '朝阳区', 39.996200, 116.480600, 'BJ-CY-002'),
+(4, '赵伟', '13900000004', '北京市昌平区回龙观东大街8号', '北京市', '北京市', '昌平区', 40.073300, 116.336900, 'BJ-CP-001'),
+(5, '陈晨', '13900000005', '北京市顺义区新顺南大街12号', '北京市', '北京市', '顺义区', 40.128900, 116.654600, 'BJ-SY-001'),
+(6, '刘洋', '13900000006', '北京市海淀区学院路20号', '北京市', '北京市', '海淀区', 39.987100, 116.352500, 'BJ-HD-002');
+
+-- ----------------------------------------------------------------------------
+-- Demo Orders / Workorders
+-- Covers typical packages, lifecycle states, customers, dates and progress.
+-- ----------------------------------------------------------------------------
+INSERT IGNORE INTO `broadband_order`
+    (`id`, `order_no`, `customer_id`, `package_code`, `package_name`, `install_address`,
+     `expected_install_date`, `status`, `cs_id`, `auditor_id`, `audit_time`, `audit_remark`,
+     `dispatch_time`, `completed_time`, `cancelled_time`, `cancel_reason`, `create_time`, `update_time`) VALUES
+(1001, 'BBDEMO20260001', 1, 'PKG_100M', '100M Broadband', '北京市朝阳区建国路1号', NOW() + INTERVAL 1 DAY, 'CREATED',       2, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NOW() - INTERVAL 1 HOUR, NOW() - INTERVAL 1 HOUR),
+(1002, 'BBDEMO20260002', 2, 'PKG_300M', '300M Broadband', '北京市海淀区中关村大街1号', NOW() + INTERVAL 1 DAY, 'WAIT_DISPATCH', 2, 4, NOW() - INTERVAL 3 HOUR, '资料完整，审核通过', NULL, NULL, NULL, NULL, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 3 HOUR),
+(1003, 'BBDEMO20260003', 3, 'PKG_500M', '500M Broadband', '北京市朝阳区望京街10号', NOW() + INTERVAL 2 DAY, 'DISPATCHED',    3, 4, NOW() - INTERVAL 1 DAY, '审核通过', NOW() - INTERVAL 6 HOUR, NULL, NULL, NULL, NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 6 HOUR),
+(1004, 'BBDEMO20260004', 4, 'PKG_1G',   '1G Broadband',   '北京市昌平区回龙观东大街8号', NOW() + INTERVAL 4 HOUR, 'INSTALLING', 2, 4, NOW() - INTERVAL 2 DAY, '加急安装', NOW() - INTERVAL 1 DAY, NULL, NULL, NULL, NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 2 HOUR),
+(1005, 'BBDEMO20260005', 5, 'PKG_300M', '300M Broadband', '北京市顺义区新顺南大街12号', NOW() - INTERVAL 1 DAY, 'FINISHED',    3, 4, NOW() - INTERVAL 4 DAY, '审核通过', NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 1 DAY, NULL, NULL, NOW() - INTERVAL 5 DAY, NOW() - INTERVAL 1 DAY),
+(1006, 'BBDEMO20260006', 6, 'PKG_500M', '500M Broadband', '北京市海淀区学院路20号', NOW() - INTERVAL 6 DAY, 'CLOSED',       2, 4, NOW() - INTERVAL 9 DAY, '审核通过', NOW() - INTERVAL 8 DAY, NOW() - INTERVAL 6 DAY, NULL, NULL, NOW() - INTERVAL 10 DAY, NOW() - INTERVAL 5 DAY),
+(1007, 'BBDEMO20260007', 1, 'PKG_1G',   '1G Broadband',   '北京市朝阳区建国路1号', NOW() + INTERVAL 3 DAY, 'CANCELLED',    2, NULL, NULL, NULL, NULL, NULL, NOW() - INTERVAL 2 DAY, '客户变更安装计划', NOW() - INTERVAL 4 DAY, NOW() - INTERVAL 2 DAY),
+(1008, 'BBDEMO20260008', 3, 'PKG_100M', '100M Broadband', '北京市朝阳区望京街10号', NOW() + INTERVAL 1 DAY, 'AUDITED',      3, 4, NOW() - INTERVAL 30 MINUTE, '等待调度处理', NULL, NULL, NULL, NULL, NOW() - INTERVAL 2 HOUR, NOW() - INTERVAL 30 MINUTE);
+
+INSERT IGNORE INTO `appointment`
+    (`id`, `order_id`, `appointment_time`, `contact_phone`, `remark`, `confirmed`, `create_time`, `update_time`) VALUES
+(1101, 1001, NOW() + INTERVAL 1 DAY, '13900000001', '工作日上门', 0, NOW() - INTERVAL 1 HOUR, NOW() - INTERVAL 1 HOUR),
+(1102, 1002, NOW() + INTERVAL 1 DAY, '13900000002', '提前电话联系', 1, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 3 HOUR),
+(1103, 1003, NOW() + INTERVAL 2 DAY, '13900000003', '物业已报备', 1, NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 6 HOUR),
+(1104, 1004, NOW() + INTERVAL 4 HOUR, '13900000004', '加急工单', 1, NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 2 HOUR),
+(1105, 1005, NOW() - INTERVAL 1 DAY, '13900000005', '已完成', 1, NOW() - INTERVAL 5 DAY, NOW() - INTERVAL 1 DAY),
+(1106, 1006, NOW() - INTERVAL 6 DAY, '13900000006', '已归档', 1, NOW() - INTERVAL 10 DAY, NOW() - INTERVAL 5 DAY);
+
+INSERT IGNORE INTO `work_order`
+    (`id`, `work_no`, `order_id`, `installer_id`, `dispatcher_id`, `status`, `dispatch_time`,
+     `accept_time`, `start_time`, `finish_time`, `install_address`, `customer_phone`, `package_name`,
+     `priority`, `expected_finish_time`, `last_active_at`, `create_time`, `update_time`) VALUES
+(2002, 'WODEMO20260002', 1002, NULL, 5, 'PENDING', NULL, NULL, NULL, NULL, '北京市海淀区中关村大街1号', '13900000002', '300M Broadband', 3, NOW() + INTERVAL 1 DAY, NULL, NOW() - INTERVAL 3 HOUR, NOW() - INTERVAL 3 HOUR),
+(2003, 'WODEMO20260003', 1003, 6, 5, 'DISPATCHED', NOW() - INTERVAL 6 HOUR, NULL, NULL, NULL, '北京市朝阳区望京街10号', '13900000003', '500M Broadband', 3, NOW() + INTERVAL 1 DAY, NOW() - INTERVAL 10 MINUTE, NOW() - INTERVAL 6 HOUR, NOW() - INTERVAL 10 MINUTE),
+(2004, 'WODEMO20260004', 1004, 7, 5, 'IN_PROGRESS', NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 22 HOUR, NOW() - INTERVAL 2 HOUR, NULL, '北京市昌平区回龙观东大街8号', '13900000004', '1G Broadband', 1, NOW() + INTERVAL 4 HOUR, NOW() - INTERVAL 5 MINUTE, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 5 MINUTE),
+(2005, 'WODEMO20260005', 1005, 8, 5, 'COMPLETED', NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 3 DAY + INTERVAL 20 MINUTE, NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 1 DAY, '北京市顺义区新顺南大街12号', '13900000005', '300M Broadband', 3, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 1 DAY),
+(2006, 'WODEMO20260006', 1006, 9, 5, 'COMPLETED', NOW() - INTERVAL 8 DAY, NOW() - INTERVAL 8 DAY + INTERVAL 50 MINUTE, NOW() - INTERVAL 7 DAY, NOW() - INTERVAL 6 DAY, '北京市海淀区学院路20号', '13900000006', '500M Broadband', 2, NOW() - INTERVAL 6 DAY, NOW() - INTERVAL 6 DAY, NOW() - INTERVAL 8 DAY, NOW() - INTERVAL 6 DAY);
+
+-- Keep a few installers online so the dispatch board and map are demonstrable.
+UPDATE `installer_profile` SET `on_duty` = 1 WHERE `user_id` IN (6, 7, 9);
+
 -- ----------------------------------------------------------------------------
 -- Dispatch Rule (default)
 -- ----------------------------------------------------------------------------

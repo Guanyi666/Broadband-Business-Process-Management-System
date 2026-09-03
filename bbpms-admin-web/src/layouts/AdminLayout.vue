@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { useAuthStore } from '@/stores/auth'
 import { useFullscreen } from '@vueuse/core'
-import { ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import SidebarItem from './components/SidebarItem.vue'
 import {
   Fold,
@@ -30,8 +30,14 @@ const breadcrumbs = computed(() =>
 
 const activeMenu = computed(() => route.path)
 
-function onMenuSelect(index: string) {
-  router.push(index)
+async function onMenuSelect(index: string) {
+  if (route.path === index) return
+  try {
+    await router.push(index)
+  } catch (error) {
+    console.error('Navigation failed', error)
+    ElMessage.error('Page could not be opened. Please retry.')
+  }
 }
 
 function goProfile() {
@@ -218,10 +224,10 @@ export const staticMenus: MenuConfig[] = [
     title: 'System',
     icon: 'Setting',
     children: [
-      { path: '/user', title: 'Users', icon: 'UserFilled' },
-      { path: '/role', title: 'Roles', icon: 'Avatar' },
-      { path: '/menu', title: 'Menus', icon: 'Menu' },
-      { path: '/dept', title: 'Departments', icon: 'OfficeBuilding' }
+      { path: '/system/user', title: 'Users', icon: 'UserFilled' },
+      { path: '/system/role', title: 'Roles', icon: 'Avatar' },
+      { path: '/system/menu', title: 'Menus', icon: 'Menu' },
+      { path: '/system/dept', title: 'Departments', icon: 'OfficeBuilding' }
     ]
   },
   {
