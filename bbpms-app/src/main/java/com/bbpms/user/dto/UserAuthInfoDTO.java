@@ -22,4 +22,8 @@ public class UserAuthInfoDTO {
     private List<String> permissions;
 
     private Integer dataScope;
+
+    /** Department of the user (sys_user.dept_id) — carried into the JWT so the
+     *  DataScopeInnerInterceptor can build DEPT / DEPT_AND_CHILD filters later. */
+    private Long deptId;
 }

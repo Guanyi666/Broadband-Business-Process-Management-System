@@ -13,6 +13,9 @@ import org.apache.ibatis.reflection.MetaObject;
 import org.apache.ibatis.reflection.SystemMetaObject;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Map;
 
 /**
@@ -25,10 +28,19 @@ import java.util.Map;
  * {@code dept_id} which no business table has). Scope values (sys_role.data_scope):
  * 1=ALL, 2=DEPT, 3=DEPT_AND_CHILD, 4=SELF, 5=CUSTOM.
  *
- * <p>This release implements <b>SELF only</b> ({@code create_by = userId}).
- * DEPT / CUSTOM scopes need the business tables to carry a dept column (not in
- * the current schema) and are skipped with a warning rather than emitting
- * invalid SQL. The seed data uses 1 (SUPER_ADMIN) and 4 (every other role).
+ * <p>Business tables do not carry a {@code dept_id} column, so DEPT /
+ * DEPT_AND_CHILD are implemented with a sub-select over
+ * {@code sys_user.dept_id} (the creator's department) resolved from the
+ * caller's {@code dept_id} (JWT {@code dept} claim):
+ * <ul>
+ *   <li>DEPT(2): {@code create_by IN (SELECT id FROM sys_user WHERE dept_id = ?)}</li>
+ *   <li>DEPT_AND_CHILD(3): the department {@code sys_dept.path} is looked up,
+ *       then {@code dept_id IN (SELECT id FROM sys_dept WHERE path = ? OR path LIKE ?)}
+ *       covers the whole sub-tree.</li>
+ * </ul>
+ * System-created rows (auto dispatch, async listeners, schedulers) run without a
+ * SecurityContext, so AutoFillHandler leaves {@code create_by} NULL — they must
+ * remain visible to everyone, exactly like the SELF clause's {@code IS NULL} escape.
  */
 @Slf4j
 public class DataScopeInnerInterceptor implements InnerInterceptor {
@@ -44,6 +56,8 @@ public class DataScopeInnerInterceptor implements InnerInterceptor {
 
     /** data_scope values (see sys_role.data_scope comment). */
     private static final int SCOPE_ALL = 1;
+    private static final int SCOPE_DEPT = 2;
+    private static final int SCOPE_DEPT_AND_CHILD = 3;
     private static final int SCOPE_SELF = 4;
 
     @Override
@@ -65,19 +79,59 @@ public class DataScopeInnerInterceptor implements InnerInterceptor {
         Integer scope = user.getDataScope();
         if (scope == null || scope == SCOPE_ALL) return; // ALL — no filter
 
-        if (scope != SCOPE_SELF) {
-            log.warn("DataScope: scope={} on {} is unsupported (no dept column on business tables); skipping filter",
-                    scope, ms.getId());
-            return;
+        String clause;
+        switch (scope) {
+            case SCOPE_SELF -> {
+                // System-created rows (auto dispatch, async listeners, schedulers) run
+                // without a SecurityContext, so AutoFillHandler leaves create_by NULL.
+                // They belong to nobody — treat them as visible to everyone within the
+                // caller's scope, otherwise e.g. dispatchers would never see AUTO
+                // dispatch records (SA-P2-004 regression).
+                clause = "(" + alias + "create_by = " + user.getUserId()
+                        + " OR " + alias + "create_by IS NULL)";
+            }
+            case SCOPE_DEPT -> {
+                if (user.getDeptId() == null) {
+                    log.warn("DataScope: scope=DEPT but caller {} has no dept_id; skipping filter",
+                            user.getUserId());
+                    return;
+                }
+                String deptUsers = "SELECT id FROM sys_user WHERE dept_id = " + user.getDeptId()
+                        + " AND deleted = 0";
+                clause = "(" + alias + "create_by IN (" + deptUsers + ")"
+                        + " OR " + alias + "create_by IS NULL)";
+            }
+            case SCOPE_DEPT_AND_CHILD -> {
+                if (user.getDeptId() == null) {
+                    log.warn("DataScope: scope=DEPT_AND_CHILD but caller {} has no dept_id; skipping filter",
+                            user.getUserId());
+                    return;
+                }
+                String deptPath = findDeptPath(conn, user.getDeptId());
+                if (deptPath == null) {
+                    // Fail closed: without the path we cannot prove the sub-tree,
+                    // so fall back to the caller's own department users only.
+                    String ownDeptUsers = "SELECT id FROM sys_user WHERE dept_id = " + user.getDeptId()
+                            + " AND deleted = 0";
+                    clause = "(" + alias + "create_by IN (" + ownDeptUsers + ")"
+                            + " OR " + alias + "create_by IS NULL)";
+                    break;
+                }
+                String inScopeDepts = "SELECT id FROM sys_dept WHERE (path = '" + deptPath
+                        + "' OR path LIKE '" + deptPath + "%') AND deleted = 0";
+                String deptUsers = "SELECT id FROM sys_user WHERE dept_id IN (" + inScopeDepts + ")"
+                        + " AND deleted = 0";
+                clause = "(" + alias + "create_by IN (" + deptUsers + ")"
+                        + " OR " + alias + "create_by IS NULL)";
+            }
+            default -> {
+                log.warn("DataScope: scope={} on {} is unsupported (only 2=DEPT, 3=DEPT_AND_CHILD, 4=SELF "
+                        + "implemented; 5=CUSTOM needs sys_role_data_scope); skipping filter",
+                        scope, ms.getId());
+                return;
+            }
         }
 
-        // System-created rows (auto dispatch, async listeners, schedulers) run
-        // without a SecurityContext, so AutoFillHandler leaves create_by NULL.
-        // They belong to nobody — treat them as visible to everyone within the
-        // caller's scope, otherwise e.g. dispatchers would never see AUTO
-        // dispatch records (SA-P2-004 regression).
-        String clause = "(" + alias + "create_by = " + user.getUserId()
-                + " OR " + alias + "create_by IS NULL)";
         try {
             MetaObject meta = SystemMetaObject.forObject(sh);
             String orig = (String) meta.getValue("delegate.boundSql.sql");
@@ -86,6 +140,19 @@ public class DataScopeInnerInterceptor implements InnerInterceptor {
             meta.setValue("delegate.boundSql.sql", patched);
         } catch (Exception e) {
             log.warn("DataScopeInnerInterceptor patch failed for {}: {}", ms.getId(), e.getMessage());
+        }
+    }
+
+    /** Materialized path (e.g. {@code /1/2/}) of a department, or null if missing. */
+    private String findDeptPath(Connection conn, Long deptId) {
+        if (conn == null) return null;
+        try (Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(
+                     "SELECT path FROM sys_dept WHERE id = " + deptId + " AND deleted = 0")) {
+            return rs.next() ? rs.getString(1) : null;
+        } catch (SQLException e) {
+            log.warn("DataScope: failed to resolve dept path for dept_id={}: {}", deptId, e.getMessage());
+            return null;
         }
     }
 

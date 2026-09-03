@@ -36,7 +36,7 @@ public class TokenServiceImpl implements TokenService {
         long accessTtl = authProperties.getAccessTtlMinutes() * 60L;
         long refreshTtl = authProperties.getRefreshTtlDays() * 86400L;
         String accessToken = jwtUtils.generateAccessToken(info.getUserId(), info.getUsername(),
-                info.getRoles(), info.getDataScope(), info.getPermissions());
+                info.getRoles(), info.getDataScope(), info.getDeptId(), info.getPermissions());
         String refreshToken = jwtUtils.generateRefreshToken(info.getUserId(), null);
         String jti = jwtUtils.getJti(accessToken);
         Date expiresAt = jwtUtils.getExpiresAt(accessToken);

@@ -9,6 +9,7 @@ public class SecurityUser {
     private List<String> roles;
     private List<String> permissions;
     private Integer dataScope;
+    private Long deptId;
     private Long tenantId;
     private String jti;
     public SecurityUser(Long userId, String username, List<String> roles, Integer dataScope, Long tenantId) {
