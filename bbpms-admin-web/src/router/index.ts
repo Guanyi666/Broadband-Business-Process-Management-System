@@ -28,7 +28,7 @@ const routes: RouteRecordRaw[] = [
     path: '/login',
     name: 'Login',
     component: () => import('@/views/login/index.vue'),
-    meta: { title: 'Login', requiresAuth: false, hideInMenu: true }
+    meta: { title: '登录', requiresAuth: false, hideInMenu: true }
   },
   {
     path: '/',
@@ -44,7 +44,7 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'Dashboard',
         component: () => import('@/views/dashboard/index.vue'),
-        meta: { title: 'Dashboard', icon: 'DataLine', requiresAuth: true, affix: true }
+        meta: { title: '数据看板', icon: 'DataLine', requiresAuth: true, affix: true }
       }
     ]
   },
@@ -52,19 +52,19 @@ const routes: RouteRecordRaw[] = [
     path: '/customer',
     component: Layout,
     redirect: '/customer/list',
-    meta: { title: 'Customer', icon: 'User', requiresAuth: true },
+    meta: { title: '客户管理', icon: 'User', requiresAuth: true },
     children: [
       {
         path: 'list',
         name: 'CustomerList',
         component: () => import('@/views/customer/list.vue'),
-        meta: { title: 'Customer List', icon: 'List', requiresAuth: true }
+        meta: { title: '客户列表', icon: 'List', requiresAuth: true }
       },
       {
         path: 'detail/:id',
         name: 'CustomerDetail',
         component: () => import('@/views/customer/detail.vue'),
-        meta: { title: 'Customer Detail', requiresAuth: true, hideInMenu: true }
+        meta: { title: '客户详情', requiresAuth: true, hideInMenu: true }
       }
     ]
   },
@@ -72,31 +72,31 @@ const routes: RouteRecordRaw[] = [
     path: '/order',
     component: Layout,
     redirect: '/order/list',
-    meta: { title: 'Order', icon: 'Document', requiresAuth: true },
+    meta: { title: '订单管理', icon: 'Document', requiresAuth: true },
     children: [
       {
         path: 'list',
         name: 'OrderList',
         component: () => import('@/views/order/list.vue'),
-        meta: { title: 'Order List', icon: 'List', requiresAuth: true, keepAlive: true }
+        meta: { title: '订单列表', icon: 'List', requiresAuth: true, keepAlive: true }
       },
       {
         path: 'create',
         name: 'OrderCreate',
         component: () => import('@/views/order/create.vue'),
-        meta: { title: 'Create Order', icon: 'Plus', requiresAuth: true, permission: 'order:create' }
+        meta: { title: '创建订单', icon: 'Plus', requiresAuth: true, permission: 'order:create' }
       },
       {
         path: 'audit',
         name: 'OrderAudit',
         component: () => import('@/views/order/audit.vue'),
-        meta: { title: 'Audit', requiresAuth: true, hideInMenu: true }
+        meta: { title: '订单审核', requiresAuth: true, hideInMenu: true }
       },
       {
         path: 'detail/:id',
         name: 'OrderDetail',
         component: () => import('@/views/order/detail.vue'),
-        meta: { title: 'Order Detail', requiresAuth: true, hideInMenu: true }
+        meta: { title: '订单详情', requiresAuth: true, hideInMenu: true }
       }
     ]
   },
@@ -104,25 +104,25 @@ const routes: RouteRecordRaw[] = [
     path: '/workorder',
     component: Layout,
     redirect: '/workorder/list',
-    meta: { title: 'Workorder', icon: 'Tools', requiresAuth: true },
+    meta: { title: '工单管理', icon: 'Tools', requiresAuth: true },
     children: [
       {
         path: 'list',
         name: 'WorkorderList',
         component: () => import('@/views/workorder/list.vue'),
-        meta: { title: 'Workorder List', icon: 'List', requiresAuth: true }
+        meta: { title: '工单列表', icon: 'List', requiresAuth: true }
       },
       {
         path: 'dispatch-board',
         name: 'DispatchBoard',
         component: () => import('@/views/workorder/dispatch-board.vue'),
-        meta: { title: 'Dispatch Board', icon: 'Connection', requiresAuth: true, permission: 'dispatch:manual' }
+        meta: { title: '派单工作台', icon: 'Connection', requiresAuth: true, permission: 'dispatch:manual' }
       },
       {
         path: 'detail/:id',
         name: 'WorkorderDetail',
         component: () => import('@/views/workorder/detail.vue'),
-        meta: { title: 'Workorder Detail', requiresAuth: true, hideInMenu: true }
+        meta: { title: '工单详情', requiresAuth: true, hideInMenu: true }
       }
     ]
   },
@@ -130,25 +130,25 @@ const routes: RouteRecordRaw[] = [
     path: '/installer',
     component: Layout,
     redirect: '/installer/list',
-    meta: { title: 'Installer', icon: 'Avatar', requiresAuth: true },
+    meta: { title: '装维管理', icon: 'Avatar', requiresAuth: true },
     children: [
       {
         path: 'list',
         name: 'InstallerList',
         component: () => import('@/views/installer/list.vue'),
-        meta: { title: 'Installer List', icon: 'List', requiresAuth: true }
+        meta: { title: '装维列表', icon: 'List', requiresAuth: true }
       },
       {
         path: 'map',
         name: 'InstallerMap',
         component: () => import('@/views/installer/map.vue'),
-        meta: { title: 'Installer Map', icon: 'MapLocation', requiresAuth: true }
+        meta: { title: '装维地图', icon: 'MapLocation', requiresAuth: true }
       },
       {
         path: 'profile/:id',
         name: 'InstallerProfile',
         component: () => import('@/views/installer/profile.vue'),
-        meta: { title: 'Installer Profile', requiresAuth: true, hideInMenu: true }
+        meta: { title: '装维档案', requiresAuth: true, hideInMenu: true }
       }
     ]
   },
@@ -156,31 +156,31 @@ const routes: RouteRecordRaw[] = [
     path: '/system',
     component: Layout,
     redirect: '/system/user',
-    meta: { title: 'System', icon: 'Setting', requiresAuth: true, roles: ['SUPER_ADMIN'] },
+    meta: { title: '系统管理', icon: 'Setting', requiresAuth: true, roles: ['SUPER_ADMIN'] },
     children: [
       {
         path: 'user',
         name: 'UserList',
         component: () => import('@/views/user/list.vue'),
-        meta: { title: 'Users', icon: 'UserFilled', requiresAuth: true, permission: 'system:user:view' }
+        meta: { title: '用户管理', icon: 'UserFilled', requiresAuth: true, permission: 'system:user:view' }
       },
       {
         path: 'role',
         name: 'RoleList',
         component: () => import('@/views/role/list.vue'),
-        meta: { title: 'Roles', icon: 'Avatar', requiresAuth: true, permission: 'system:role:view' }
+        meta: { title: '角色管理', icon: 'Avatar', requiresAuth: true, permission: 'system:role:view' }
       },
       {
         path: 'menu',
         name: 'MenuList',
         component: () => import('@/views/menu/list.vue'),
-        meta: { title: 'Menus', icon: 'Menu', requiresAuth: true, permission: 'system:menu:view' }
+        meta: { title: '菜单管理', icon: 'Menu', requiresAuth: true, permission: 'system:menu:view' }
       },
       {
         path: 'dept',
         name: 'DeptList',
         component: () => import('@/views/dept/list.vue'),
-        meta: { title: 'Departments', icon: 'OfficeBuilding', requiresAuth: true, permission: 'system:dept:view' }
+        meta: { title: '部门管理', icon: 'OfficeBuilding', requiresAuth: true, permission: 'system:dept:view' }
       }
     ]
   },
@@ -188,19 +188,19 @@ const routes: RouteRecordRaw[] = [
     path: '/notify',
     component: Layout,
     redirect: '/notify/template',
-    meta: { title: 'Notification', icon: 'Message', requiresAuth: true },
+    meta: { title: '通知管理', icon: 'Message', requiresAuth: true },
     children: [
       {
         path: 'template',
         name: 'NotifyTemplate',
         component: () => import('@/views/notify/template.vue'),
-        meta: { title: 'Templates', icon: 'Memo', requiresAuth: true }
+        meta: { title: '消息模板', icon: 'Memo', requiresAuth: true }
       },
       {
         path: 'record',
         name: 'NotifyRecord',
         component: () => import('@/views/notify/record.vue'),
-        meta: { title: 'Message Records', icon: 'ChatLineRound', requiresAuth: true }
+        meta: { title: '消息记录', icon: 'ChatLineRound', requiresAuth: true }
       }
     ]
   },
@@ -212,7 +212,7 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'FileManager',
         component: () => import('@/views/file/index.vue'),
-        meta: { title: 'Files', icon: 'Folder', requiresAuth: true }
+        meta: { title: '文件管理', icon: 'Folder', requiresAuth: true }
       }
     ]
   },
@@ -220,19 +220,19 @@ const routes: RouteRecordRaw[] = [
     path: '/log',
     component: Layout,
     redirect: '/log/operation',
-    meta: { title: 'Logs', icon: 'Document', requiresAuth: true, roles: ['SUPER_ADMIN', 'AUDITOR'] },
+    meta: { title: '日志管理', icon: 'Document', requiresAuth: true, roles: ['SUPER_ADMIN', 'AUDITOR'] },
     children: [
       {
         path: 'operation',
         name: 'OperationLog',
         component: () => import('@/views/log/operation.vue'),
-        meta: { title: 'Operation Logs', icon: 'Tickets', requiresAuth: true }
+        meta: { title: '操作日志', icon: 'Tickets', requiresAuth: true }
       },
       {
         path: 'login',
         name: 'LoginLog',
         component: () => import('@/views/log/login.vue'),
-        meta: { title: 'Login Logs', icon: 'Key', requiresAuth: true }
+        meta: { title: '登录日志', icon: 'Key', requiresAuth: true }
       }
     ]
   },
@@ -240,19 +240,19 @@ const routes: RouteRecordRaw[] = [
     path: '/monitor',
     component: Layout,
     redirect: '/monitor/metrics',
-    meta: { title: 'Monitor', icon: 'Monitor', requiresAuth: true, roles: ['SUPER_ADMIN'] },
+    meta: { title: '系统监控', icon: 'Monitor', requiresAuth: true, roles: ['SUPER_ADMIN'] },
     children: [
       {
         path: 'metrics',
         name: 'MonitorMetrics',
         component: () => import('@/views/monitor/metrics.vue'),
-        meta: { title: 'Metrics', icon: 'TrendCharts', requiresAuth: true }
+        meta: { title: '监控指标', icon: 'TrendCharts', requiresAuth: true }
       },
       {
         path: 'health',
         name: 'MonitorHealth',
         component: () => import('@/views/monitor/health.vue'),
-        meta: { title: 'Health', icon: 'FirstAidKit', requiresAuth: true }
+        meta: { title: '健康检查', icon: 'FirstAidKit', requiresAuth: true }
       }
     ]
   },
@@ -260,13 +260,13 @@ const routes: RouteRecordRaw[] = [
     path: '/attendance',
     component: Layout,
     redirect: '/attendance/team',
-    meta: { title: 'Attendance', icon: 'Clock', requiresAuth: true, permission: 'attendance:view-all' },
+    meta: { title: '考勤管理', icon: 'Clock', requiresAuth: true, permission: 'attendance:view-all' },
     children: [
       {
         path: 'team',
         name: 'AttendanceReport',
         component: () => import('@/views/attendance/Report.vue'),
-        meta: { title: 'Team Report', icon: 'DataAnalysis', requiresAuth: true }
+        meta: { title: '团队报表', icon: 'DataAnalysis', requiresAuth: true }
       }
     ]
   },
@@ -274,13 +274,13 @@ const routes: RouteRecordRaw[] = [
     path: '/leave',
     component: Layout,
     redirect: '/leave/approvals',
-    meta: { title: 'Leave', icon: 'TodoList', requiresAuth: true },
+    meta: { title: '请假管理', icon: 'TodoList', requiresAuth: true },
     children: [
       {
         path: 'approvals',
         name: 'LeaveApproval',
         component: () => import('@/views/leave/Approval.vue'),
-        meta: { title: 'Approvals', icon: 'Check', requiresAuth: true, permission: 'leave:approve' }
+        meta: { title: '请假审批', icon: 'Check', requiresAuth: true, permission: 'leave:approve' }
       }
     ]
   },
@@ -288,13 +288,13 @@ const routes: RouteRecordRaw[] = [
     path: '/sla',
     component: Layout,
     redirect: '/sla/expiring',
-    meta: { title: 'SLA Monitor', icon: 'Warning', requiresAuth: true, permission: 'workorder:sla:view' },
+    meta: { title: 'SLA 监控', icon: 'Warning', requiresAuth: true, permission: 'workorder:sla:view' },
     children: [
       {
         path: 'expiring',
         name: 'SlaExpiring',
         component: () => import('@/views/sla/Expiring.vue'),
-        meta: { title: 'Work-Order SLA', icon: 'AlarmClock', requiresAuth: true }
+        meta: { title: '工单时效', icon: 'AlarmClock', requiresAuth: true }
       }
     ]
   },
@@ -306,7 +306,7 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'Profile',
         component: () => import('@/views/profile/index.vue'),
-        meta: { title: 'Profile', icon: 'User', requiresAuth: true, hideInMenu: true }
+        meta: { title: '个人中心', icon: 'User', requiresAuth: true, hideInMenu: true }
       }
     ]
   },
@@ -333,12 +333,12 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/403',
     component: () => import('@/views/error/403.vue'),
-    meta: { title: 'Forbidden', hideInMenu: true, requiresAuth: false }
+    meta: { title: '无访问权限', hideInMenu: true, requiresAuth: false }
   },
   {
     path: '/404',
     component: () => import('@/views/error/404.vue'),
-    meta: { title: 'Not Found', hideInMenu: true, requiresAuth: false }
+    meta: { title: '页面不存在', hideInMenu: true, requiresAuth: false }
   },
   {
     path: '/:pathMatch(.*)*',

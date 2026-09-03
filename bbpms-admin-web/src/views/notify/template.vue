@@ -48,10 +48,10 @@ function openEdit(row: NotifyTemplate) {
 async function onSave() {
   if (editing.value) {
     await updateTemplate(editing.value.id, form)
-    ElMessage.success('Updated')
+    ElMessage.success('更新成功')
   } else {
     await createTemplate(form)
-    ElMessage.success('Created')
+    ElMessage.success('创建成功')
   }
   dialogVisible.value = false
   fetchData()
@@ -59,19 +59,19 @@ async function onSave() {
 
 async function onDelete(row: NotifyTemplate) {
   try {
-    await ElMessageBox.confirm(`Delete template ${row.code}?`, 'Confirm', { type: 'warning' })
+    await ElMessageBox.confirm(`Delete template ${row.code}?`, '确认', { type: 'warning' })
   } catch { return }
   await deleteTemplate(row.id)
-  ElMessage.success('Deleted')
+  ElMessage.success('删除成功')
   fetchData()
 }
 </script>
 
 <template>
   <div class="app-container">
-    <PageHeader title="Notify Templates">
+    <PageHeader title="通知模板">
       <template #extra>
-        <el-button type="primary" @click="openCreate">Add Template</el-button>
+        <el-button type="primary" @click="openCreate">新增模板</el-button>
       </template>
     </PageHeader>
 
@@ -79,30 +79,30 @@ async function onDelete(row: NotifyTemplate) {
       <div class="page-toolbar">
         <div class="flex" style="gap: 8px">
           <el-input v-model="query.keyword" placeholder="Code / Subject / Content" clearable style="width: 240px" @keyup.enter="onSearch" />
-          <el-button type="primary" @click="onSearch">Search</el-button>
-          <el-button @click="onReset">Reset</el-button>
+          <el-button type="primary" @click="onSearch">搜索</el-button>
+          <el-button @click="onReset">重置</el-button>
         </div>
       </div>
 
       <el-table v-loading="loading" :data="list" stripe>
-        <el-table-column prop="code" label="Code" width="160" />
-        <el-table-column prop="channel" label="Channel" width="100" />
-        <el-table-column prop="subject" label="Subject" width="180" show-overflow-tooltip />
-        <el-table-column prop="content" label="Content" show-overflow-tooltip />
-        <el-table-column label="Status" width="100">
+        <el-table-column prop="code" label="编码" width="160" />
+        <el-table-column prop="channel" label="渠道" width="100" />
+        <el-table-column prop="subject" label="主题" width="180" show-overflow-tooltip />
+        <el-table-column prop="content" label="内容" show-overflow-tooltip />
+        <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'info'">
               {{ row.status === 1 ? 'Enabled' : 'Disabled' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="Updated" width="170">
+        <el-table-column label="更新时间" width="170">
           <template #default="{ row }">{{ formatDate(row.updatedAt) }}</template>
         </el-table-column>
-        <el-table-column label="Action" width="180" align="center">
+        <el-table-column label="操作" width="180" align="center">
           <template #default="{ row }">
-            <el-button link type="primary" @click="openEdit(row)">Edit</el-button>
-            <el-button link type="danger" @click="onDelete(row)">Delete</el-button>
+            <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
+            <el-button link type="danger" @click="onDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -119,28 +119,28 @@ async function onDelete(row: NotifyTemplate) {
       </div>
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="editing ? 'Edit Template' : 'Add Template'" width="640px">
+    <el-dialog v-model="dialogVisible" :title="editing ? '编辑模板' : '新增模板'" width="640px">
       <el-form :model="form" label-width="100px">
-        <el-form-item label="Code"><el-input v-model="form.code" /></el-form-item>
-        <el-form-item label="Channel">
+        <el-form-item label="编码"><el-input v-model="form.code" /></el-form-item>
+        <el-form-item label="渠道">
           <el-select v-model="form.channel">
-            <el-option value="SMS" label="SMS" />
-            <el-option value="WECHAT" label="WeChat" />
+            <el-option value="SMS" label="短信" />
+            <el-option value="WECHAT" label="微信" />
             <el-option value="INAPP" label="In-app" />
           </el-select>
         </el-form-item>
-        <el-form-item label="Subject"><el-input v-model="form.subject" /></el-form-item>
-        <el-form-item label="Content"><el-input v-model="form.content" type="textarea" :rows="5" /></el-form-item>
-        <el-form-item label="Status">
+        <el-form-item label="主题"><el-input v-model="form.subject" /></el-form-item>
+        <el-form-item label="内容"><el-input v-model="form.content" type="textarea" :rows="5" /></el-form-item>
+        <el-form-item label="状态">
           <el-radio-group v-model="form.status">
-            <el-radio :value="1">Enabled</el-radio>
-            <el-radio :value="0">Disabled</el-radio>
+            <el-radio :value="1">启用</el-radio>
+            <el-radio :value="0">禁用</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">Cancel</el-button>
-        <el-button type="primary" @click="onSave">Save</el-button>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="onSave">保存</el-button>
       </template>
     </el-dialog>
   </div>

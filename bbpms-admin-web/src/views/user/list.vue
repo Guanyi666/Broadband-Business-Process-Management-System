@@ -81,10 +81,10 @@ function openEdit(row: any) {
 async function onSave() {
   if (dialogMode.value === 'create') {
     await store.create(form as any)
-    ElMessage.success('Created')
+    ElMessage.success('创建成功')
   } else {
     await store.update(editing.value.id, form)
-    ElMessage.success('Updated')
+    ElMessage.success('更新成功')
   }
   dialogVisible.value = false
   fetchData()
@@ -92,10 +92,10 @@ async function onSave() {
 
 async function onDelete(row: any) {
   try {
-    await ElMessageBox.confirm(`Delete user ${row.username}?`, 'Confirm', { type: 'warning' })
+    await ElMessageBox.confirm(`Delete user ${row.username}?`, '确认', { type: 'warning' })
   } catch { return }
   await store.remove(row.id)
-  ElMessage.success('Deleted')
+  ElMessage.success('删除成功')
   fetchData()
 }
 
@@ -115,47 +115,47 @@ async function onSaveRoles() {
 
 <template>
   <div class="app-container">
-    <PageHeader title="Users">
+    <PageHeader title="用户管理">
       <template #extra>
-        <el-button type="primary" @click="openCreate">Add User</el-button>
+        <el-button type="primary" @click="openCreate">新增用户</el-button>
       </template>
     </PageHeader>
 
     <div class="app-card">
       <div class="page-toolbar">
         <div class="flex" style="gap: 8px">
-          <el-input v-model="store.query.keyword" placeholder="Username / Nickname" clearable style="width: 240px" @keyup.enter="onSearch" />
-          <el-button type="primary" @click="onSearch">Search</el-button>
-          <el-button @click="onReset">Reset</el-button>
+          <el-input v-model="store.query.keyword" placeholder="用户名 / 昵称" clearable style="width: 240px" @keyup.enter="onSearch" />
+          <el-button type="primary" @click="onSearch">搜索</el-button>
+          <el-button @click="onReset">重置</el-button>
         </div>
       </div>
 
       <el-table v-loading="store.loading" :data="store.list" stripe>
-        <el-table-column prop="username" label="Username" width="140" />
-        <el-table-column prop="nickname" label="Nickname" width="140" />
-        <el-table-column prop="phone" label="Phone" width="140" />
-        <el-table-column prop="email" label="Email" />
-        <el-table-column prop="deptName" label="Department" width="140" />
-        <el-table-column label="Roles" width="220">
+        <el-table-column prop="username" label="用户名" width="140" />
+        <el-table-column prop="nickname" label="昵称" width="140" />
+        <el-table-column prop="phone" label="手机号" width="140" />
+        <el-table-column prop="email" label="邮箱" />
+        <el-table-column prop="deptName" label="所属部门" width="140" />
+        <el-table-column label="角色" width="220">
           <template #default="{ row }">
             <el-tag v-for="r in row.roles" :key="r.id" size="small" style="margin-right: 4px">{{ r.name }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="Status" width="100">
+        <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'info'">
               {{ row.status === 1 ? 'Enabled' : 'Disabled' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="Created" width="170">
+        <el-table-column label="创建时间" width="170">
           <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
         </el-table-column>
-        <el-table-column label="Action" width="220" align="center">
+        <el-table-column label="操作" width="220" align="center">
           <template #default="{ row }">
             <el-button link type="primary" @click="openAssignRoles(row)">Roles</el-button>
-            <el-button link type="primary" @click="openEdit(row)">Edit</el-button>
-            <el-button link type="danger" @click="onDelete(row)">Delete</el-button>
+            <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
+            <el-button link type="danger" @click="onDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -173,41 +173,41 @@ async function onSaveRoles() {
       </div>
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="dialogMode === 'create' ? 'Add User' : 'Edit User'" width="540px">
+    <el-dialog v-model="dialogVisible" :title="dialogMode === 'create' ? '新增用户' : '编辑用户'" width="540px">
       <el-form :model="form" label-width="100px">
-        <el-form-item label="Username">
+        <el-form-item label="用户名">
           <el-input v-model="form.username" :disabled="dialogMode === 'edit'" />
         </el-form-item>
         <el-form-item label="Password" v-if="dialogMode === 'create'">
           <el-input v-model="form.password" type="password" show-password />
         </el-form-item>
-        <el-form-item label="Nickname">
+        <el-form-item label="昵称">
           <el-input v-model="form.nickname" />
         </el-form-item>
-        <el-form-item label="Phone">
+        <el-form-item label="手机号">
           <el-input v-model="form.phone" />
         </el-form-item>
-        <el-form-item label="Email">
+        <el-form-item label="邮箱">
           <el-input v-model="form.email" />
         </el-form-item>
-        <el-form-item label="Dept">
+        <el-form-item label="部门">
           <el-input v-model="form.deptId" />
         </el-form-item>
-        <el-form-item label="Status">
+        <el-form-item label="状态">
           <el-radio-group v-model="form.status">
-            <el-radio :value="1">Enabled</el-radio>
-            <el-radio :value="0">Disabled</el-radio>
+            <el-radio :value="1">启用</el-radio>
+            <el-radio :value="0">禁用</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="Roles">
+        <el-form-item label="角色">
           <el-select v-model="form.roleIds" multiple style="width: 100%">
             <el-option v-for="r in roles" :key="r.id" :label="r.name" :value="r.id" />
           </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">Cancel</el-button>
-        <el-button type="primary" @click="onSave">Save</el-button>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="onSave">保存</el-button>
       </template>
     </el-dialog>
 
@@ -216,8 +216,8 @@ async function onSaveRoles() {
         <el-option v-for="r in roles" :key="r.id" :label="r.name" :value="r.id" />
       </el-select>
       <template #footer>
-        <el-button @click="roleDialogVisible = false">Cancel</el-button>
-        <el-button type="primary" @click="onSaveRoles">Save</el-button>
+        <el-button @click="roleDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="onSaveRoles">保存</el-button>
       </template>
     </el-dialog>
   </div>

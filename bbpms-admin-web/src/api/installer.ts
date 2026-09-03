@@ -76,3 +76,8 @@ export async function pageInstallers(params?: PageQuery) {
     pageSize: res?.pageSize ?? 10
   } as PageResult<InstallerProfile>
 }
+
+/** GET /installers/online —— 当前在线装维（Dashboard「在线装维」KPI 数据源） */
+export function listOnlineInstallers() {
+  return request<InstallerVO[]>({ url: '/installers/online', method: 'GET' })
+}

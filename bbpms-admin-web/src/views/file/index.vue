@@ -16,7 +16,7 @@ const presignResult = ref<any>(null)
 
 function beforeUpload(file: File) {
   if (file.size > 20 * 1024 * 1024) {
-    ElMessage.error('Max 20MB')
+    ElMessage.error('文件大小不能超过 20MB')
     return false
   }
   return true
@@ -33,7 +33,7 @@ async function customUpload(options: any) {
     })
     fileList.value.push(res)
     options.onSuccess(res)
-    ElMessage.success('Uploaded')
+    ElMessage.success('上传成功')
   } catch (e: any) {
     options.onError(e)
   } finally {
@@ -43,7 +43,7 @@ async function customUpload(options: any) {
 
 async function onPresign() {
   if (!presignForm.attachmentId) {
-    ElMessage.error('Enter an attachment ID first')
+    ElMessage.error('请先输入附件 ID')
     return
   }
   presignResult.value = await presign(presignForm.attachmentId)
@@ -52,7 +52,7 @@ async function onPresign() {
 
 <template>
   <div class="app-container">
-    <PageHeader title="File Manager" />
+    <PageHeader title="文件管理" />
 
     <div class="app-card">
       <h3>Upload (Direct)</h3>
@@ -64,7 +64,7 @@ async function onPresign() {
         drag
       >
         <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-        <div class="el-upload__text">Drag file here or <em>click to upload</em></div>
+        <div class="el-upload__text">拖拽文件到此处或 <em>click to upload</em></div>
         <template #tip>
           <div class="text-muted">Max 20MB. Direct multipart upload.</div>
         </template>
@@ -73,11 +73,11 @@ async function onPresign() {
     </div>
 
     <div class="app-card">
-      <h3>Presigned Download</h3>
+      <h3>预签名下载</h3>
       <el-form :model="presignForm" label-width="120px" style="max-width: 560px">
-        <el-form-item label="Attachment ID"><el-input v-model="presignForm.attachmentId" placeholder="e.g. 1" /></el-form-item>
+        <el-form-item label="附件 ID"><el-input v-model="presignForm.attachmentId" placeholder="如 1" /></el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="onPresign">Get Download URL</el-button>
+          <el-button type="primary" @click="onPresign">获取下载链接</el-button>
         </el-form-item>
       </el-form>
       <pre v-if="presignResult" class="presign-result">{{ JSON.stringify(presignResult, null, 2) }}</pre>

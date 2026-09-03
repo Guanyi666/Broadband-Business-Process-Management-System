@@ -57,7 +57,7 @@ onMounted(fetchData)
 
 <template>
   <div class="app-container">
-    <PageHeader title="Workorders">
+    <PageHeader title="工单管理">
       <template #extra>
         <el-button type="primary" @click="router.push('/workorder/dispatch-board')">
           <el-icon><Connection /></el-icon> Dispatch Board
@@ -67,35 +67,35 @@ onMounted(fetchData)
 
     <div class="app-card">
       <el-tabs v-model="activeTab" class="mb-16">
-        <el-tab-pane label="All" name="ALL" />
-        <el-tab-pane label="Pending" name="PENDING" />
-        <el-tab-pane label="Dispatched" name="DISPATCHED" />
+        <el-tab-pane label="全部" name="ALL" />
+        <el-tab-pane label="待处理" name="PENDING" />
+        <el-tab-pane label="派单时间" name="DISPATCHED" />
         <el-tab-pane label="In Progress" name="IN_PROGRESS" />
-        <el-tab-pane label="Completed" name="COMPLETED" />
+        <el-tab-pane label="完成时间" name="COMPLETED" />
         <el-tab-pane label="Cancelled" name="CANCELLED" />
       </el-tabs>
 
       <div class="page-toolbar">
         <div class="flex" style="gap: 8px">
           <el-input v-model="query.installerId" placeholder="Installer ID" clearable style="width: 200px" />
-          <el-date-picker v-model="query.dateRange" type="daterange" range-separator="-" start-placeholder="From" end-placeholder="To" />
-          <el-button type="primary" @click="onSearch">Search</el-button>
-          <el-button @click="onReset">Reset</el-button>
+          <el-date-picker v-model="query.dateRange" type="daterange" range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期" />
+          <el-button type="primary" @click="onSearch">搜索</el-button>
+          <el-button @click="onReset">重置</el-button>
         </div>
       </div>
 
       <el-table v-loading="loading" :data="list" stripe @row-click="onRowClick">
-        <el-table-column prop="workNo" label="Workorder No" width="180" />
-        <el-table-column prop="orderId" label="Order ID" width="120" />
-        <el-table-column label="Status" width="130">
+        <el-table-column prop="workNo" label="工单号" width="180" />
+        <el-table-column prop="orderId" label="订单 ID" width="120" />
+        <el-table-column label="状态" width="130">
           <template #default="{ row }"><BBPMSStatusTag :status="row.status" :label="row.statusDesc || row.status" /></template>
         </el-table-column>
-        <el-table-column prop="installerName" label="Installer" width="120" />
-        <el-table-column prop="customerPhone" label="Customer Phone" width="130" />
+        <el-table-column prop="installerName" label="装维人员" width="120" />
+        <el-table-column prop="customerPhone" label="客户电话" width="130" />
         <el-table-column label="Dispatch" width="170">
           <template #default="{ row }">{{ formatDate(row.dispatchTime, 'YYYY-MM-DD HH:mm') }}</template>
         </el-table-column>
-        <el-table-column label="Created" width="170">
+        <el-table-column label="创建时间" width="170">
           <template #default="{ row }">{{ formatDate(row.createTime) }}</template>
         </el-table-column>
       </el-table>

@@ -78,10 +78,10 @@ function onAudit(row: OrderItem) {
 
 async function onCancel(row: OrderItem) {
   try {
-    await ElMessageBox.confirm(`Cancel order ${row.orderNo}?`, 'Confirm', { type: 'warning' })
+    await ElMessageBox.confirm(`确定取消订单 ${row.orderNo} 吗？`, '确认', { type: 'warning' })
   } catch { return }
   await cancelOrder(row.id)
-  ElMessage.success('Cancelled')
+  ElMessage.success('已取消')
   fetchData()
 }
 
@@ -94,7 +94,7 @@ onMounted(fetchData)
 
 <template>
   <div class="app-container">
-    <PageHeader title="Orders">
+    <PageHeader title="订单管理">
       <template #extra>
         <el-button type="primary" @click="router.push('/order/create')">
           <el-icon><Plus /></el-icon> Create Order
@@ -104,41 +104,41 @@ onMounted(fetchData)
 
     <div class="app-card">
       <el-tabs v-model="activeTab" class="mb-16">
-        <el-tab-pane label="All" name="ALL" />
-        <el-tab-pane label="Created" name="CREATED" />
+        <el-tab-pane label="全部" name="ALL" />
+        <el-tab-pane label="创建时间" name="CREATED" />
         <el-tab-pane label="Waiting Dispatch" name="WAIT_DISPATCH" />
-        <el-tab-pane label="Installing" name="INSTALLING" />
-        <el-tab-pane label="Finished" name="FINISHED" />
+        <el-tab-pane label="安装中" name="INSTALLING" />
+        <el-tab-pane label="已完成" name="FINISHED" />
       </el-tabs>
 
       <div class="page-toolbar">
         <div class="flex" style="gap: 8px; flex-wrap: wrap">
-          <el-input v-model="query.keyword" placeholder="Order No / Customer" clearable style="width: 240px" @keyup.enter="onSearch" />
-          <el-date-picker v-model="query.dateRange" type="daterange" value-format="YYYY-MM-DD" range-separator="-" start-placeholder="From" end-placeholder="To" />
-          <el-button type="primary" @click="onSearch">Search</el-button>
-          <el-button @click="onReset">Reset</el-button>
+          <el-input v-model="query.keyword" placeholder="订单号 / 客户" clearable style="width: 240px" @keyup.enter="onSearch" />
+          <el-date-picker v-model="query.dateRange" type="daterange" value-format="YYYY-MM-DD" range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期" />
+          <el-button type="primary" @click="onSearch">搜索</el-button>
+          <el-button @click="onReset">重置</el-button>
         </div>
       </div>
 
       <el-table v-loading="loading" :data="list" stripe @row-click="onRowClick">
-        <el-table-column prop="orderNo" label="Order No" width="180" />
-        <el-table-column prop="customerName" label="Customer" width="120" />
-        <el-table-column prop="packageName" label="Package" min-width="160" show-overflow-tooltip />
-        <el-table-column label="Status" width="120">
+        <el-table-column prop="orderNo" label="订单号" width="180" />
+        <el-table-column prop="customerName" label="客户" width="120" />
+        <el-table-column prop="packageName" label="套餐" min-width="160" show-overflow-tooltip />
+        <el-table-column label="状态" width="120">
           <template #default="{ row }"><BBPMSStatusTag :status="row.status" /></template>
         </el-table-column>
-        <el-table-column label="Appointment" width="170">
+        <el-table-column label="预约时间" width="170">
           <template #default="{ row }">{{ formatDate(row.appointmentAt, 'YYYY-MM-DD HH:mm') }}</template>
         </el-table-column>
-        <el-table-column prop="csName" label="CS" width="100" />
-        <el-table-column label="Created" width="170">
+        <el-table-column prop="csName" label="客服" width="100" />
+        <el-table-column label="创建时间" width="170">
           <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
         </el-table-column>
-        <el-table-column label="Action" width="200" fixed="right" align="center">
+        <el-table-column label="操作" width="200" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button link type="primary" @click.stop="onAudit(row)" v-if="row.status === 'CREATED'">Audit</el-button>
-            <el-button link type="danger" @click.stop="onCancel(row)" v-if="['CREATED','AUDITED','WAIT_DISPATCH'].includes(row.status)">Cancel</el-button>
-            <el-button link @click.stop="onRowClick(row)">Detail</el-button>
+            <el-button link type="primary" @click.stop="onAudit(row)" v-if="row.status === 'CREATED'">审核</el-button>
+            <el-button link type="danger" @click.stop="onCancel(row)" v-if="['CREATED','AUDITED','WAIT_DISPATCH'].includes(row.status)">取消</el-button>
+            <el-button link @click.stop="onRowClick(row)">详情</el-button>
           </template>
         </el-table-column>
       </el-table>

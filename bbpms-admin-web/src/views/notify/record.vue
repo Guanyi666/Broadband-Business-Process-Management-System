@@ -63,44 +63,44 @@ async function onSend() {
 
 <template>
   <div class="app-container">
-    <PageHeader title="Message Records">
+    <PageHeader title="消息记录">
       <template #extra>
-        <el-button type="primary" @click="sendDialog = true">Send SMS</el-button>
+        <el-button type="primary" @click="sendDialog = true">发送短信</el-button>
       </template>
     </PageHeader>
 
     <div class="app-card">
       <div class="page-toolbar">
         <div class="flex" style="gap: 8px">
-          <el-select v-model="query.channel" placeholder="Channel" clearable style="width: 140px">
-            <el-option value="SMS" label="SMS" />
-            <el-option value="WECHAT" label="WeChat" />
-            <el-option value="APP_PUSH" label="Push" />
+          <el-select v-model="query.channel" placeholder="渠道" clearable style="width: 140px">
+            <el-option value="SMS" label="短信" />
+            <el-option value="WECHAT" label="微信" />
+            <el-option value="APP_PUSH" label="推送" />
           </el-select>
-          <el-select v-model="query.status" placeholder="Status" clearable style="width: 140px">
-            <el-option value="PENDING" label="Pending" />
-            <el-option value="SUCCESS" label="Success" />
-            <el-option value="FAILED" label="Failed" />
+          <el-select v-model="query.status" placeholder="状态" clearable style="width: 140px">
+            <el-option value="PENDING" label="待处理" />
+            <el-option value="SUCCESS" label="成功" />
+            <el-option value="FAILED" label="失败" />
           </el-select>
-          <el-button type="primary" @click="onSearch">Search</el-button>
-          <el-button @click="onReset">Reset</el-button>
+          <el-button type="primary" @click="onSearch">搜索</el-button>
+          <el-button @click="onReset">重置</el-button>
         </div>
       </div>
 
       <el-table v-loading="loading" :data="list" stripe>
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="templateCode" label="Template" width="160" />
-        <el-table-column prop="channel" label="Channel" width="100" />
-        <el-table-column prop="receiver" label="Receiver" width="160" />
-        <el-table-column prop="content" label="Content" show-overflow-tooltip />
-        <el-table-column label="Status" width="100">
+        <el-table-column prop="templateCode" label="模板" width="160" />
+        <el-table-column prop="channel" label="渠道" width="100" />
+        <el-table-column prop="receiver" label="接收人" width="160" />
+        <el-table-column prop="content" label="内容" show-overflow-tooltip />
+        <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.status === 'SUCCESS' ? 'success' : row.status === 'FAILED' ? 'danger' : 'warning'">
               {{ row.status }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="Sent" width="170">
+        <el-table-column label="发送时间" width="170">
           <template #default="{ row }">{{ formatDate(row.sentAt) }}</template>
         </el-table-column>
       </el-table>
@@ -117,12 +117,12 @@ async function onSend() {
       </div>
     </div>
 
-    <el-dialog v-model="sendDialog" title="Send SMS" width="520px">
+    <el-dialog v-model="sendDialog" title="发送短信" width="520px">
       <el-form :model="sendForm" label-width="100px">
-        <el-form-item label="Phone">
+        <el-form-item label="手机号">
           <el-input v-model="sendForm.phone" placeholder="Mobile phone number" />
         </el-form-item>
-        <el-form-item label="Template">
+        <el-form-item label="模板">
           <el-input v-model="sendForm.templateCode" placeholder="e.g. ORDER_CREATED" />
         </el-form-item>
         <el-form-item label="Parameters">
@@ -130,8 +130,8 @@ async function onSend() {
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="sendDialog = false">Cancel</el-button>
-        <el-button type="primary" @click="onSend">Send</el-button>
+        <el-button @click="sendDialog = false">取消</el-button>
+        <el-button type="primary" @click="onSend">发送</el-button>
       </template>
     </el-dialog>
   </div>

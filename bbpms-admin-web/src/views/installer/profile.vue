@@ -25,17 +25,17 @@ onMounted(fetchData)
 
 <template>
   <div class="app-container" v-loading="loading">
-    <PageHeader :title="detail?.name || 'Installer'" />
+    <PageHeader :title="detail?.name || '装维人员'" />
     <div class="app-card" v-if="detail">
       <el-descriptions :column="2" border>
         <el-descriptions-item label="ID">{{ detail.id }}</el-descriptions-item>
-        <el-descriptions-item label="Status"><BBPMSStatusTag :status="detail.status" /></el-descriptions-item>
-        <el-descriptions-item label="Username">{{ detail.username || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="Name">{{ detail.name }}</el-descriptions-item>
-        <el-descriptions-item label="Phone">{{ detail.phone || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="Workload">{{ detail.workload ?? 0 }}</el-descriptions-item>
-        <el-descriptions-item label="Rating">{{ detail.rating ?? '-' }}</el-descriptions-item>
-        <el-descriptions-item label="Last Active">{{ formatDate(detail.lastActiveAt) }}</el-descriptions-item>
+        <el-descriptions-item label="状态"><BBPMSStatusTag :status="detail.status" /></el-descriptions-item>
+        <el-descriptions-item label="用户名">{{ detail.username || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="名称">{{ detail.name }}</el-descriptions-item>
+        <el-descriptions-item label="手机号">{{ detail.phone || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="当前负载">{{ detail.workload ?? 0 }}</el-descriptions-item>
+        <el-descriptions-item label="评分">{{ detail.rating ?? '-' }}</el-descriptions-item>
+        <el-descriptions-item label="最后活跃">{{ formatDate(detail.lastActiveAt) }}</el-descriptions-item>
       </el-descriptions>
     </div>
   </div>

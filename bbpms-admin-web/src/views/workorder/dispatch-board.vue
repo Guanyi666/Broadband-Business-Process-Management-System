@@ -74,7 +74,7 @@ async function onManualDispatch(c: DispatchCandidate) {
   if (!currentOrder.value) return
   try {
     await manualDispatch(currentOrder.value.id, c.installerId)
-    ElMessage.success('Dispatched')
+    ElMessage.success('派单成功')
     dialogVisible.value = false
     refresh()
   } catch {
@@ -97,7 +97,7 @@ onBeforeUnmount(() => {
   <div class="app-container" v-loading="loading">
     <PageHeader title="Dispatch Board">
       <template #extra>
-        <el-button @click="refresh"><el-icon><Refresh /></el-icon> Refresh</el-button>
+        <el-button @click="refresh"><el-icon><Refresh /></el-icon> 刷新</el-button>
       </template>
     </PageHeader>
 
@@ -111,7 +111,7 @@ onBeforeUnmount(() => {
     <div class="board">
       <div class="board-col">
         <div class="board-col-header">
-          <span>Pending Orders</span>
+          <span>待处理订单</span>
           <el-tag size="small">{{ pendingOrders.length }}</el-tag>
         </div>
         <div class="board-col-body">
@@ -130,7 +130,7 @@ onBeforeUnmount(() => {
 
       <div class="board-col">
         <div class="board-col-header">
-          <span>Online Installers</span>
+          <span>在线装维</span>
           <el-tag size="small" type="success">{{ onlineInstallers.length }}</el-tag>
         </div>
         <div class="board-col-body">
@@ -168,33 +168,33 @@ onBeforeUnmount(() => {
 
         <div class="candidate-header">Top Candidates (by score)</div>
         <el-table :data="candidates" border>
-          <el-table-column label="Rank" width="60" type="index" />
-          <el-table-column label="Installer">
+          <el-table-column label="排名" width="60" type="index" />
+          <el-table-column label="装维人员">
             <template #default="{ row }">{{ row.name }} ({{ row.phone || '-' }})</template>
           </el-table-column>
-          <el-table-column label="Score" width="80">
+          <el-table-column label="综合评分" width="80">
             <template #default="{ row }">
               <el-tag :type="(row.score ?? 0) >= 80 ? 'success' : (row.score ?? 0) >= 60 ? 'warning' : 'info'">
                 {{ row.score ?? '-' }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="Distance" width="100">
+          <el-table-column label="距离" width="100">
             <template #default="{ row }">{{ row.distanceKm?.toFixed?.(1) ?? '-' }} km</template>
           </el-table-column>
-          <el-table-column label="Workload" width="100">
+          <el-table-column label="当前负载" width="100">
             <template #default="{ row }">{{ row.workload ?? 0 }}</template>
           </el-table-column>
-          <el-table-column label="Action" width="120" align="center">
+          <el-table-column label="操作" width="120" align="center">
             <template #default="{ row }">
-              <el-button size="small" type="primary" @click="onManualDispatch(row)">Assign</el-button>
+              <el-button size="small" type="primary" @click="onManualDispatch(row)">分配</el-button>
             </template>
           </el-table-column>
         </el-table>
       </div>
       <template #footer>
-        <el-button @click="dialogVisible = false">Cancel</el-button>
-        <el-button type="success" @click="onAutoDispatch">Auto Dispatch</el-button>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="success" @click="onAutoDispatch">自动派单</el-button>
       </template>
     </el-dialog>
   </div>

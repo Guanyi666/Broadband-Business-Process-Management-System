@@ -49,41 +49,41 @@ onMounted(fetchData)
 
 <template>
   <div class="app-container">
-    <PageHeader title="Customers" description="Customer information (masked in list view)" />
+    <PageHeader title="客户管理" description="列表中敏感信息已脱敏" />
     <div class="app-card">
       <div class="page-toolbar">
         <div class="flex" style="gap: 8px">
           <el-input
             v-model="query.keyword"
-            placeholder="Name / Phone / Address"
+            placeholder="姓名 / 手机号 / 地址"
             clearable
             style="width: 280px"
             @keyup.enter="onSearch"
           />
-          <el-button type="primary" @click="onSearch">Search</el-button>
-          <el-button @click="onReset">Reset</el-button>
+          <el-button type="primary" @click="onSearch">搜索</el-button>
+          <el-button @click="onReset">重置</el-button>
         </div>
       </div>
 
       <el-table v-loading="loading" :data="list" stripe @row-click="onRowClick">
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column label="Name">
+        <el-table-column label="名称">
           <template #default="{ row }">{{ maskName(row.name) }}</template>
         </el-table-column>
-        <el-table-column label="Phone">
+        <el-table-column label="手机号">
           <template #default="{ row }">{{ maskPhone(row.phone) }}</template>
         </el-table-column>
-        <el-table-column label="ID Card">
+        <el-table-column label="身份证号">
           <template #default="{ row }">{{ maskIdCard(row.idCard) }}</template>
         </el-table-column>
-        <el-table-column prop="address" label="Address" show-overflow-tooltip />
-        <el-table-column prop="source" label="Source" width="120" />
-        <el-table-column label="Created">
+        <el-table-column prop="address" label="地址" show-overflow-tooltip />
+        <el-table-column prop="source" label="来源" width="120" />
+        <el-table-column label="创建时间">
           <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
         </el-table-column>
-        <el-table-column label="Action" width="100" align="center">
+        <el-table-column label="操作" width="100" align="center">
           <template #default="{ row }">
-            <el-button link type="primary" @click.stop="onRowClick(row)">Detail</el-button>
+            <el-button link type="primary" @click.stop="onRowClick(row)">详情</el-button>
           </template>
         </el-table-column>
       </el-table>

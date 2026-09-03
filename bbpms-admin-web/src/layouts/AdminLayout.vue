@@ -185,77 +185,77 @@ export interface MenuConfig {
 }
 
 export const staticMenus: MenuConfig[] = [
-  { path: '/dashboard', title: 'Dashboard', icon: 'DataLine' },
+  { path: '/dashboard', title: '数据看板', icon: 'DataLine' },
   {
     path: '/customer',
-    title: 'Customer',
+    title: '客户管理',
     icon: 'User',
-    children: [{ path: '/customer/list', title: 'Customer List', icon: 'List' }]
+    children: [{ path: '/customer/list', title: '客户列表', icon: 'List' }]
   },
   {
     path: '/order',
-    title: 'Order',
+    title: '订单管理',
     icon: 'Document',
     children: [
-      { path: '/order/list', title: 'Order List', icon: 'List' },
-      { path: '/order/create', title: 'Create Order', icon: 'Plus' }
+      { path: '/order/list', title: '订单列表', icon: 'List' },
+      { path: '/order/create', title: '创建订单', icon: 'Plus' }
     ]
   },
   {
     path: '/workorder',
-    title: 'Workorder',
+    title: '工单管理',
     icon: 'Tools',
     children: [
-      { path: '/workorder/list', title: 'Workorder List', icon: 'List' },
-      { path: '/workorder/dispatch-board', title: 'Dispatch Board', icon: 'Connection' }
+      { path: '/workorder/list', title: '工单列表', icon: 'List' },
+      { path: '/workorder/dispatch-board', title: '派单工作台', icon: 'Connection' }
     ]
   },
   {
     path: '/installer',
-    title: 'Installer',
+    title: '装维管理',
     icon: 'Avatar',
     children: [
-      { path: '/installer/list', title: 'Installer List', icon: 'List' },
-      { path: '/installer/map', title: 'Installer Map', icon: 'MapLocation' }
+      { path: '/installer/list', title: '装维列表', icon: 'List' },
+      { path: '/installer/map', title: '装维地图', icon: 'MapLocation' }
     ]
   },
   {
     path: '/system',
-    title: 'System',
+    title: '系统管理',
     icon: 'Setting',
     children: [
-      { path: '/system/user', title: 'Users', icon: 'UserFilled' },
-      { path: '/system/role', title: 'Roles', icon: 'Avatar' },
-      { path: '/system/menu', title: 'Menus', icon: 'Menu' },
-      { path: '/system/dept', title: 'Departments', icon: 'OfficeBuilding' }
+      { path: '/system/user', title: '用户管理', icon: 'UserFilled' },
+      { path: '/system/role', title: '角色管理', icon: 'Avatar' },
+      { path: '/system/menu', title: '菜单管理', icon: 'Menu' },
+      { path: '/system/dept', title: '部门管理', icon: 'OfficeBuilding' }
     ]
   },
   {
     path: '/notify',
-    title: 'Notification',
+    title: '通知管理',
     icon: 'Message',
     children: [
-      { path: '/notify/template', title: 'Templates', icon: 'Memo' },
-      { path: '/notify/record', title: 'Records', icon: 'ChatLineRound' }
+      { path: '/notify/template', title: '消息模板', icon: 'Memo' },
+      { path: '/notify/record', title: '消息记录', icon: 'ChatLineRound' }
     ]
   },
-  { path: '/file', title: 'Files', icon: 'Folder' },
+  { path: '/file', title: '文件管理', icon: 'Folder' },
   {
     path: '/log',
-    title: 'Logs',
+    title: '日志管理',
     icon: 'Document',
     children: [
-      { path: '/log/operation', title: 'Operation Logs', icon: 'Tickets' },
-      { path: '/log/login', title: 'Login Logs', icon: 'Key' }
+      { path: '/log/operation', title: '操作日志', icon: 'Tickets' },
+      { path: '/log/login', title: '登录日志', icon: 'Key' }
     ]
   },
   {
     path: '/monitor',
-    title: 'Monitor',
+    title: '系统监控',
     icon: 'Monitor',
     children: [
-      { path: '/monitor/metrics', title: 'Metrics', icon: 'TrendCharts' },
-      { path: '/monitor/health', title: 'Health', icon: 'FirstAidKit' }
+      { path: '/monitor/metrics', title: '监控指标', icon: 'TrendCharts' },
+      { path: '/monitor/health', title: '健康检查', icon: 'FirstAidKit' }
     ]
   }
 ]

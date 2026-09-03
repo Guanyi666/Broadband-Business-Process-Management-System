@@ -70,3 +70,21 @@ a {
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+// —— 12 栅格工具类（配合断点做响应式布局）——
+.bbpms-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+}
+
+@for $i from 1 through 12 {
+  .bbpms-col-#{$i} { grid-column: span #{$i}; }
+}
+
+// —— 区块分组标题（Dashboard / 列表页统一使用）——
+.section-title {
+  margin: 0 0 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #303133;
+}

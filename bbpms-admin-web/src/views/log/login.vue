@@ -41,34 +41,34 @@ function onReset() {
 
 <template>
   <div class="app-container">
-    <PageHeader title="Login Logs" />
+    <PageHeader title="登录日志" />
 
     <div class="app-card">
       <div class="page-toolbar">
         <div class="flex" style="gap: 8px; flex-wrap: wrap">
-          <el-input v-model="query.username" placeholder="Username" clearable style="width: 180px" />
-          <el-select v-model="query.status" placeholder="Status" clearable style="width: 140px">
-            <el-option value="SUCCESS" label="Success" />
-            <el-option value="FAILED" label="Failed" />
+          <el-input v-model="query.username" placeholder="用户名" clearable style="width: 180px" />
+          <el-select v-model="query.status" placeholder="状态" clearable style="width: 140px">
+            <el-option value="SUCCESS" label="成功" />
+            <el-option value="FAILED" label="失败" />
           </el-select>
-          <el-date-picker v-model="query.dateRange" type="daterange" value-format="YYYY-MM-DD" range-separator="-" start-placeholder="From" end-placeholder="To" />
-          <el-button type="primary" @click="onSearch">Search</el-button>
-          <el-button @click="onReset">Reset</el-button>
+          <el-date-picker v-model="query.dateRange" type="daterange" value-format="YYYY-MM-DD" range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期" />
+          <el-button type="primary" @click="onSearch">搜索</el-button>
+          <el-button @click="onReset">重置</el-button>
         </div>
       </div>
 
       <el-table v-loading="loading" :data="list" stripe>
-        <el-table-column prop="username" label="Username" width="160" />
+        <el-table-column prop="username" label="用户名" width="160" />
         <el-table-column prop="ip" label="IP" width="160" />
         <el-table-column prop="location" label="Location" width="140" />
         <el-table-column prop="terminal" label="Terminal" min-width="160" show-overflow-tooltip />
-        <el-table-column label="Status" width="100">
+        <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.status === 'SUCCESS' ? 'success' : 'danger'">{{ row.status }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="message" label="Message" min-width="200" show-overflow-tooltip />
-        <el-table-column label="Time" width="170">
+        <el-table-column prop="message" label="消息" min-width="200" show-overflow-tooltip />
+        <el-table-column label="时间" width="170">
           <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
         </el-table-column>
       </el-table>

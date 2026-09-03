@@ -38,7 +38,7 @@ onMounted(fetchData)
 
 <template>
   <div class="app-container">
-    <PageHeader title="Installers">
+    <PageHeader title="装维人员">
       <template #extra>
         <el-button @click="router.push('/installer/map')">
           <el-icon><MapLocation /></el-icon> Map View
@@ -49,15 +49,15 @@ onMounted(fetchData)
     <div class="app-card">
       <el-table v-loading="loading" :data="list" stripe @row-click="onRowClick">
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="name" label="Name" />
-        <el-table-column prop="username" label="Username" width="120" />
-        <el-table-column prop="phone" label="Phone" width="130" />
-        <el-table-column label="Status" width="100">
+        <el-table-column prop="name" label="名称" />
+        <el-table-column prop="username" label="用户名" width="120" />
+        <el-table-column prop="phone" label="手机号" width="130" />
+        <el-table-column label="状态" width="100">
           <template #default="{ row }"><BBPMSStatusTag :status="row.status" :label="row.status" /></template>
         </el-table-column>
-        <el-table-column prop="workload" label="Workload" width="100" />
-        <el-table-column prop="rating" label="Rating" width="100" />
-        <el-table-column label="Last Active" width="170">
+        <el-table-column prop="workload" label="当前负载" width="100" />
+        <el-table-column prop="rating" label="评分" width="100" />
+        <el-table-column label="最后活跃" width="170">
           <template #default="{ row }">{{ formatDate(row.lastActiveAt) }}</template>
         </el-table-column>
       </el-table>

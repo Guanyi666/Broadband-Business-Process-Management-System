@@ -32,10 +32,10 @@ function onAudit() {
 
 async function onCancel() {
   try {
-    await ElMessageBox.confirm('Cancel this order?', 'Confirm', { type: 'warning' })
+    await ElMessageBox.confirm('Cancel this order?', '确认', { type: 'warning' })
   } catch { return }
   await cancelOrder(route.params.id as string)
-  ElMessage.success('Cancelled')
+  ElMessage.success('已取消')
   fetchData()
 }
 
@@ -53,41 +53,41 @@ const canReassign = computed(() => ['AUDITED', 'WAIT_DISPATCH'].includes(detail.
     <PageHeader :title="`Order ${detail?.orderNo || ''}`">
       <template #extra>
         <PermissionButton permission="order:audit">
-          <el-button v-if="canAudit" type="primary" @click="onAudit">Audit</el-button>
+          <el-button v-if="canAudit" type="primary" @click="onAudit">审核</el-button>
         </PermissionButton>
         <PermissionButton permission="order:cancel">
-          <el-button v-if="canCancel" type="danger" plain @click="onCancel">Cancel</el-button>
+          <el-button v-if="canCancel" type="danger" plain @click="onCancel">取消</el-button>
         </PermissionButton>
         <PermissionButton permission="dispatch:manual">
-          <el-button v-if="canReassign" @click="onReassign">Dispatch</el-button>
+          <el-button v-if="canReassign" @click="onReassign">转派</el-button>
         </PermissionButton>
       </template>
     </PageHeader>
 
     <div class="card-grid">
       <div class="app-card">
-        <h3>Order Info</h3>
+        <h3>订单信息</h3>
         <el-descriptions :column="2" border v-if="detail">
-          <el-descriptions-item label="Order No">{{ detail.orderNo }}</el-descriptions-item>
-          <el-descriptions-item label="Status"><BBPMSStatusTag :status="detail.status" /></el-descriptions-item>
-          <el-descriptions-item label="Package">{{ detail.packageName }}</el-descriptions-item>
-          <el-descriptions-item label="CS">{{ detail.csName || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="Auditor">{{ detail.auditByName || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="Audit Time">{{ formatDate(detail.auditAt) }}</el-descriptions-item>
-          <el-descriptions-item label="Address" :span="2">{{ detail.address }}</el-descriptions-item>
-          <el-descriptions-item label="Appointment" :span="2">{{ formatDate(detail.appointmentAt) }}</el-descriptions-item>
-          <el-descriptions-item label="Remark" :span="2">{{ detail.remark || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="Created" :span="2">{{ formatDate(detail.createdAt) }}</el-descriptions-item>
+          <el-descriptions-item label="订单号">{{ detail.orderNo }}</el-descriptions-item>
+          <el-descriptions-item label="状态"><BBPMSStatusTag :status="detail.status" /></el-descriptions-item>
+          <el-descriptions-item label="套餐">{{ detail.packageName }}</el-descriptions-item>
+          <el-descriptions-item label="客服">{{ detail.csName || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="审核人">{{ detail.auditByName || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="审核时间">{{ formatDate(detail.auditAt) }}</el-descriptions-item>
+          <el-descriptions-item label="地址" :span="2">{{ detail.address }}</el-descriptions-item>
+          <el-descriptions-item label="预约时间" :span="2">{{ formatDate(detail.appointmentAt) }}</el-descriptions-item>
+          <el-descriptions-item label="备注" :span="2">{{ detail.remark || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="创建时间" :span="2">{{ formatDate(detail.createdAt) }}</el-descriptions-item>
         </el-descriptions>
       </div>
 
       <div class="app-card">
-        <h3>Customer</h3>
+        <h3>客户</h3>
         <el-descriptions :column="1" border v-if="detail?.customer">
-          <el-descriptions-item label="Name">{{ maskName(detail.customer.name) }}</el-descriptions-item>
-          <el-descriptions-item label="Phone">{{ maskPhone(detail.customer.phone) }}</el-descriptions-item>
-          <el-descriptions-item label="ID Card">{{ maskIdCard(detail.customer.idCard) }}</el-descriptions-item>
-          <el-descriptions-item label="Address">{{ detail.customer.address || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="名称">{{ maskName(detail.customer.name) }}</el-descriptions-item>
+          <el-descriptions-item label="手机号">{{ maskPhone(detail.customer.phone) }}</el-descriptions-item>
+          <el-descriptions-item label="身份证号">{{ maskIdCard(detail.customer.idCard) }}</el-descriptions-item>
+          <el-descriptions-item label="地址">{{ detail.customer.address || '-' }}</el-descriptions-item>
         </el-descriptions>
       </div>
 
@@ -95,15 +95,15 @@ const canReassign = computed(() => ['AUDITED', 'WAIT_DISPATCH'].includes(detail.
         <h3>Workorder</h3>
         <el-empty v-if="!detail?.workorder" description="Not dispatched yet" :image-size="60" />
         <el-descriptions v-else :column="1" border>
-          <el-descriptions-item label="Workorder No">{{ detail.workorder.workorderNo }}</el-descriptions-item>
-          <el-descriptions-item label="Status"><BBPMSStatusTag :status="detail.workorder.status" /></el-descriptions-item>
-          <el-descriptions-item label="Installer">{{ detail.workorder.installerName || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="Scheduled">{{ formatDate(detail.workorder.scheduledAt) }}</el-descriptions-item>
+          <el-descriptions-item label="工单号">{{ detail.workorder.workorderNo }}</el-descriptions-item>
+          <el-descriptions-item label="状态"><BBPMSStatusTag :status="detail.workorder.status" /></el-descriptions-item>
+          <el-descriptions-item label="装维人员">{{ detail.workorder.installerName || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="预约时间">{{ formatDate(detail.workorder.scheduledAt) }}</el-descriptions-item>
         </el-descriptions>
       </div>
     </div>
 
-    <OrderTimeline :events="detail?.timeline || []" title="Order Timeline" />
+    <OrderTimeline :events="detail?.timeline || []" title="订单时间线" />
   </div>
 </template>
 

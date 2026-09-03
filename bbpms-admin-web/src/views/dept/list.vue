@@ -38,10 +38,10 @@ function openEdit(row: DeptNode) {
 async function onSave() {
   if (editing.value) {
     await updateDept(editing.value.id, form)
-    ElMessage.success('Updated')
+    ElMessage.success('更新成功')
   } else {
     await createDept(form)
-    ElMessage.success('Created')
+    ElMessage.success('创建成功')
   }
   dialogVisible.value = false
   fetchData()
@@ -49,17 +49,17 @@ async function onSave() {
 
 async function onDelete(row: DeptNode) {
   try {
-    await ElMessageBox.confirm(`Delete ${row.name}?`, 'Confirm', { type: 'warning' })
+    await ElMessageBox.confirm(`确定删除 ${row.name} 吗？`, '确认', { type: 'warning' })
   } catch { return }
   await deleteDept(row.id)
-  ElMessage.success('Deleted')
+  ElMessage.success('删除成功')
   fetchData()
 }
 </script>
 
 <template>
   <div class="app-container">
-    <PageHeader title="Departments">
+    <PageHeader title="部门管理">
       <template #extra>
         <el-button type="primary" @click="openCreate()">Add Top-level</el-button>
       </template>
@@ -67,43 +67,43 @@ async function onDelete(row: DeptNode) {
 
     <div class="app-card">
       <el-table v-loading="loading" :data="tree" row-key="id" :tree-props="{ children: 'children' }" default-expand-all>
-        <el-table-column prop="name" label="Name" width="240" />
-        <el-table-column prop="leader" label="Leader" width="160" />
-        <el-table-column prop="phone" label="Phone" width="160" />
-        <el-table-column prop="sort" label="Sort" width="80" />
-        <el-table-column label="Status" width="100">
+        <el-table-column prop="name" label="名称" width="240" />
+        <el-table-column prop="leader" label="负责人" width="160" />
+        <el-table-column prop="phone" label="手机号" width="160" />
+        <el-table-column prop="sort" label="排序" width="80" />
+        <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'info'">
               {{ row.status === 1 ? 'Enabled' : 'Disabled' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="Action" width="220" align="center">
+        <el-table-column label="操作" width="220" align="center">
           <template #default="{ row }">
-            <el-button link type="primary" @click="openCreate(row)">Add Child</el-button>
-            <el-button link type="primary" @click="openEdit(row)">Edit</el-button>
-            <el-button link type="danger" @click="onDelete(row)">Delete</el-button>
+            <el-button link type="primary" @click="openCreate(row)">新增子级</el-button>
+            <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
+            <el-button link type="danger" @click="onDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="editing ? 'Edit Dept' : 'Add Dept'" width="480px">
+    <el-dialog v-model="dialogVisible" :title="editing ? '编辑部门' : '新增部门'" width="480px">
       <el-form :model="form" label-width="100px">
-        <el-form-item label="Name"><el-input v-model="form.name" /></el-form-item>
-        <el-form-item label="Leader"><el-input v-model="form.leader" /></el-form-item>
-        <el-form-item label="Phone"><el-input v-model="form.phone" /></el-form-item>
-        <el-form-item label="Sort"><el-input-number v-model="form.sort" :min="0" /></el-form-item>
-        <el-form-item label="Status">
+        <el-form-item label="名称"><el-input v-model="form.name" /></el-form-item>
+        <el-form-item label="负责人"><el-input v-model="form.leader" /></el-form-item>
+        <el-form-item label="手机号"><el-input v-model="form.phone" /></el-form-item>
+        <el-form-item label="排序"><el-input-number v-model="form.sort" :min="0" /></el-form-item>
+        <el-form-item label="状态">
           <el-radio-group v-model="form.status">
-            <el-radio :value="1">Enabled</el-radio>
-            <el-radio :value="0">Disabled</el-radio>
+            <el-radio :value="1">启用</el-radio>
+            <el-radio :value="0">禁用</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">Cancel</el-button>
-        <el-button type="primary" @click="onSave">Save</el-button>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="onSave">保存</el-button>
       </template>
     </el-dialog>
   </div>

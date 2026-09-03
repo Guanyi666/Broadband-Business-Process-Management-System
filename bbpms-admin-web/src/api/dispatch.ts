@@ -1,5 +1,6 @@
 import request from '@/utils/request'
 import type { DispatchCandidate } from '@/types/order'
+import type { DispatchStat } from '@/composables/useDashboard'
 
 export interface DispatchResult {
   workOrderId: number | string
@@ -79,4 +80,13 @@ export async function dispatchRecords(params: { orderId?: number | string; worko
     params
   })
   return { list: res?.records ?? [], total: res?.total ?? 0 }
+}
+
+/** GET /dispatch/stats —— 派单策略构成与平均评分（后端 DispatchStatVO） */
+export function getDispatchStats(days = 7) {
+  return request<DispatchStat>({
+    url: '/dispatch/stats',
+    method: 'GET',
+    params: { days }
+  })
 }

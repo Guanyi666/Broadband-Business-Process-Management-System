@@ -23,20 +23,20 @@ const theme = ref(localStorage.getItem('bbpms_theme') || 'light')
 
 function onSaveProfile() {
   // backend update not in scope of this stub; show success toast
-  ElMessage.success('Profile saved (UI only)')
+  ElMessage.success('已保存（仅界面演示）')
 }
 
 async function onChangePwd() {
   if (pwdForm.newPwd !== pwdForm.confirm) {
-    ElMessage.error('Passwords do not match')
+    ElMessage.error('两次输入的密码不一致')
     return
   }
   if (!auth.userInfo?.id) {
-    ElMessage.error('Not signed in')
+    ElMessage.error('未登录')
     return
   }
   await changePassword(auth.userInfo.id, { oldPassword: pwdForm.oldPwd, newPassword: pwdForm.newPwd })
-  ElMessage.success('Password changed')
+  ElMessage.success('密码修改成功')
   pwdForm.oldPwd = ''
   pwdForm.newPwd = ''
   pwdForm.confirm = ''
@@ -51,51 +51,51 @@ function onThemeChange(v: string) {
 
 <template>
   <div class="app-container">
-    <PageHeader title="Profile" />
+    <PageHeader title="个人中心" />
 
     <div class="app-card">
-      <h3>Account</h3>
+      <h3>账号</h3>
       <el-descriptions :column="2" border>
-        <el-descriptions-item label="Username">{{ auth.userInfo?.username }}</el-descriptions-item>
-        <el-descriptions-item label="Roles">
+        <el-descriptions-item label="用户名">{{ auth.userInfo?.username }}</el-descriptions-item>
+        <el-descriptions-item label="角色">
           <el-tag v-for="r in auth.roles" :key="r" style="margin-right: 4px">{{ r }}</el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="Dept">{{ auth.userInfo?.deptName || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="Status">
-          <el-tag type="success">Active</el-tag>
+        <el-descriptions-item label="部门">{{ auth.userInfo?.deptName || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="状态">
+          <el-tag type="success">正常</el-tag>
         </el-descriptions-item>
       </el-descriptions>
     </div>
 
     <div class="app-card">
-      <h3>Update Info</h3>
+      <h3>更新信息</h3>
       <el-form :model="profileForm" label-width="120px" style="max-width: 560px">
-        <el-form-item label="Nickname"><el-input v-model="profileForm.nickname" /></el-form-item>
-        <el-form-item label="Email"><el-input v-model="profileForm.email" /></el-form-item>
-        <el-form-item label="Phone"><el-input v-model="profileForm.phone" /></el-form-item>
+        <el-form-item label="昵称"><el-input v-model="profileForm.nickname" /></el-form-item>
+        <el-form-item label="邮箱"><el-input v-model="profileForm.email" /></el-form-item>
+        <el-form-item label="手机号"><el-input v-model="profileForm.phone" /></el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="onSaveProfile">Save</el-button>
+          <el-button type="primary" @click="onSaveProfile">保存</el-button>
         </el-form-item>
       </el-form>
     </div>
 
     <div class="app-card">
-      <h3>Change Password</h3>
+      <h3>修改密码</h3>
       <el-form :model="pwdForm" label-width="160px" style="max-width: 560px">
-        <el-form-item label="Old Password"><el-input v-model="pwdForm.oldPwd" type="password" show-password /></el-form-item>
-        <el-form-item label="New Password"><el-input v-model="pwdForm.newPwd" type="password" show-password /></el-form-item>
+        <el-form-item label="原密码"><el-input v-model="pwdForm.oldPwd" type="password" show-password /></el-form-item>
+        <el-form-item label="新密码"><el-input v-model="pwdForm.newPwd" type="password" show-password /></el-form-item>
         <el-form-item label="Confirm"><el-input v-model="pwdForm.confirm" type="password" show-password /></el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="onChangePwd">Change Password</el-button>
+          <el-button type="primary" @click="onChangePwd">修改密码</el-button>
         </el-form-item>
       </el-form>
     </div>
 
     <div class="app-card">
-      <h3>Appearance</h3>
+      <h3>外观</h3>
       <el-radio-group :model-value="theme" @change="onThemeChange">
-        <el-radio-button value="light">Light</el-radio-button>
-        <el-radio-button value="dark">Dark</el-radio-button>
+        <el-radio-button value="light">浅色</el-radio-button>
+        <el-radio-button value="dark">深色</el-radio-button>
       </el-radio-group>
     </div>
   </div>

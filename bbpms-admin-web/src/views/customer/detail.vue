@@ -24,16 +24,16 @@ onMounted(fetchData)
 <template>
   <div class="app-container" v-loading="loading">
     <div class="app-card">
-      <h3>Customer Info</h3>
+      <h3>客户信息</h3>
       <el-descriptions :column="2" border v-if="detail">
         <el-descriptions-item label="ID">{{ detail.id }}</el-descriptions-item>
-        <el-descriptions-item label="Name">{{ maskName(detail.name) }}</el-descriptions-item>
-        <el-descriptions-item label="Phone">{{ maskPhone(detail.phone) }}</el-descriptions-item>
-        <el-descriptions-item label="ID Card">{{ maskIdCard(detail.idCard) }}</el-descriptions-item>
-        <el-descriptions-item label="Email">{{ detail.email || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="Source">{{ detail.source || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="Address" :span="2">{{ detail.address || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="Created" :span="2">{{ formatDate(detail.createdAt) }}</el-descriptions-item>
+        <el-descriptions-item label="名称">{{ maskName(detail.name) }}</el-descriptions-item>
+        <el-descriptions-item label="手机号">{{ maskPhone(detail.phone) }}</el-descriptions-item>
+        <el-descriptions-item label="身份证号">{{ maskIdCard(detail.idCard) }}</el-descriptions-item>
+        <el-descriptions-item label="邮箱">{{ detail.email || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="来源">{{ detail.source || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="地址" :span="2">{{ detail.address || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="创建时间" :span="2">{{ formatDate(detail.createdAt) }}</el-descriptions-item>
       </el-descriptions>
     </div>
   </div>

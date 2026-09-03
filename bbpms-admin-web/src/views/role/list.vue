@@ -52,10 +52,10 @@ function openEdit(row: RoleInfo) {
 async function onSave() {
   if (editing.value) {
     await updateRole(editing.value.id, form)
-    ElMessage.success('Updated')
+    ElMessage.success('更新成功')
   } else {
     await createRole(form)
-    ElMessage.success('Created')
+    ElMessage.success('创建成功')
   }
   dialogVisible.value = false
   fetchData()
@@ -63,10 +63,10 @@ async function onSave() {
 
 async function onDelete(row: RoleInfo) {
   try {
-    await ElMessageBox.confirm(`Delete role ${row.name}?`, 'Confirm', { type: 'warning' })
+    await ElMessageBox.confirm(`确定删除角色 ${row.name} 吗？`, '确认', { type: 'warning' })
   } catch { return }
   await deleteRole(row.id)
-  ElMessage.success('Deleted')
+  ElMessage.success('删除成功')
   fetchData()
 }
 
@@ -82,44 +82,44 @@ async function onSaveMenus() {
   const checked = treeRef.value?.getCheckedKeys?.() ?? checkedKeys.value
   const halfChecked = treeRef.value?.getHalfCheckedKeys?.() ?? []
   await assignMenus(menuTarget.value.id, [...new Set([...checked, ...halfChecked])])
-  ElMessage.success('Menus updated')
+  ElMessage.success('菜单已更新')
   menuDialogVisible.value = false
 }
 </script>
 
 <template>
   <div class="app-container">
-    <PageHeader title="Roles">
+    <PageHeader title="角色管理">
       <template #extra>
-        <el-button type="primary" @click="openCreate">Add Role</el-button>
+        <el-button type="primary" @click="openCreate">新增角色</el-button>
       </template>
     </PageHeader>
 
     <div class="app-card">
       <div class="page-toolbar">
         <div class="flex" style="gap: 8px">
-          <el-input v-model="query.keyword" placeholder="Name / Code" clearable style="width: 240px" @keyup.enter="onSearch" />
-          <el-button type="primary" @click="onSearch">Search</el-button>
-          <el-button @click="onReset">Reset</el-button>
+          <el-input v-model="query.keyword" placeholder="名称 / 编码" clearable style="width: 240px" @keyup.enter="onSearch" />
+          <el-button type="primary" @click="onSearch">搜索</el-button>
+          <el-button @click="onReset">重置</el-button>
         </div>
       </div>
 
       <el-table v-loading="loading" :data="list" stripe>
-        <el-table-column prop="code" label="Code" width="160" />
-        <el-table-column prop="name" label="Name" width="160" />
-        <el-table-column prop="remark" label="Remark" />
-        <el-table-column label="Status" width="100">
+        <el-table-column prop="code" label="编码" width="160" />
+        <el-table-column prop="name" label="名称" width="160" />
+        <el-table-column prop="remark" label="备注" />
+        <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'info'">
               {{ row.status === 1 ? 'Enabled' : 'Disabled' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="Action" width="240" align="center">
+        <el-table-column label="操作" width="240" align="center">
           <template #default="{ row }">
-            <el-button link type="primary" @click="openAssignMenus(row)">Menus</el-button>
-            <el-button link type="primary" @click="openEdit(row)">Edit</el-button>
-            <el-button link type="danger" @click="onDelete(row)">Delete</el-button>
+            <el-button link type="primary" @click="openAssignMenus(row)">菜单</el-button>
+            <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
+            <el-button link type="danger" @click="onDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -136,21 +136,21 @@ async function onSaveMenus() {
       </div>
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="editing ? 'Edit Role' : 'Add Role'" width="480px">
+    <el-dialog v-model="dialogVisible" :title="editing ? '编辑角色' : '新增角色'" width="480px">
       <el-form :model="form" label-width="100px">
-        <el-form-item label="Code"><el-input v-model="form.code" /></el-form-item>
-        <el-form-item label="Name"><el-input v-model="form.name" /></el-form-item>
-        <el-form-item label="Remark"><el-input v-model="form.remark" type="textarea" :rows="2" /></el-form-item>
-        <el-form-item label="Status">
+        <el-form-item label="编码"><el-input v-model="form.code" /></el-form-item>
+        <el-form-item label="名称"><el-input v-model="form.name" /></el-form-item>
+        <el-form-item label="备注"><el-input v-model="form.remark" type="textarea" :rows="2" /></el-form-item>
+        <el-form-item label="状态">
           <el-radio-group v-model="form.status">
-            <el-radio :value="1">Enabled</el-radio>
-            <el-radio :value="0">Disabled</el-radio>
+            <el-radio :value="1">启用</el-radio>
+            <el-radio :value="0">禁用</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">Cancel</el-button>
-        <el-button type="primary" @click="onSave">Save</el-button>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="onSave">保存</el-button>
       </template>
     </el-dialog>
 
@@ -165,8 +165,8 @@ async function onSaveMenus() {
         @check="(_: any, info: any) => { checkedKeys = info.checkedKeys }"
       />
       <template #footer>
-        <el-button @click="menuDialogVisible = false">Cancel</el-button>
-        <el-button type="primary" @click="onSaveMenus">Save</el-button>
+        <el-button @click="menuDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="onSaveMenus">保存</el-button>
       </template>
     </el-dialog>
   </div>

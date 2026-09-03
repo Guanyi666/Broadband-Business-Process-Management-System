@@ -102,27 +102,27 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="app-container" v-loading="loading">
-    <PageHeader title="Installer Map">
+    <PageHeader title="装维地图">
       <template #extra>
-        <el-button @click="refresh"><el-icon><Refresh /></el-icon> Refresh</el-button>
+        <el-button @click="refresh"><el-icon><Refresh /></el-icon> 刷新</el-button>
       </template>
     </PageHeader>
     <el-alert v-if="loadError" :title="loadError" type="error" show-icon :closable="false" class="map-alert" />
     <el-alert v-if="mapError" :title="mapError" type="warning" show-icon :closable="false" class="map-alert" />
     <div v-show="!mapError" class="map-wrapper">
       <div v-if="locations.length === 0" class="map-empty">
-        <el-empty description="No installer locations to display" :image-size="80" />
+        <el-empty description="暂无装维位置信息" :image-size="80" />
       </div>
       <div ref="mapEl" class="map" />
     </div>
     <div class="app-card location-list">
       <el-table :data="locations" stripe empty-text="No installer locations">
-        <el-table-column prop="name" label="Installer" min-width="140" />
-        <el-table-column prop="phone" label="Phone" min-width="130" />
-        <el-table-column label="Status" width="100">
+        <el-table-column prop="name" label="装维人员" min-width="140" />
+        <el-table-column prop="phone" label="手机号" min-width="130" />
+        <el-table-column label="状态" width="100">
           <template #default="{ row }"><el-tag :type="row.online ? 'success' : 'info'">{{ row.online ? 'Online' : 'Offline' }}</el-tag></template>
         </el-table-column>
-        <el-table-column prop="workload" label="Workload" width="100" />
+        <el-table-column prop="workload" label="当前负载" width="100" />
         <el-table-column label="Coordinates" min-width="180">
           <template #default="{ row }">{{ row.lng && row.lat ? `${row.lng.toFixed(6)}, ${row.lat.toFixed(6)}` : '-' }}</template>
         </el-table-column>
