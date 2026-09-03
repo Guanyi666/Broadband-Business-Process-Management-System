@@ -28,6 +28,7 @@ const props = withDefaults(defineProps<Props>(), {
 const STATUS_TEXT: Record<string, string> = {
   // 订单 OrderStatus
   CREATED: '已创建',
+  REJECTED: '已驳回',
   AUDITED: '已审核',
   WAIT_DISPATCH: '待派单',
   DISPATCHED: '已派单',
@@ -60,6 +61,7 @@ const STATUS_TEXT: Record<string, string> = {
 const map: Record<string, TagType> = {
   PENDING: 'warning',
   CREATED: 'warning',
+  REJECTED: 'danger',
   AUDITED: 'primary',
   WAIT_DISPATCH: 'warning',
   AUDIT_PASS: 'primary',

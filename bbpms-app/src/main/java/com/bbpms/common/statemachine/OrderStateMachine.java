@@ -21,8 +21,10 @@ public class OrderStateMachine {
 
     public OrderStateMachine() {
         put(OrderStatus.CREATED,    OrderEvent.AUDIT_PASS,      OrderStatus.AUDITED,      List.of(3));
-        put(OrderStatus.CREATED,    OrderEvent.AUDIT_REJECT,    OrderStatus.CANCELLED,    List.of(3));
+        put(OrderStatus.CREATED,    OrderEvent.AUDIT_REJECT,    OrderStatus.REJECTED,     List.of(3));
         put(OrderStatus.CREATED,    OrderEvent.CANCEL,          OrderStatus.CANCELLED,    List.of(2, 6));
+        put(OrderStatus.REJECTED,   OrderEvent.RESUBMIT,        OrderStatus.CREATED,      List.of(2));
+        put(OrderStatus.REJECTED,   OrderEvent.CANCEL,          OrderStatus.CANCELLED,    List.of(2, 6));
         put(OrderStatus.AUDITED,    OrderEvent.START_DISPATCH,  OrderStatus.WAIT_DISPATCH,List.of(4));
         put(OrderStatus.WAIT_DISPATCH, OrderEvent.DISPATCH_OK,  OrderStatus.DISPATCHED,   List.of(4));
         put(OrderStatus.WAIT_DISPATCH, OrderEvent.DISPATCH_TIMEOUT, OrderStatus.CANCELLED,List.of(4));

@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getOrderDetail, cancelOrder } from '@/api/order'
+import { getOrderDetail, cancelOrder, resubmitOrder } from '@/api/order'
 import { maskPhone, maskName, maskIdCard, formatDate } from '@/utils/format'
 import PageHeader from '@/components/PageHeader.vue'
 import BBPMSStatusTag from '@/components/BBPMSStatusTag.vue'
@@ -32,10 +32,19 @@ function onAudit() {
 
 async function onCancel() {
   try {
-    await ElMessageBox.confirm('Cancel this order?', '确认', { type: 'warning' })
+    await ElMessageBox.confirm('确定取消该订单吗？', '确认', { type: 'warning' })
   } catch { return }
   await cancelOrder(route.params.id as string)
   ElMessage.success('已取消')
+  fetchData()
+}
+
+async function onResubmit() {
+  try {
+    await ElMessageBox.confirm('确定重新提交该订单吗？将重新进入审核队列。', '确认', { type: 'warning' })
+  } catch { return }
+  await resubmitOrder(route.params.id as string)
+  ElMessage.success('已重新提交，等待审核')
   fetchData()
 }
 
@@ -44,16 +53,20 @@ function onReassign() {
 }
 
 const canAudit = computed(() => detail.value?.status === 'CREATED')
-const canCancel = computed(() => ['CREATED', 'AUDITED', 'WAIT_DISPATCH'].includes(detail.value?.status))
+const canResubmit = computed(() => detail.value?.status === 'REJECTED')
+const canCancel = computed(() => ['CREATED', 'REJECTED', 'AUDITED', 'WAIT_DISPATCH'].includes(detail.value?.status))
 const canReassign = computed(() => ['AUDITED', 'WAIT_DISPATCH'].includes(detail.value?.status))
 </script>
 
 <template>
   <div class="app-container" v-loading="loading">
-    <PageHeader :title="`Order ${detail?.orderNo || ''}`">
+    <PageHeader :title="`订单 ${detail?.orderNo || ''}`">
       <template #extra>
         <PermissionButton permission="order:audit">
           <el-button v-if="canAudit" type="primary" @click="onAudit">审核</el-button>
+        </PermissionButton>
+        <PermissionButton permission="order:create">
+          <el-button v-if="canResubmit" type="warning" @click="onResubmit">重新提交</el-button>
         </PermissionButton>
         <PermissionButton permission="order:cancel">
           <el-button v-if="canCancel" type="danger" plain @click="onCancel">取消</el-button>

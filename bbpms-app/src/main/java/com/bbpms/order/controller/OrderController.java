@@ -93,6 +93,15 @@ public class OrderController {
         return R.ok();
     }
 
+    @Operation(summary = "重新提交被驳回的订单")
+    @PostMapping("/{id}/resubmit")
+    @PreAuthorize("hasAuthority('order:create')")
+    @OperationLog(value = "重新提交订单", module = "订单")
+    public R<Void> resubmit(@PathVariable("id") Long id) {
+        orderService.resubmit(id, SecurityUtils.getCurrentUserId());
+        return R.ok();
+    }
+
     @Operation(summary = "取消订单")
     @PostMapping("/{id}/cancel")
     @PreAuthorize("hasAuthority('order:cancel')")
