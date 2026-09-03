@@ -76,7 +76,7 @@ async function onDelete(row: MenuNode) {
   <div class="app-container">
     <PageHeader title="菜单管理">
       <template #extra>
-        <el-button type="primary" @click="openCreate()">Add Top-level</el-button>
+        <el-button type="primary" @click="openCreate()">新增顶级菜单</el-button>
       </template>
     </PageHeader>
 
@@ -98,7 +98,7 @@ async function onDelete(row: MenuNode) {
         <el-table-column label="是否可见" width="80">
           <template #default="{ row }">
             <el-tag size="small" :type="row.visible !== false ? 'success' : 'info'">
-              {{ row.visible !== false ? 'Yes' : 'No' }}
+              {{ row.visible !== false ? '是' : '否' }}
             </el-tag>
           </template>
         </el-table-column>

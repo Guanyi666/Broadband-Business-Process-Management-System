@@ -60,11 +60,11 @@ function onReset() {
       <el-table v-loading="loading" :data="list" stripe>
         <el-table-column prop="username" label="用户名" width="160" />
         <el-table-column prop="ip" label="IP" width="160" />
-        <el-table-column prop="location" label="Location" width="140" />
-        <el-table-column prop="terminal" label="Terminal" min-width="160" show-overflow-tooltip />
+        <el-table-column prop="location" label="位置" width="140" />
+        <el-table-column prop="terminal" label="终端" min-width="160" show-overflow-tooltip />
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="row.status === 'SUCCESS' ? 'success' : 'danger'">{{ row.status }}</el-tag>
+            <el-tag :type="row.status === 'SUCCESS' ? 'success' : 'danger'">{{ row.status === 'SUCCESS' ? '成功' : '失败' }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="message" label="消息" min-width="200" show-overflow-tooltip />

@@ -84,7 +84,7 @@ function onThemeChange(v: string) {
       <el-form :model="pwdForm" label-width="160px" style="max-width: 560px">
         <el-form-item label="原密码"><el-input v-model="pwdForm.oldPwd" type="password" show-password /></el-form-item>
         <el-form-item label="新密码"><el-input v-model="pwdForm.newPwd" type="password" show-password /></el-form-item>
-        <el-form-item label="Confirm"><el-input v-model="pwdForm.confirm" type="password" show-password /></el-form-item>
+        <el-form-item label="确认新密码"><el-input v-model="pwdForm.confirm" type="password" show-password /></el-form-item>
         <el-form-item>
           <el-button type="primary" @click="onChangePwd">修改密码</el-button>
         </el-form-item>

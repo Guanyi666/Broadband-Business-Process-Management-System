@@ -55,7 +55,7 @@ async function onPresign() {
     <PageHeader title="文件管理" />
 
     <div class="app-card">
-      <h3>Upload (Direct)</h3>
+      <h3>上传文件</h3>
       <el-upload
         :file-list="fileList"
         :http-request="customUpload"
@@ -64,9 +64,9 @@ async function onPresign() {
         drag
       >
         <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-        <div class="el-upload__text">拖拽文件到此处或 <em>click to upload</em></div>
+        <div class="el-upload__text">拖拽文件到此处或 <em>点击上传</em></div>
         <template #tip>
-          <div class="text-muted">Max 20MB. Direct multipart upload.</div>
+          <div class="text-muted">最大 20MB，支持直接上传</div>
         </template>
       </el-upload>
       <el-progress v-if="uploading" :percentage="percent" class="mt-16" />

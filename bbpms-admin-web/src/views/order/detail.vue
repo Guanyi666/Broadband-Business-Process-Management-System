@@ -92,7 +92,7 @@ const canReassign = computed(() => ['AUDITED', 'WAIT_DISPATCH'].includes(detail.
       </div>
 
       <div class="app-card">
-        <h3>Workorder</h3>
+        <h3>工单信息</h3>
         <el-empty v-if="!detail?.workorder" description="Not dispatched yet" :image-size="60" />
         <el-descriptions v-else :column="1" border>
           <el-descriptions-item label="工单号">{{ detail.workorder.workorderNo }}</el-descriptions-item>

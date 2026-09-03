@@ -3,7 +3,7 @@
     <PageHeader title="SLA 监控" :breadcrumb="['SLA', '监控']" />
 
     <el-alert type="warning" :closable="false" style="margin-bottom: 16px">
-      即将超时工单：{{ expiring.length }} 个；已 STALLED：{{ stalled.length }} 个；已 AUTO_CANCELLED：{{ cancelled.length }} 个
+      即将超时工单：{{ expiring.length }} 个；已停滞：{{ stalled.length }} 个；已自动取消：{{ cancelled.length }} 个
     </el-alert>
 
     <el-tabs v-model="activeTab">

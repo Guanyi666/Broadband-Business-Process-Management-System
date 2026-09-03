@@ -61,7 +61,7 @@ async function onDelete(row: DeptNode) {
   <div class="app-container">
     <PageHeader title="部门管理">
       <template #extra>
-        <el-button type="primary" @click="openCreate()">Add Top-level</el-button>
+        <el-button type="primary" @click="openCreate()">新增顶级部门</el-button>
       </template>
     </PageHeader>
 
@@ -74,7 +74,7 @@ async function onDelete(row: DeptNode) {
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'info'">
-              {{ row.status === 1 ? 'Enabled' : 'Disabled' }}
+              {{ row.status === 1 ? '启用' : '禁用' }}
             </el-tag>
           </template>
         </el-table-column>

@@ -60,7 +60,7 @@ onMounted(fetchData)
     <PageHeader title="工单管理">
       <template #extra>
         <el-button type="primary" @click="router.push('/workorder/dispatch-board')">
-          <el-icon><Connection /></el-icon> Dispatch Board
+          <el-icon><Connection /></el-icon> 派单工作台
         </el-button>
       </template>
     </PageHeader>
@@ -70,9 +70,9 @@ onMounted(fetchData)
         <el-tab-pane label="全部" name="ALL" />
         <el-tab-pane label="待处理" name="PENDING" />
         <el-tab-pane label="派单时间" name="DISPATCHED" />
-        <el-tab-pane label="In Progress" name="IN_PROGRESS" />
+        <el-tab-pane label="施工中" name="IN_PROGRESS" />
         <el-tab-pane label="完成时间" name="COMPLETED" />
-        <el-tab-pane label="Cancelled" name="CANCELLED" />
+        <el-tab-pane label="已取消" name="CANCELLED" />
       </el-tabs>
 
       <div class="page-toolbar">
@@ -92,7 +92,7 @@ onMounted(fetchData)
         </el-table-column>
         <el-table-column prop="installerName" label="装维人员" width="120" />
         <el-table-column prop="customerPhone" label="客户电话" width="130" />
-        <el-table-column label="Dispatch" width="170">
+        <el-table-column label="派单时间" width="170">
           <template #default="{ row }">{{ formatDate(row.dispatchTime, 'YYYY-MM-DD HH:mm') }}</template>
         </el-table-column>
         <el-table-column label="创建时间" width="170">

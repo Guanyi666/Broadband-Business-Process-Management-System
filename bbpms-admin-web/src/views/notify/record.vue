@@ -41,7 +41,7 @@ function onReset() { query.channel = ''; query.status = ''; query.pageNum = 1; f
 
 async function onSend() {
   if (!sendForm.phone || !sendForm.templateCode) {
-    ElMessage.warning('Please enter a phone number and template code')
+    ElMessage.warning('请输入手机号和模板编码')
     return
   }
   let params: Record<string, any>
@@ -120,12 +120,12 @@ async function onSend() {
     <el-dialog v-model="sendDialog" title="发送短信" width="520px">
       <el-form :model="sendForm" label-width="100px">
         <el-form-item label="手机号">
-          <el-input v-model="sendForm.phone" placeholder="Mobile phone number" />
+          <el-input v-model="sendForm.phone" placeholder="请输入手机号（逗号分隔）" />
         </el-form-item>
         <el-form-item label="模板">
           <el-input v-model="sendForm.templateCode" placeholder="e.g. ORDER_CREATED" />
         </el-form-item>
-        <el-form-item label="Parameters">
+        <el-form-item label="变量参数">
           <el-input v-model="sendForm.params" type="textarea" :rows="5" placeholder='{"name":"Alice"}' />
         </el-form-item>
       </el-form>

@@ -63,7 +63,7 @@ function onReset() {
         <el-table-column prop="ip" label="IP" width="140" />
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="row.status === 'SUCCESS' ? 'success' : 'danger'">{{ row.status }}</el-tag>
+            <el-tag :type="row.status === 'SUCCESS' ? 'success' : 'danger'">{{ row.status === 1 ? '成功' : '失败' }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="durationMs" label="耗时 (ms)" width="120" />

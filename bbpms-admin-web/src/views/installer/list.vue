@@ -41,7 +41,7 @@ onMounted(fetchData)
     <PageHeader title="装维人员">
       <template #extra>
         <el-button @click="router.push('/installer/map')">
-          <el-icon><MapLocation /></el-icon> Map View
+          <el-icon><MapLocation /></el-icon> 装维地图
         </el-button>
       </template>
     </PageHeader>

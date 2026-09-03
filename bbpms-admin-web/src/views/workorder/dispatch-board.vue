@@ -62,7 +62,7 @@ async function onAutoDispatch() {
   } catch { return }
   try {
     const r = await autoDispatch(currentOrder.value.id)
-    ElMessage.success(`Dispatched to ${r.installerName || r.installerId}`)
+    ElMessage.success(`已派单给 ${r.installerName || r.installerId}`)
     dialogVisible.value = false
     refresh()
   } catch {
@@ -95,17 +95,17 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="app-container" v-loading="loading">
-    <PageHeader title="Dispatch Board">
+    <PageHeader title="派单工作台">
       <template #extra>
         <el-button @click="refresh"><el-icon><Refresh /></el-icon> 刷新</el-button>
       </template>
     </PageHeader>
 
     <div class="status-row">
-      <div class="status-card"><span>Pending Dispatch</span><strong>{{ statusSummary.pending }}</strong></div>
-      <div class="status-card"><span>Dispatched</span><strong>{{ statusSummary.dispatched }}</strong></div>
-      <div class="status-card"><span>Processing</span><strong>{{ statusSummary.processing }}</strong></div>
-      <div class="status-card"><span>Completed</span><strong>{{ statusSummary.completed }}</strong></div>
+      <div class="status-card"><span>待派单</span><strong>{{ statusSummary.pending }}</strong></div>
+      <div class="status-card"><span>已派单</span><strong>{{ statusSummary.dispatched }}</strong></div>
+      <div class="status-card"><span>施工中</span><strong>{{ statusSummary.processing }}</strong></div>
+      <div class="status-card"><span>已完成</span><strong>{{ statusSummary.completed }}</strong></div>
     </div>
 
     <div class="board">
@@ -124,7 +124,7 @@ onBeforeUnmount(() => {
               {{ formatDate(o.appointmentAt, 'MM-DD HH:mm') }}
             </div>
           </div>
-          <el-empty v-if="!pendingOrders.length" description="No pending orders" :image-size="60" />
+          <el-empty v-if="!pendingOrders.length" description="暂无待派发工单" :image-size="60" />
         </div>
       </div>
 
@@ -137,36 +137,36 @@ onBeforeUnmount(() => {
           <div v-for="i in onlineInstallers" :key="i.installerId" class="installer-card">
             <div class="installer-name">
               <el-tag size="small" :type="i.online ? 'success' : 'info'">
-                {{ i.online ? 'Online' : 'Offline' }}
+                {{ i.online ? '在线' : '离线' }}
               </el-tag>
               <span>{{ i.name }}</span>
             </div>
             <div class="installer-stats">
-              <span><el-icon><Tools /></el-icon> Workload: {{ i.workload ?? '-' }}</span>
+              <span><el-icon><Tools /></el-icon> 当前负载：{{ i.workload ?? '-' }}</span>
               <span><el-icon><Star /></el-icon> {{ i.rating ?? '-' }}</span>
             </div>
             <div class="installer-loc text-muted" v-if="i.lng && i.lat">
               ({{ i.lng.toFixed(3) }}, {{ i.lat.toFixed(3) }})
             </div>
           </div>
-          <el-empty v-if="!onlineInstallers.length" description="No installers online" :image-size="60" />
+          <el-empty v-if="!onlineInstallers.length" description="暂无在线装维" :image-size="60" />
         </div>
       </div>
     </div>
 
     <el-dialog
       v-model="dialogVisible"
-      :title="`Dispatch - ${currentOrder?.orderNo || ''}`"
+      :title="`派单 - ${currentOrder?.orderNo || ''}`"
       width="640px"
     >
       <div v-loading="dialogLoading">
         <el-alert type="info" :closable="false" class="mb-16">
-          <div>Customer: <strong>{{ currentOrder?.customerName }}</strong></div>
-          <div>Address: {{ currentOrder?.address }}</div>
-          <div>Appointment: {{ formatDate(currentOrder?.appointmentAt) }}</div>
+          <div>客户：<strong>{{ currentOrder?.customerName }}</strong></div>
+          <div>安装地址：{{ currentOrder?.address }}</div>
+          <div>预约时间：{{ formatDate(currentOrder?.appointmentAt) }}</div>
         </el-alert>
 
-        <div class="candidate-header">Top Candidates (by score)</div>
+        <div class="candidate-header">推荐装维（按评分）</div>
         <el-table :data="candidates" border>
           <el-table-column label="排名" width="60" type="index" />
           <el-table-column label="装维人员">

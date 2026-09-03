@@ -24,14 +24,14 @@ const query = reactive({
 })
 
 const statusOptions: { label: string; value: OrderStatus }[] = [
-  { label: 'Created', value: 'CREATED' },
+  { label: '已创建', value: 'CREATED' },
   { label: 'Audited', value: 'AUDITED' },
-  { label: 'Waiting Dispatch', value: 'WAIT_DISPATCH' },
+  { label: '待派单', value: 'WAIT_DISPATCH' },
   { label: 'Dispatched', value: 'DISPATCHED' },
   { label: 'Installing', value: 'INSTALLING' },
   { label: 'Finished', value: 'FINISHED' },
   { label: 'Closed', value: 'CLOSED' },
-  { label: 'Cancelled', value: 'CANCELLED' }
+  { label: '已取消', value: 'CANCELLED' }
 ]
 
 async function fetchData() {
@@ -97,7 +97,7 @@ onMounted(fetchData)
     <PageHeader title="订单管理">
       <template #extra>
         <el-button type="primary" @click="router.push('/order/create')">
-          <el-icon><Plus /></el-icon> Create Order
+          <el-icon><Plus /></el-icon> 创建订单
         </el-button>
       </template>
     </PageHeader>
@@ -106,7 +106,7 @@ onMounted(fetchData)
       <el-tabs v-model="activeTab" class="mb-16">
         <el-tab-pane label="全部" name="ALL" />
         <el-tab-pane label="创建时间" name="CREATED" />
-        <el-tab-pane label="Waiting Dispatch" name="WAIT_DISPATCH" />
+        <el-tab-pane label="待派单" name="WAIT_DISPATCH" />
         <el-tab-pane label="安装中" name="INSTALLING" />
         <el-tab-pane label="已完成" name="FINISHED" />
       </el-tabs>

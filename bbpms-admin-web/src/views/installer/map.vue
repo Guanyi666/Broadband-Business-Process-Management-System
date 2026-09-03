@@ -72,7 +72,7 @@ function updateMarkers() {
           <div style="padding:8px 12px">
             <div style="font-weight:600">${l.name}</div>
             <div>Phone: ${l.phone || '-'}</div>
-            <div>Status: ${l.online ? 'Online' : 'Offline'}</div>
+            <div>状态：${l.online ? '在线' : '离线'}</div>
             <div>Workload: ${l.workload ?? 0}</div>
             <div>Rating: ${l.rating ?? '-'}</div>
           </div>
@@ -120,10 +120,10 @@ onBeforeUnmount(() => {
         <el-table-column prop="name" label="装维人员" min-width="140" />
         <el-table-column prop="phone" label="手机号" min-width="130" />
         <el-table-column label="状态" width="100">
-          <template #default="{ row }"><el-tag :type="row.online ? 'success' : 'info'">{{ row.online ? 'Online' : 'Offline' }}</el-tag></template>
+          <template #default="{ row }"><el-tag :type="row.online ? 'success' : 'info'">{{ row.online ? '在线' : '离线' }}</el-tag></template>
         </el-table-column>
         <el-table-column prop="workload" label="当前负载" width="100" />
-        <el-table-column label="Coordinates" min-width="180">
+        <el-table-column label="坐标" min-width="180">
           <template #default="{ row }">{{ row.lng && row.lat ? `${row.lng.toFixed(6)}, ${row.lat.toFixed(6)}` : '-' }}</template>
         </el-table-column>
       </el-table>
