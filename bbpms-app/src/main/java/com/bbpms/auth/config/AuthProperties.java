@@ -29,6 +29,16 @@ public class AuthProperties {
 
     @PostConstruct
     public void initKeys() {
+        // Reuse persisted keys across restarts so the public key served to
+        // browsers stays stable; only generate once and store on first boot.
+        java.util.Properties stored = RsaKeyStore.load();
+        if (stored != null) {
+            rsaPrivateKey = stored.getProperty("rsaPrivateKey");
+            rsaPublicKey = stored.getProperty("rsaPublicKey");
+            if (refreshSecret == null || refreshSecret.isEmpty()) {
+                refreshSecret = stored.getProperty("refreshSecret");
+            }
+        }
         if (rsaPrivateKey == null || rsaPrivateKey.isEmpty()
                 || rsaPublicKey == null || rsaPublicKey.isEmpty()) {
             KeyPair kp = CryptoUtils.rsaGenerate(2048);
@@ -39,6 +49,14 @@ public class AuthProperties {
             byte[] bytes = new byte[32];
             new java.security.SecureRandom().nextBytes(bytes);
             refreshSecret = Base64.getEncoder().encodeToString(bytes);
+        }
+        try {
+            RsaKeyStore.save(rsaPrivateKey, rsaPublicKey, refreshSecret);
+        } catch (Exception e) {
+            // Persistence is best-effort; a failure must not block startup.
+            System.getLogger(AuthProperties.class.getName()).log(System.Logger.Level.WARNING,
+                    "RSA keys not persisted (fresh keys will be generated on next boot): " + e.getMessage(),
+                    e);
         }
     }
 

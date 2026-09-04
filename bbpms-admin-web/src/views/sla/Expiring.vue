@@ -13,7 +13,9 @@
             <BBPMSStatusTag :status="row.status" :type-map="STATUS_MAP" />
           </template>
           <template #action="{ row }">
-            <PermissionButton v-hasPermi="'workorder:reassign'" type="primary" size="small" @click="onReassign(row)">改派</PermissionButton>
+            <PermissionButton v-hasPermi="'workorder:reassign'">
+              <el-button type="primary" size="small" @click="onReassign(row)">改派</el-button>
+            </PermissionButton>
           </template>
         </BBPMSTable>
       </el-tab-pane>
@@ -24,9 +26,15 @@
             <BBPMSStatusTag :status="row.status" :type-map="STATUS_MAP" />
           </template>
           <template #action="{ row }">
-            <PermissionButton v-hasPermi="'workorder:resume'" type="success" size="small" @click="onResume(row)">恢复</PermissionButton>
-            <PermissionButton v-hasPermi="'workorder:reassign'" type="primary" size="small" @click="onReassign(row)">改派</PermissionButton>
-            <PermissionButton v-hasPermi="'workorder:force-close'" type="danger" size="small" @click="onForceClose(row)">强关</PermissionButton>
+            <PermissionButton v-hasPermi="'workorder:resume'">
+              <el-button type="success" size="small" @click="onResume(row)">恢复</el-button>
+            </PermissionButton>
+            <PermissionButton v-hasPermi="'workorder:reassign'">
+              <el-button type="primary" size="small" @click="onReassign(row)">改派</el-button>
+            </PermissionButton>
+            <PermissionButton v-hasPermi="'workorder:force-close'">
+              <el-button type="danger" size="small" @click="onForceClose(row)">强关</el-button>
+            </PermissionButton>
           </template>
         </BBPMSTable>
       </el-tab-pane>

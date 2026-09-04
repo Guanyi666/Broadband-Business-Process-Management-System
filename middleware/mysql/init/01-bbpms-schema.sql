@@ -1,3 +1,4 @@
+SET NAMES utf8mb4;
 -- ============================================================================
 -- BBPMS Merged Schema — Modular Monolith
 -- All business tables in one database (no undo_log, no outbox_event)
