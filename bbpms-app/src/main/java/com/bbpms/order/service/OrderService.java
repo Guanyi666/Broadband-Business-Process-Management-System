@@ -36,10 +36,18 @@ public interface OrderService {
      * Audit an order.
      *
      * @param req           audit decision (pass=true moves CREATED -> AUDITED,
-     *                      pass=false moves CREATED -> CANCELLED)
+     *                      pass=false moves CREATED -> REJECTED)
      * @param auditorId     id of the auditor
      */
     void audit(Long orderId, OrderAuditReq req, Long auditorId);
+
+    /**
+     * Resubmit a rejected order after the customer-service fixes it.
+     * Moves REJECTED -> CREATED so it re-enters the audit queue.
+     *
+     * @param operatorId    id of the customer-service user
+     */
+    void resubmit(Long orderId, Long operatorId);
 
     /**
      * Cancel an order. Allowed from CREATED or AUDITED.

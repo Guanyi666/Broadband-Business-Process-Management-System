@@ -104,7 +104,11 @@ export function auditOrder(id: number | string, data: AuditPayload) {
 }
 
 export function cancelOrder(id: number | string, remark?: string) {
-  return request<void>({ url: `/orders/${id}/cancel`, method: 'POST', data: { reason: remark || 'Cancelled by operator' } })
+  return request<void>({ url: `/orders/${id}/cancel`, method: 'POST', data: { reason: remark || '操作员取消订单' } })
+}
+
+export function resubmitOrder(id: number | string) {
+  return request<void>({ url: `/orders/${id}/resubmit`, method: 'POST' })
 }
 
 export function orderTimeline(id: number | string) {

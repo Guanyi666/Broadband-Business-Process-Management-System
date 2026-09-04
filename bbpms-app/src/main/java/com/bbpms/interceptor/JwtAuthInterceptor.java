@@ -59,6 +59,7 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
         user.setRoles(toList(claims.get("roles")));
         user.setPermissions(toList(claims.get("perms")));
         user.setDataScope(claims.get("scope", Integer.class));
+        user.setDeptId(claims.get("dept", Long.class));
         user.setJti(jti);
         SecurityContextHolder.set(user);
 

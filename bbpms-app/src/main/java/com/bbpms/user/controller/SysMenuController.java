@@ -39,12 +39,14 @@ public class SysMenuController {
     }
 
     @GetMapping("/tree")
+    @PreAuthorize("hasAuthority('system:menu:view')")
     public R<List<SysMenuVO>> tree() {
         Long userId = SecurityUtils.getCurrentUserId();
         return R.ok(menuService.getMenuTreeByUserId(userId));
     }
 
     @GetMapping("/perms")
+    @PreAuthorize("hasAuthority('system:menu:view')")
     public R<List<String>> perms() {
         Long userId = SecurityUtils.getCurrentUserId();
         return R.ok(menuService.getPermsByUserId(userId));

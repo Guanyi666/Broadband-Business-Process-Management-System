@@ -169,6 +169,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         info.setRoles(baseMapper.selectUserRoles(userId));
         info.setPermissions(baseMapper.selectUserPermissions(userId));
         info.setDataScope(baseMapper.selectUserDataScope(userId));
+        info.setDeptId(user.getDeptId());
         return info;
     }
 

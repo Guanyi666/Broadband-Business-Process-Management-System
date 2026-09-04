@@ -88,6 +88,7 @@ public class InstallController {
     }
 
     @GetMapping("/my")
+    @PreAuthorize("hasAuthority('install:view')")
     public R<List<InstallRecordVO>> mine() {
         Long uid = SecurityUtils.requireUserId();
         return R.ok(installService.getByInstaller(uid));

@@ -77,4 +77,13 @@ public class OrderVO {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Schema(description = "更新时间")
     private LocalDateTime updateTime;
+
+    @Schema(description = "资源房间ID（ITERATION 2 资源核查回写）")
+    private Long roomId;
+
+    @Schema(description = "资源核查状态（RESOURCE_OK/RESOURCE_INSUFFICIENT/NO_COVERAGE）")
+    private String resourceStatus;
+
+    @Schema(description = "资源核查备注")
+    private String checkRemark;
 }

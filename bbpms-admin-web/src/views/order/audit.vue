@@ -38,7 +38,7 @@ async function onSubmit() {
   submitting.value = true
   try {
     await auditOrder(order.value.id, { pass: form.pass, remark: form.remark })
-    ElMessage.success(form.pass ? 'Approved' : 'Rejected')
+    ElMessage.success(form.pass ? '审核通过' : '已驳回')
     router.push(`/order/detail/${order.value.id}`)
   } finally {
     submitting.value = false

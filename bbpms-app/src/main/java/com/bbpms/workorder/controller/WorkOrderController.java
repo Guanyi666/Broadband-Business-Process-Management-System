@@ -53,18 +53,21 @@ public class WorkOrderController {
 
     @Operation(summary = "工单详情（含时间线 + 订单快照）")
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('workorder:view')")
     public R<WorkOrderDetailVO> getDetail(@PathVariable("id") Long id) {
         return R.ok(workOrderService.getDetail(id));
     }
 
     @Operation(summary = "分页查询工单")
     @GetMapping("/page")
+    @PreAuthorize("hasAuthority('workorder:view')")
     public R<PageResp<WorkOrderVO>> page(WorkOrderQueryReq req) {
         return R.ok(workOrderService.page(req));
     }
 
     @Operation(summary = "按订单 id 查询工单")
     @GetMapping("/by-order/{orderId}")
+    @PreAuthorize("hasAuthority('workorder:view')")
     public R<WorkOrderVO> byOrder(@PathVariable("orderId") Long orderId) {
         return R.ok(workOrderService.findByOrderId(orderId));
     }
@@ -144,6 +147,7 @@ public class WorkOrderController {
 
     @Operation(summary = "按 id 查工单单行（管理端原始查询）")
     @GetMapping("/entity/{id}")
+    @PreAuthorize("hasAuthority('workorder:view')")
     public R<WorkOrder> rawById(@PathVariable("id") Long id) {
         return R.ok(workOrderService.getById(id));
     }
@@ -152,6 +156,7 @@ public class WorkOrderController {
 
     @Operation(summary = "心跳（H5 端每 5 分钟调一次）")
     @PostMapping("/{id}/heartbeat")
+    @PreAuthorize("hasAuthority('workorder:view-own')")
     public R<Void> heartbeat(@PathVariable("id") Long id) {
         workOrderService.markHeartbeat(id);
         return R.ok();

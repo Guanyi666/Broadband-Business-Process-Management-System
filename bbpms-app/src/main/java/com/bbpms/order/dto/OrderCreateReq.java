@@ -48,4 +48,14 @@ public class OrderCreateReq implements Serializable {
 
     @Schema(description = "备注")
     private String remark;
+
+    /** 资源核查结果回写（ITERATION 2）：房间ID（可选，下单前经 /resources/check 获得）。 */
+    @Schema(description = "资源房间ID")
+    private Long roomId;
+
+    @Schema(description = "资源核查结果（RESOURCE_OK/RESOURCE_INSUFFICIENT/NO_COVERAGE，可选）")
+    private String resourceStatus;
+
+    @Schema(description = "资源核查备注（可选）")
+    private String checkRemark;
 }

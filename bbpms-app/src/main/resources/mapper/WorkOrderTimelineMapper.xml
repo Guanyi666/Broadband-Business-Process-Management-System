@@ -33,7 +33,9 @@
     </select>
 
     <select id="selectByOrderId" resultMap="BaseResultMap">
-        SELECT t.<include refid="Base_Column_List"/>
+        SELECT t.id, t.work_order_id, t.from_status, t.to_status,
+               t.operator_id, t.operator_role, t.remark,
+               t.create_by, t.update_by, t.create_time, t.update_time, t.deleted
         FROM work_order_timeline t
         INNER JOIN work_order w ON w.id = t.work_order_id
         WHERE w.order_id = #{orderId}

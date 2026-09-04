@@ -6,7 +6,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum OrderStatus {
-    CREATED("CREATED", "已创建"),
+    CREATED("CREATED", "待审核"),
+    REJECTED("REJECTED", "已驳回"),
     AUDITED("AUDITED", "已审核"),
     WAIT_DISPATCH("WAIT_DISPATCH", "待派单"),
     DISPATCHED("DISPATCHED", "已派单"),

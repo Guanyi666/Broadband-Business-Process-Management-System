@@ -33,10 +33,12 @@ public class MessageTemplateController {
         return R.ok();
     }
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('notify:template:view')")
     public R<MessageTemplate> getById(@PathVariable Long id) {
         return R.ok(templateService.getById(id));
     }
     @GetMapping
+    @PreAuthorize("hasAuthority('notify:template:view')")
     public R<List<MessageTemplate>> list() {
         return R.ok(templateService.listEnabled());
     }

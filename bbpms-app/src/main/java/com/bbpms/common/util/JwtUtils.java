@@ -50,7 +50,7 @@ public class JwtUtils {
     private static final long REFRESH_TTL_MS = 7L * 24 * 60 * 60 * 1000L;
 
     public String generateAccessToken(Long userId, String username, List<String> roles,
-                                      Integer dataScope, List<String> permissions) {
+                                      Integer dataScope, Long deptId, List<String> permissions) {
         String jti = UUID.randomUUID().toString();
         long now = System.currentTimeMillis();
         Map<String, Object> claims = new HashMap<>();
@@ -59,6 +59,7 @@ public class JwtUtils {
         claims.put("roles", roles);
         claims.put("perms", permissions);
         claims.put("scope", dataScope);
+        claims.put("dept", deptId);
         claims.put("jti", jti);
         claims.put("typ", "access");
         JwtBuilder b = Jwts.builder().claims(claims).subject(String.valueOf(userId))

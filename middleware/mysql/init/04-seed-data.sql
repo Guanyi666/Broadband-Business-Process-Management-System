@@ -116,6 +116,14 @@ INSERT IGNORE INTO `sys_menu` (`id`, `parent_id`, `name`, `path`, `component`, `
 (230, 0, 'H5 Attendance', '/h5/attendance', 'Layout', 1, 'attendance:clock', NULL, 230, 0, 1),
 (231, 0, 'H5 Leave', '/h5/leave', 'Layout', 1, 'leave:apply', NULL, 231, 0, 1);
 
+-- Resource management (ITERATION 2) — 资源台账 + 核查（admin 全量）
+INSERT IGNORE INTO `sys_menu` (`id`, `parent_id`, `name`, `path`, `component`, `type`, `perms`, `icon`, `sort`, `visible`, `status`) VALUES
+(400, 0, 'Resource', '/resource', 'Layout', 1, 'resource:view', 'office-building', 400, 1, 1),
+(401, 400, 'Resource List', 'list', 'resource/index', 2, 'resource:view', NULL, 1, 1, 1);
+
+INSERT IGNORE INTO `sys_menu` (`id`, `parent_id`, `name`, `type`, `perms`, `sort`, `visible`, `status`) VALUES
+(402, 401, 'Resource Edit Button', 3, 'resource:edit', 1, 1, 1);
+
 -- Attendance / leave / SLA button-level perms
 INSERT IGNORE INTO `sys_menu` (`id`, `parent_id`, `name`, `type`, `perms`, `sort`, `visible`, `status`) VALUES
 (204, 201, 'Clock-In Button',   3, 'attendance:clock',      1, 1, 1),

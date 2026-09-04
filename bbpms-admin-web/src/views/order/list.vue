@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { pageOrders, cancelOrder } from '@/api/order'
+import { pageOrders, cancelOrder, resubmitOrder } from '@/api/order'
 import type { OrderItem, OrderStatus } from '@/types/order'
 import { formatDate } from '@/utils/format'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -24,13 +24,14 @@ const query = reactive({
 })
 
 const statusOptions: { label: string; value: OrderStatus }[] = [
-  { label: '已创建', value: 'CREATED' },
-  { label: 'Audited', value: 'AUDITED' },
+  { label: '待审核', value: 'CREATED' },
+  { label: '已驳回', value: 'REJECTED' },
+  { label: '已审核', value: 'AUDITED' },
   { label: '待派单', value: 'WAIT_DISPATCH' },
-  { label: 'Dispatched', value: 'DISPATCHED' },
-  { label: 'Installing', value: 'INSTALLING' },
-  { label: 'Finished', value: 'FINISHED' },
-  { label: 'Closed', value: 'CLOSED' },
+  { label: '已派单', value: 'DISPATCHED' },
+  { label: '安装中', value: 'INSTALLING' },
+  { label: '已完成', value: 'FINISHED' },
+  { label: '已归档', value: 'CLOSED' },
   { label: '已取消', value: 'CANCELLED' }
 ]
 
@@ -85,6 +86,15 @@ async function onCancel(row: OrderItem) {
   fetchData()
 }
 
+async function onResubmit(row: OrderItem) {
+  try {
+    await ElMessageBox.confirm(`确定重新提交订单 ${row.orderNo} 吗？将重新进入审核队列。`, '确认', { type: 'warning' })
+  } catch { return }
+  await resubmitOrder(row.id)
+  ElMessage.success('已重新提交，等待审核')
+  fetchData()
+}
+
 function onRowClick(row: OrderItem) {
   router.push(`/order/detail/${row.id}`)
 }
@@ -105,7 +115,8 @@ onMounted(fetchData)
     <div class="app-card">
       <el-tabs v-model="activeTab" class="mb-16">
         <el-tab-pane label="全部" name="ALL" />
-        <el-tab-pane label="创建时间" name="CREATED" />
+        <el-tab-pane label="待审核" name="CREATED" />
+        <el-tab-pane label="已驳回" name="REJECTED" />
         <el-tab-pane label="待派单" name="WAIT_DISPATCH" />
         <el-tab-pane label="安装中" name="INSTALLING" />
         <el-tab-pane label="已完成" name="FINISHED" />
@@ -137,7 +148,8 @@ onMounted(fetchData)
         <el-table-column label="操作" width="200" fixed="right" align="center">
           <template #default="{ row }">
             <el-button link type="primary" @click.stop="onAudit(row)" v-if="row.status === 'CREATED'">审核</el-button>
-            <el-button link type="danger" @click.stop="onCancel(row)" v-if="['CREATED','AUDITED','WAIT_DISPATCH'].includes(row.status)">取消</el-button>
+            <el-button link type="warning" @click.stop="onResubmit(row)" v-if="row.status === 'REJECTED'">重新提交</el-button>
+            <el-button link type="danger" @click.stop="onCancel(row)" v-if="['CREATED','REJECTED','AUDITED','WAIT_DISPATCH'].includes(row.status)">取消</el-button>
             <el-button link @click.stop="onRowClick(row)">详情</el-button>
           </template>
         </el-table-column>

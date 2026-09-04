@@ -120,6 +120,10 @@ public class OrderServiceImpl implements OrderService {
         order.setCsId(csUserId);
         order.setCreateBy(csUserId);
         order.setUpdateBy(csUserId);
+        // ITERATION 2 — 资源核查回写（可选，不阻断旧调用）
+        order.setRoomId(req.getRoomId());
+        order.setResourceStatus(req.getResourceStatus());
+        order.setCheckRemark(req.getCheckRemark());
         orderMapper.insert(order);
 
         // Optional appointment.
@@ -195,12 +199,43 @@ public class OrderServiceImpl implements OrderService {
         if (pass) {
             publisher.publishEvent(new BbpmsEvents.OrderAuditedEvent(
                     order.getId(), order.getOrderNo(), auditorId, order.getAuditTime()));
-        } else {
+        } else if (next == OrderStatus.CANCELLED) {
+            // Only a real cancellation (or cancel-after-reject) cancels work orders.
+            // A plain REJECT keeps the order resubmittable, so no cancel event is fired.
             publisher.publishEvent(new BbpmsEvents.OrderCancelledEvent(
                     order.getId(), auditorId, req.getRemark()));
         }
 
         log.info("Audit on order {} -> {} by {}", order.getOrderNo(), next, auditorId);
+    }
+
+    /* ===================== RESUBMIT ===================== */
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @OperationLog(value = "重新提交订单", module = "订单")
+    public void resubmit(Long orderId, Long operatorId) {
+        if (orderId == null) {
+            throw new BizException(ResultCode.BAD_REQUEST, "orderId 不能为空");
+        }
+        BroadbandOrder order = mustLoad(orderId);
+        OrderStatus current = OrderStatus.fromCode(order.getStatus());
+        if (current == null) {
+            throw new BizException(ResultCode.ORDER_STATUS_INVALID, "订单状态未知");
+        }
+        OrderStatus next = orderStateMachine.next(current, OrderEvent.RESUBMIT);
+
+        String before = current.name();
+        order.setStatus(next.name());
+        // A fresh audit round should not carry the previous rejection remark.
+        order.setAuditRemark(null);
+        order.setUpdateBy(operatorId);
+        orderMapper.updateById(order);
+
+        appendAuditLog(order.getId(), operatorId,
+                before, next.name(), "驳回后重新提交，重新进入审核队列");
+
+        log.info("Order {} resubmitted {} -> {} by {}", order.getOrderNo(), before, next, operatorId);
     }
 
     /* ===================== CANCEL ===================== */
