@@ -64,6 +64,9 @@ public class WorkOrder extends BaseDO {
     /** Package name snapshot (denormalised from the order). */
     private String packageName;
 
+    /** INSTALL / REPAIR. Existing work orders default to INSTALL. */
+    private String businessType;
+
     /* ---------- Phase 5 SLA / lifecycle additions ---------- */
 
     /** 1=URGENT, 2=HIGH, 3=NORMAL. */

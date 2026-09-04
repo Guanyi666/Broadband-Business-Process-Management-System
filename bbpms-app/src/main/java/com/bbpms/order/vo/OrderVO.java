@@ -42,6 +42,9 @@ public class OrderVO {
     @Schema(description = "订单状态")
     private String status;
 
+    @Schema(description = "订单来源（CS/CUSTOMER_SELF）")
+    private String source;
+
     @Schema(description = "客服ID")
     private Long csId;
 

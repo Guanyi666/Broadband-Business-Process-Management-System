@@ -117,6 +117,7 @@ public class OrderServiceImpl implements OrderService {
         order.setInstallAddress(req.getInstallAddress());
         order.setExpectedInstallDate(req.getExpectedInstallDate());
         order.setStatus(OrderStatus.CREATED.name());
+        order.setSource("CS");
         order.setCsId(csUserId);
         order.setCreateBy(csUserId);
         order.setUpdateBy(csUserId);
@@ -134,6 +135,8 @@ public class OrderServiceImpl implements OrderService {
             appt.setContactPhone(req.getContactPhone());
             appt.setRemark(req.getRemark());
             appt.setConfirmed(0);
+            appt.setStatus("PENDING");
+            appt.setRescheduleCount(0);
             appt.setCreateBy(csUserId);
             appt.setUpdateBy(csUserId);
             appointmentMapper.insert(appt);
@@ -480,6 +483,8 @@ public class OrderServiceImpl implements OrderService {
             a.setAppointmentTime(time);
             a.setRemark(remark);
             a.setConfirmed(0);
+            a.setStatus("PENDING");
+            a.setRescheduleCount(0);
             a.setCreateBy(operatorId);
             a.setUpdateBy(operatorId);
             appointmentMapper.insert(a);
@@ -512,23 +517,27 @@ public class OrderServiceImpl implements OrderService {
         CustomerVO vo = new CustomerVO();
         BeanUtils.copyProperties(c, vo);
         vo.setMasked(!unmasked);
-        try {
-            String key = orderProperties.getSm4Key();
-            if (c.getName() != null) {
-                String plain = CryptoUtils.sm4Decrypt(c.getName(), key);
-                vo.setName(unmasked ? plain : CryptoUtils.maskPhone(plain));
-            }
-            if (c.getPhone() != null) {
-                String plain = CryptoUtils.sm4Decrypt(c.getPhone(), key);
-                vo.setPhone(unmasked ? plain : CryptoUtils.maskPhone(plain));
-            }
-            if (c.getIdCardNo() != null) {
-                String plain = CryptoUtils.sm4Decrypt(c.getIdCardNo(), key);
-                vo.setIdCardNo(unmasked ? plain : CryptoUtils.maskIdCard(plain));
-            }
-        } catch (Exception ignored) {
-            // Masking is best-effort.
+        String key = orderProperties.getSm4Key();
+        if (c.getName() != null) {
+            String plain = decryptOrLegacyPlaintext(c.getName(), key);
+            vo.setName(unmasked ? plain : CryptoUtils.maskPhone(plain));
+        }
+        if (c.getPhone() != null) {
+            String plain = decryptOrLegacyPlaintext(c.getPhone(), key);
+            vo.setPhone(unmasked ? plain : CryptoUtils.maskPhone(plain));
+        }
+        if (c.getIdCardNo() != null) {
+            String plain = decryptOrLegacyPlaintext(c.getIdCardNo(), key);
+            vo.setIdCardNo(unmasked ? plain : CryptoUtils.maskIdCard(plain));
         }
         return vo;
+    }
+
+    private String decryptOrLegacyPlaintext(String value, String key) {
+        try {
+            return CryptoUtils.sm4Decrypt(value, key);
+        } catch (Exception ignored) {
+            return value;
+        }
     }
 }

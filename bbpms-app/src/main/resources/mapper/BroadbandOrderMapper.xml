@@ -12,6 +12,7 @@
         <result column="install_address"        property="installAddress"/>
         <result column="expected_install_date"  property="expectedInstallDate"/>
         <result column="status"                 property="status"/>
+        <result column="source"                 property="source"/>
         <result column="cs_id"                  property="csId"/>
         <result column="auditor_id"             property="auditorId"/>
         <result column="audit_time"             property="auditTime"/>
@@ -30,7 +31,7 @@
 
     <sql id="Base_Column_List">
         id, order_no, customer_id, package_code, package_name, install_address,
-        expected_install_date, status, cs_id, auditor_id, audit_time, audit_remark,
+        expected_install_date, status, source, cs_id, auditor_id, audit_time, audit_remark,
         dispatch_time, completed_time, cancelled_time, cancel_reason,
         create_by, update_by, create_time, update_time, version, deleted
     </sql>

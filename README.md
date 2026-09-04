@@ -16,7 +16,7 @@ BBPMS 是一个面向运营商宽带装维业务的**全生命周期管理平台
 
 > 客户申请 → 订单创建 → 资料审核 → 资源校验 → 自动派单 → 装维接单 → 上门安装 → 销单归档
 
-涵盖 **1 个 Spring Boot 单体应用 + 1 个 MySQL + 1 个 Redis + 2 个 Vue 前端**，代码组织按业务域分包（`com.bbpms.auth` / `user` / `order` / `workorder` / `dispatch` / `install` / `notify` / `log` / `file`）。
+涵盖 **1 个 Spring Boot 单体应用 + 1 个 MySQL + 1 个 Redis + 3 个 Vue 前端**，代码组织按业务域分包（`com.bbpms.auth` / `user` / `order` / `customerportal` / `workorder` / `dispatch` / `install` / `notify` / `log` / `file`）。
 
 ### 核心特性（简化后）
 
@@ -55,6 +55,7 @@ BBPMS 是一个面向运营商宽带装维业务的**全生命周期管理平台
 |---|---|
 | 管理后台 | Vue 3.4 + Vite 5 + TypeScript 5 + Element Plus 2.5 + Pinia 2 |
 | 装维 H5 | Vue 3.4 + Vant 4 + 高德地图 JS API |
+| 客户 H5 | Vue 3.4 + Vant 4 + Pinia 2（账号密码登录） |
 | HTTP | Axios + 请求/响应拦截器 |
 
 ### 运维
@@ -90,6 +91,7 @@ BBPMS/
 │       ├── auth/                          # 认证模块
 │       ├── user/                          # 用户/RBAC 模块
 │       ├── order/                         # 订单模块
+│       ├── customerportal/                # 客户自助端领域与专属数据边界
 │       ├── workorder/                     # 工单模块
 │       ├── dispatch/                      # 派单模块（含算法）
 │       ├── install/                       # 安装模块（含 BSS mock）
@@ -99,6 +101,7 @@ BBPMS/
 │       └── config/                        # Web/Jackson/CORS/MyBatis+/Redisson 等
 ├── bbpms-admin-web/                       # 管理后台前端（Vue3 + Element Plus）
 ├── bbpms-installer-h5/                    # 装维 H5（Vue3 + Vant）
+├── bbpms-customer-h5/                     # 客户自助 H5（Vue3 + Vant）
 ├── middleware/
 │   ├── mysql/init/                        # 合并后的 SQL init 脚本
 │   └── redis/redis.conf
@@ -139,6 +142,12 @@ cd bbpms-installer-h5
 npm install
 npm run dev
 # → http://localhost:9002
+
+# 客户自助 H5
+cd bbpms-customer-h5
+npm install
+npm run dev
+# → http://localhost:9003
 ```
 
 ### 4. 默认账号
@@ -150,6 +159,7 @@ npm run dev
 | `audit1` | `admin123` | 审核员 |
 | `disp1` | `admin123` | 调度员 |
 | `install1` | `admin123` | 装维工程师 |
+| `customer1` | `admin123` | 客户（绑定演示客户 1） |
 
 ---
 

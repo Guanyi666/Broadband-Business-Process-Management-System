@@ -35,6 +35,9 @@ public class BroadbandOrder extends BaseDO {
     /** String code of {@link OrderStatus} — kept as String for backward compat. */
     private String status;
 
+    /** CS for back-office entry, CUSTOMER_SELF for customer portal submission. */
+    private String source;
+
     /** Customer-service user id at the time of creation. */
     private Long csId;
 

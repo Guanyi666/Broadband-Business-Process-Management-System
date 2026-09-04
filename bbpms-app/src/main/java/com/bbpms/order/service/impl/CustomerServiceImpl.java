@@ -1,5 +1,7 @@
 package com.bbpms.order.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbpms.common.enums.ResultCode;
 import com.bbpms.common.exception.BizException;
 import com.bbpms.common.result.PageResp;
@@ -203,6 +205,16 @@ public class CustomerServiceImpl implements CustomerService {
         } catch (Exception ex) {
             log.warn("Decrypt failed for customer id={}, falling back to raw value", customerId);
             return null;
+        }
+    }
+
+    /** Fresh rows are encrypted; legacy demo seed rows may still be plaintext. */
+    private String decryptOrLegacyPlaintext(String value, String key) {
+        if (value == null) return null;
+        try {
+            return CryptoUtils.sm4Decrypt(value, key);
+        } catch (Exception ignored) {
+            return value;
         }
     }
 }
