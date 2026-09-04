@@ -48,6 +48,11 @@ export function getCustomer(id: number | string) {
   })
 }
 
+/** 明文接口：仅当后端鉴权通过（具备 customer:view-sensitive）时返回未脱敏数据；否则 403 降级为脱敏数据。 */
+export function getCustomerUnmasked(id: number | string) {
+  return request<Customer>({ url: `/customers/${id}/unmasked`, method: 'GET' })
+}
+
 export function searchCustomers(keyword: string, limit = 20) {
   return request<Customer[]>({
     url: '/customers/search',

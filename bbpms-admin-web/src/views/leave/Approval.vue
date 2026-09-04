@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onActivated, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { fetchPendingApprovals, approveLeave, fetchTeamCalendar, type LeaveVO } from '@/api/leave'
 import BBPMSTable from '@/components/BBPMSTable.vue'
@@ -129,6 +129,7 @@ async function onSubmit() {
 
 watch(activeTab, (t) => { if (t === 'pending') loadPending() })
 onMounted(loadPending)
+onActivated(loadPending)
 </script>
 
 <style lang="scss" scoped>

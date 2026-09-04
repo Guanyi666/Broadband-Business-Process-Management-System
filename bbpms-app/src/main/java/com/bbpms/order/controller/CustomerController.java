@@ -84,7 +84,7 @@ public class CustomerController {
         // For sensitive listing use the per-id unmasked endpoint above.
         long pageNum = req.getPageNum() == null ? 1 : req.getPageNum();
         long pageSize = req.getPageSize() == null ? 20 : req.getPageSize();
-        return R.ok(customerService.page((int) pageNum, (int) pageSize));
+        return R.ok(customerService.page((int) pageNum, (int) pageSize, req.getKeyword()));
     }
 
     @Operation(summary = "模糊搜索客户（名称/手机号）")
@@ -119,5 +119,7 @@ public class CustomerController {
     @Data
     @EqualsAndHashCode(callSuper = true)
     public static class CustomerPageReq extends BaseDTO {
+        /** 模糊关键字：匹配解密后的姓名或手机号 */
+        private String keyword;
     }
 }

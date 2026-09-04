@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, reactive, watch } from 'vue'
+import { ref, onMounted, onActivated, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { pageOrders, cancelOrder, resubmitOrder } from '@/api/order'
 import type { OrderItem, OrderStatus } from '@/types/order'
@@ -100,6 +100,7 @@ function onRowClick(row: OrderItem) {
 }
 
 onMounted(fetchData)
+onActivated(fetchData)
 </script>
 
 <template>

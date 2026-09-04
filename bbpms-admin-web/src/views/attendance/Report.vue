@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, onActivated } from 'vue'
 import { Refresh } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { fetchOnDuty, fetchInstallerDaily, fetchInstallerMonthly, type AttendanceVO } from '@/api/attendance'
@@ -156,6 +156,7 @@ function formatMinutes(min: number) {
 
 watch(month, () => loadMonthly())
 onMounted(() => { loadOnDuty(); loadMonthly() })
+onActivated(() => { loadOnDuty(); loadMonthly() })
 </script>
 
 <style lang="scss" scoped>

@@ -65,6 +65,12 @@ const routes: RouteRecordRaw[] = [
         name: 'CustomerDetail',
         component: () => import('@/views/customer/detail.vue'),
         meta: { title: '客户详情', requiresAuth: true, hideInMenu: true, permission: 'customer:view' }
+      },
+      {
+        path: 'create',
+        name: 'CustomerCreate',
+        component: () => import('@/views/customer/create.vue'),
+        meta: { title: '新增客户', requiresAuth: true, hideInMenu: true, permission: 'customer:create' }
       }
     ]
   },

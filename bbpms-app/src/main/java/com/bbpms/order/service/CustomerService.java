@@ -45,8 +45,11 @@ public interface CustomerService {
 
     /**
      * Paged customer list (masked PII).
+     *
+     * @param keyword optional fuzzy filter on decrypted name / phone;
+     *                {@code null}/{@code blank} returns the whole page.
      */
-    PageResp<CustomerVO> page(int pageNum, int pageSize);
+    PageResp<CustomerVO> page(int pageNum, int pageSize, String keyword);
 
     /**
      * Fuzzy search on decrypted name/phone (masked PII), capped at

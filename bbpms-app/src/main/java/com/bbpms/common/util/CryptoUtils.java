@@ -176,6 +176,15 @@ public final class CryptoUtils {
         return id.substring(0, 6) + "********" + id.substring(id.length() - 4);
     }
 
+    public static String maskName(String name) {
+        if (name == null || name.isBlank()) return name;
+        String s = name.trim();
+        if (s.length() == 1) return s;
+        if (s.length() == 2) return s.charAt(0) + "*";
+        // Keep first and last char, mask the middle (supports multi-char names).
+        return s.charAt(0) + "*".repeat(s.length() - 2) + s.charAt(s.length() - 1);
+    }
+
     /* -------------------- utils -------------------- */
     private static byte[] hexToBytes(String hex) {
         int len = hex.length();
