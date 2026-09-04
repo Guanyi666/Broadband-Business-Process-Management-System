@@ -1,3 +1,4 @@
+SET NAMES utf8mb4;
 -- ============================================================================
 -- BBPMS Database & User Initialization
 -- Single database `bbpms` for the modular monolith

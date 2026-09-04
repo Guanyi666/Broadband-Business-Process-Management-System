@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onActivated, onBeforeUnmount } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { pageOrders } from '@/api/order'
 import { listInstallerLocations } from '@/api/installer'
@@ -58,7 +58,7 @@ async function openDispatch(order: OrderItem) {
 async function onAutoDispatch() {
   if (!currentOrder.value) return
   try {
-    await ElMessageBox.confirm('Auto-dispatch this order?', 'Confirm', { type: 'info' })
+    await ElMessageBox.confirm('确定自动派单给评分最高的装维人员吗？', '自动派单确认', { type: 'info' })
   } catch { return }
   try {
     const r = await autoDispatch(currentOrder.value.id)
@@ -91,6 +91,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   if (timer) clearInterval(timer)
 })
+onActivated(refresh)
 </script>
 
 <template>

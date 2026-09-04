@@ -66,7 +66,7 @@ public class InstallServiceImpl implements InstallService {
     private final InstallProperties props;
 
     @Override
-    @OperationLog(module = "install", value = "arrive")
+    @OperationLog(module = "install", value = "到达现场")
     @Transactional(rollbackFor = Exception.class)
     public void arrive(Long workOrderId, InstallArriveReq req, Long installerId) {
         InstallRecord rec = mustFind(workOrderId);
@@ -81,7 +81,7 @@ public class InstallServiceImpl implements InstallService {
     }
 
     @Override
-    @OperationLog(module = "install", value = "save-info")
+    @OperationLog(module = "install", value = "保存安装信息")
     @Transactional(rollbackFor = Exception.class)
     public void saveInfo(Long workOrderId, InstallInfoReq req) {
         if (req == null) return;
@@ -94,7 +94,7 @@ public class InstallServiceImpl implements InstallService {
     }
 
     @Override
-    @OperationLog(module = "install", value = "add-photo")
+    @OperationLog(module = "install", value = "添加照片")
     @Transactional(rollbackFor = Exception.class)
     public void addPhoto(Long workOrderId, InstallPhotoReq req) {
         if (req == null || !StringUtils.hasText(req.getObjectKey()) && !StringUtils.hasText(req.getUrl())) {
@@ -109,7 +109,7 @@ public class InstallServiceImpl implements InstallService {
     }
 
     @Override
-    @OperationLog(module = "install", value = "add-signature")
+    @OperationLog(module = "install", value = "添加签名")
     @Transactional(rollbackFor = Exception.class)
     public void addSignature(Long workOrderId, InstallSignatureReq req) {
         if (req == null) throw new BizException(ResultCode.BAD_REQUEST, "signature 不能为空");
@@ -120,7 +120,7 @@ public class InstallServiceImpl implements InstallService {
     }
 
     @Override
-    @OperationLog(module = "install", value = "complete")
+    @OperationLog(module = "install", value = "完成工单")
     @Transactional(rollbackFor = Exception.class)
     public void complete(Long workOrderId, InstallCompleteReq req, Long installerId) {
         if (req == null) throw new BizException(ResultCode.BAD_REQUEST, "请求不能为空");

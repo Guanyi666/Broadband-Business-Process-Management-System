@@ -253,6 +253,13 @@ export const allMenus: MenuConfig[] = [
     ]
   },
   {
+    path: '/resource',
+    title: '资源管理',
+    icon: 'OfficeBuilding',
+    perms: 'resource:view',
+    children: [{ path: '/resource/list', title: '网络资源台账', icon: 'List', perms: 'resource:view' }]
+  },
+  {
     path: '/installer',
     title: '装维管理',
     icon: 'Avatar',

@@ -94,7 +94,7 @@ public class DispatchServiceImpl implements DispatchService {
     /* ========================= AUTO ========================= */
 
     @Override
-    @OperationLog(module = "dispatch", value = "auto-dispatch")
+    @OperationLog(module = "dispatch", value = "自动派单")
     @Transactional(rollbackFor = Exception.class)
     public DispatchResultDTO autoDispatch(Long orderId) {
         if (orderId == null) throw new BizException(ResultCode.BAD_REQUEST, "orderId 不能为空");
@@ -209,7 +209,7 @@ public class DispatchServiceImpl implements DispatchService {
     /* ========================= MANUAL ========================= */
 
     @Override
-    @OperationLog(module = "dispatch", value = "manual-dispatch")
+    @OperationLog(module = "dispatch", value = "手动派单")
     @Transactional(rollbackFor = Exception.class)
     public DispatchResultDTO manualDispatch(ManualDispatchReq req) {
         if (req == null || req.getOrderId() == null || req.getInstallerId() == null) {
@@ -280,7 +280,7 @@ public class DispatchServiceImpl implements DispatchService {
     /* ========================= REASSIGN ========================= */
 
     @Override
-    @OperationLog(module = "dispatch", value = "reassign")
+    @OperationLog(module = "dispatch", value = "改派")
     @Transactional(rollbackFor = Exception.class)
     public DispatchResultDTO reassign(ReassignReq req) {
         if (req == null || req.getWorkOrderId() == null) {

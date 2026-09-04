@@ -62,6 +62,7 @@ onMounted(fetchData)
           />
           <el-button type="primary" @click="onSearch">搜索</el-button>
           <el-button @click="onReset">重置</el-button>
+          <el-button type="primary" plain @click="router.push('/customer/create')">新增客户</el-button>
         </div>
       </div>
 

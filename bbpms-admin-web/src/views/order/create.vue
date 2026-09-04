@@ -69,10 +69,10 @@ const rules = {
 }
 
 const packageOptions = [
-  { value: 'PKG_100M', name: '100M Broadband', label: '100M Broadband - ¥99/month' },
-  { value: 'PKG_300M', name: '300M Broadband', label: '300M Broadband - ¥159/month' },
-  { value: 'PKG_500M', name: '500M Broadband', label: '500M Broadband - ¥199/month' },
-  { value: 'PKG_1G', name: '1G Broadband', label: '1G Broadband - ¥299/month' }
+  { value: 'PKG_100M', name: '100M宽带', label: '100M宽带 - ¥99/月' },
+  { value: 'PKG_300M', name: '300M宽带', label: '300M宽带 - ¥159/月' },
+  { value: 'PKG_500M', name: '500M宽带', label: '500M宽带 - ¥199/月' },
+  { value: 'PKG_1G', name: '1G宽带', label: '1G宽带 - ¥299/月' }
 ]
 
 async function onSubmit() {
@@ -106,7 +106,6 @@ async function onSubmit() {
         checkRemark: checkResult.value?.message
       }
       const createdId = await createOrder(payload)
-      ElMessage.success('Order created')
       router.push(`/order/detail/${createdId}`)
     } finally {
       submitting.value = false
@@ -129,7 +128,7 @@ async function onSubmit() {
         </el-form-item>
 
         <template v-if="form.customerMode === 'EXISTING'">
-          <el-form-item label="Search" prop="customerId">
+          <el-form-item label="搜索客户" prop="customerId">
             <el-select
               v-model="form.customerId"
               filterable
@@ -185,7 +184,7 @@ async function onSubmit() {
         <el-form-item label="地图选点">
           <BBPMSMapPicker v-model="form.location" />
           <div class="text-muted mt-8" style="font-size: 12px">
-            Optional — Click on the map to set the service location coordinates.
+            可选——点击地图设置安装位置坐标
           </div>
         </el-form-item>
 

@@ -1,3 +1,4 @@
+SET NAMES utf8mb4;
 -- =============================================================================
 -- BBPMS Schema Extensions — Phases 3-6 (Attendance, Leave, SLA + missing cols)
 -- Canonical extension file (merged from the two earlier 03 files).

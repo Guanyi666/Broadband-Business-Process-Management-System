@@ -57,3 +57,4 @@ docker-compose.override.yml
 
 # --- 清理临时归档（确认后可删除） ---
 temporary_backup/
+.workbuddy/

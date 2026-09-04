@@ -1,3 +1,4 @@
+SET NAMES utf8mb4;
 -- ============================================================================
 -- BBPMS Seed Data — Simplified for Modular Monolith
 -- All test users password = admin123 (BCrypt hash: $2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2)

@@ -6,7 +6,14 @@
       <el-tab-pane label="待我审批" name="pending">
         <BBPMSTable :data="pending" :columns="columns" :loading="loading">
           <template #action="{ row }">
-            <PermissionButton v-hasPermi="`leave:approve-l${row.currentLevel + 1}`" type="primary" size="small" @click="openApprove(row, row.currentLevel + 1)">审批</PermissionButton>
+            <!-- PermissionButton renders a text root node when given plain text
+                 content, and Vue 3 drops fallthrough attrs (@click/type/size) on
+                 text roots — the button silently stopped working. The real
+                 el-button must live INSIDE the slot (same pattern as
+                 order/detail.vue). -->
+            <PermissionButton v-hasPermi="`leave:approve-l${row.currentLevel + 1}`">
+              <el-button type="primary" size="small" @click="openApprove(row, row.currentLevel + 1)">审批</el-button>
+            </PermissionButton>
           </template>
         </BBPMSTable>
       </el-tab-pane>
@@ -43,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onActivated, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { fetchPendingApprovals, approveLeave, fetchTeamCalendar, type LeaveVO } from '@/api/leave'
 import BBPMSTable from '@/components/BBPMSTable.vue'
@@ -129,6 +136,7 @@ async function onSubmit() {
 
 watch(activeTab, (t) => { if (t === 'pending') loadPending() })
 onMounted(loadPending)
+onActivated(loadPending)
 </script>
 
 <style lang="scss" scoped>

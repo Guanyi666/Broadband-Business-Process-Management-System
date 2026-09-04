@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, reactive, watch } from 'vue'
+import { ref, onMounted, onActivated, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { pageWorkorders } from '@/api/workorder'
 import type { WorkorderItem } from '@/types/order'
@@ -53,6 +53,7 @@ function onSearch() { query.pageNum = 1; fetchData() }
 function onReset() { query.installerId = ''; query.dateRange = []; query.pageNum = 1; fetchData() }
 
 onMounted(fetchData)
+onActivated(fetchData)
 </script>
 
 <template>
