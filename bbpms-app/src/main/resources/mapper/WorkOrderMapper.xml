@@ -17,6 +17,7 @@
         <result column="install_address" property="installAddress"/>
         <result column="customer_phone"  property="customerPhone"/>
         <result column="package_name"    property="packageName"/>
+        <result column="business_type"   property="businessType"/>
         <result column="create_by"       property="createBy"/>
         <result column="update_by"       property="updateBy"/>
         <result column="create_time"     property="createTime"/>
@@ -28,7 +29,7 @@
     <sql id="Base_Column_List">
         id, work_no, order_id, installer_id, dispatcher_id, status,
         dispatch_time, accept_time, start_time, finish_time,
-        install_address, customer_phone, package_name,
+        install_address, customer_phone, package_name, business_type,
         create_by, update_by, create_time, update_time, version, deleted
     </sql>
 

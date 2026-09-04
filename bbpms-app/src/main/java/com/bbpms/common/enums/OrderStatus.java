@@ -6,6 +6,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum OrderStatus {
+    PENDING_CS_CONFIRM("PENDING_CS_CONFIRM", "待客服确认"),
+    CS_REJECTED("CS_REJECTED", "客服已退回"),
     CREATED("CREATED", "待审核"),
     REJECTED("REJECTED", "已驳回"),
     AUDITED("AUDITED", "已审核"),

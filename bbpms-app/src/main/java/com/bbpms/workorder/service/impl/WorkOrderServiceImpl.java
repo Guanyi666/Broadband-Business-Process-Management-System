@@ -130,6 +130,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         wo.setInstallerId(installerId);
         wo.setDispatcherId(dispatcherId);
         wo.setStatus(WorkOrderStatus.DISPATCHED.getCode());
+        wo.setBusinessType("BROADBAND_INSTALL");
         wo.setDispatchTime(LocalDateTime.now());
         wo.setCreateBy(dispatcherId);
         wo.setUpdateBy(dispatcherId);

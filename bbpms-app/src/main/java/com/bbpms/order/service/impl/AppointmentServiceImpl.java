@@ -34,6 +34,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         a.setContactPhone(phone);
         a.setRemark(remark);
         a.setConfirmed(0);
+        a.setStatus("PENDING");
+        a.setRescheduleCount(0);
         a.setCreateBy(SecurityUtils.getCurrentUserId());
         a.setUpdateBy(SecurityUtils.getCurrentUserId());
         appointmentMapper.insert(a);
@@ -63,6 +65,8 @@ public class AppointmentServiceImpl implements AppointmentService {
             a.setContactPhone(contactPhone);
             a.setRemark(remark);
             a.setConfirmed(0);
+            a.setStatus("PENDING");
+            a.setRescheduleCount(0);
             a.setCreateBy(uid);
             a.setUpdateBy(uid);
             appointmentMapper.insert(a);

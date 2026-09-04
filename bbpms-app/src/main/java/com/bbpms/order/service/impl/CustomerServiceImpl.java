@@ -124,14 +124,8 @@ public class CustomerServiceImpl implements CustomerService {
         // in memory after decrypt. Fine at master-data scale; if the table
         // grows, move to a plaintext hash column or a search index.
         for (Customer c : customerMapper.selectList(null)) {
-            String name = null;
-            String phone = null;
-            try {
-                name = c.getName() == null ? "" : CryptoUtils.sm4Decrypt(c.getName(), key);
-                phone = c.getPhone() == null ? "" : CryptoUtils.sm4Decrypt(c.getPhone(), key);
-            } catch (Exception ex) {
-                log.warn("Decrypt failed for customer id={} in search", c.getId(), ex);
-            }
+            String name = decryptOrLegacyPlaintext(c.getName(), key);
+            String phone = decryptOrLegacyPlaintext(c.getPhone(), key);
             boolean hit = (name != null && name.toLowerCase().contains(kw))
                     || (phone != null && phone.toLowerCase().contains(kw));
             if (hit) {
@@ -148,23 +142,29 @@ public class CustomerServiceImpl implements CustomerService {
         CustomerVO vo = new CustomerVO();
         BeanUtils.copyProperties(c, vo);
         vo.setMasked(!unmasked);
-        try {
-            String key = orderProperties.getSm4Key();
-            if (c.getName() != null) {
-                String plain = CryptoUtils.sm4Decrypt(c.getName(), key);
-                vo.setName(unmasked ? plain : CryptoUtils.maskPhone(plain));
-            }
-            if (c.getPhone() != null) {
-                String plain = CryptoUtils.sm4Decrypt(c.getPhone(), key);
-                vo.setPhone(unmasked ? plain : CryptoUtils.maskPhone(plain));
-            }
-            if (c.getIdCardNo() != null) {
-                String plain = CryptoUtils.sm4Decrypt(c.getIdCardNo(), key);
-                vo.setIdCardNo(unmasked ? plain : CryptoUtils.maskIdCard(plain));
-            }
-        } catch (Exception ex) {
-            log.warn("Decrypt failed for customer id={}, returning ciphertext", c.getId(), ex);
+        String key = orderProperties.getSm4Key();
+        if (c.getName() != null) {
+            String plain = decryptOrLegacyPlaintext(c.getName(), key);
+            vo.setName(unmasked ? plain : CryptoUtils.maskPhone(plain));
+        }
+        if (c.getPhone() != null) {
+            String plain = decryptOrLegacyPlaintext(c.getPhone(), key);
+            vo.setPhone(unmasked ? plain : CryptoUtils.maskPhone(plain));
+        }
+        if (c.getIdCardNo() != null) {
+            String plain = decryptOrLegacyPlaintext(c.getIdCardNo(), key);
+            vo.setIdCardNo(unmasked ? plain : CryptoUtils.maskIdCard(plain));
         }
         return vo;
+    }
+
+    /** Fresh rows are encrypted; legacy demo seed rows may still be plaintext. */
+    private String decryptOrLegacyPlaintext(String value, String key) {
+        if (value == null) return null;
+        try {
+            return CryptoUtils.sm4Decrypt(value, key);
+        } catch (Exception ignored) {
+            return value;
+        }
     }
 }

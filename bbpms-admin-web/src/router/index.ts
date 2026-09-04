@@ -69,6 +69,20 @@ const routes: RouteRecordRaw[] = [
     ]
   },
   {
+    path: '/customer-portal',
+    component: Layout,
+    redirect: '/customer-portal/operations',
+    meta: { title: '客户自助业务', icon: 'Service', requiresAuth: true, permission: 'customer-portal:admin' },
+    children: [
+      {
+        path: 'operations',
+        name: 'CustomerPortalOperations',
+        component: () => import('@/views/customer-portal/operations.vue'),
+        meta: { title: '业务处理台', icon: 'Service', requiresAuth: true, permission: 'customer-portal:admin' }
+      }
+    ]
+  },
+  {
     path: '/order',
     component: Layout,
     redirect: '/order/list',

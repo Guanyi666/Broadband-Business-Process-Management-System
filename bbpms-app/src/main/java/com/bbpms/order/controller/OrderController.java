@@ -63,21 +63,21 @@ public class OrderController {
 
     @Operation(summary = "订单详情")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('order:view')")
+    @PreAuthorize("hasAuthority('order:view') and !hasRole('CUSTOMER')")
     public R<OrderDetailVO> detail(@PathVariable("id") Long id) {
         return R.ok(orderService.getDetail(id));
     }
 
     @Operation(summary = "分页查询订单")
     @GetMapping("/page")
-    @PreAuthorize("hasAuthority('order:view')")
+    @PreAuthorize("hasAuthority('order:view') and !hasRole('CUSTOMER')")
     public R<PageResp<OrderVO>> page(OrderQueryReq req) {
         return R.ok(orderService.page(req));
     }
 
     @Operation(summary = "按订单号查询")
     @GetMapping("/by-no/{orderNo}")
-    @PreAuthorize("hasAuthority('order:view')")
+    @PreAuthorize("hasAuthority('order:view') and !hasRole('CUSTOMER')")
     public R<BroadbandOrder> byNo(@PathVariable("orderNo") String orderNo) {
         return R.ok(orderService.findByOrderNo(orderNo));
     }
@@ -124,7 +124,7 @@ public class OrderController {
 
     @Operation(summary = "订单时间线")
     @GetMapping("/{id}/timeline")
-    @PreAuthorize("hasAuthority('order:view')")
+    @PreAuthorize("hasAuthority('order:view') and !hasRole('CUSTOMER')")
     public R<List<OrderTimelineVO>> timeline(@PathVariable("id") Long id) {
         return R.ok(orderService.getDetail(id).getTimeline());
     }

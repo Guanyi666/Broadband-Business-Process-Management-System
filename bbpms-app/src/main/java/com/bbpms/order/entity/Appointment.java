@@ -27,4 +27,11 @@ public class Appointment extends BaseDO {
 
     /** 1=customer confirmed, 0=pending. */
     private Integer confirmed;
+
+    /** PENDING / CONFIRMED / CANCELLED. */
+    private String status;
+
+    private Integer rescheduleCount;
+    private Long confirmedBy;
+    private LocalDateTime confirmedTime;
 }
