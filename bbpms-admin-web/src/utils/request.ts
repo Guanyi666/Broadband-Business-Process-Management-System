@@ -58,7 +58,11 @@ service.interceptors.response.use(
     if (status === 401) {
       handleUnauthorized()
     } else if (status === 403) {
-      ElMessage.error('暂无权限访问该页面')
+      // 403 = 已认证但无权限。页面级权限由路由守卫拦截（跳 403 页），
+      // 到达这里的 403 多为模块/接口级权限不足（如看板内某模块）。
+      // 静默 reject，由调用方决定是否提示 —— 避免无权限用户看到全局报错弹窗。
+      // 需要提示的调用方可在 catch 中自行处理（见 useDashboard 的 403 静默降级）。
+      return Promise.reject(error)
     } else if (status === 500) {
       ElMessage.error('服务器暂时无法处理请求，请稍后重试')
     } else if (!error.response) {
