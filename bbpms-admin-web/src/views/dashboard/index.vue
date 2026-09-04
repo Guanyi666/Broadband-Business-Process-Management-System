@@ -24,6 +24,11 @@ const days = ref(7)
 const dashboard = useDashboard(days)
 const { overview, trend, dispatch, buckets, sla, latest, counts } = dashboard
 
+// 权限门控（无权限看板直接隐藏，不渲染、不发请求、不报错）
+const canViewDispatch = computed(() => dispatch.permitted.value)
+const canViewSla = computed(() => sla.permitted.value)
+const canViewCounts = computed(() => counts.permitted.value)
+
 onMounted(() => {
   dashboard.refreshAll()
 })
@@ -214,37 +219,39 @@ function formatTime(t?: string | null): string {
           :loading="overview.loading.value"
         />
 
-        <!-- 人员侧计数：counts 模块独立失败，单独降级 -->
-        <template v-if="!counts.error.value">
-          <BBPMSKpiCard
-            tone="primary"
-            icon="User"
-            label="在线装维"
-            :value="counts.data.value?.onlineInstallers ?? null"
-            unit="人"
-            :loading="counts.loading.value"
-          />
-          <BBPMSKpiCard
-            tone="success"
-            icon="Avatar"
-            label="在岗人数"
-            :value="counts.data.value?.onDuty ?? null"
-            unit="人"
-            :loading="counts.loading.value"
-          />
-          <BBPMSKpiCard
-            tone="warning"
-            icon="Document"
-            label="待审批请假"
-            :value="counts.data.value?.pendingLeaves ?? null"
-            unit="人"
-            :loading="counts.loading.value"
-          />
+        <!-- 人员侧计数：counts 模块独立失败，单独降级；无权限则整体隐藏 -->
+        <template v-if="canViewCounts">
+          <template v-if="!counts.error.value">
+            <BBPMSKpiCard
+              tone="primary"
+              icon="User"
+              label="在线装维"
+              :value="counts.data.value?.onlineInstallers ?? null"
+              unit="人"
+              :loading="counts.loading.value"
+            />
+            <BBPMSKpiCard
+              tone="success"
+              icon="Avatar"
+              label="在岗人数"
+              :value="counts.data.value?.onDuty ?? null"
+              unit="人"
+              :loading="counts.loading.value"
+            />
+            <BBPMSKpiCard
+              tone="warning"
+              icon="Document"
+              label="待审批请假"
+              :value="counts.data.value?.pendingLeaves ?? null"
+              unit="人"
+              :loading="counts.loading.value"
+            />
+          </template>
+          <div v-else class="kpi-grid__counts-error">
+            <span class="kpi-grid__counts-error-text">人员数据加载失败</span>
+            <el-button type="primary" link size="small" @click="counts.load()">重试</el-button>
+          </div>
         </template>
-        <div v-else class="kpi-grid__counts-error">
-          <span class="kpi-grid__counts-error-text">人员数据加载失败</span>
-          <el-button type="primary" link size="small" @click="counts.load()">重试</el-button>
-        </div>
       </div>
     </section>
 
@@ -253,7 +260,7 @@ function formatTime(t?: string | null): string {
       <h3 class="section-title">流程健康</h3>
       <div class="bbpms-grid chart-grid">
         <BBPMSPanel
-          class="bbpms-col-8 panel-trend"
+          :class="canViewDispatch ? 'bbpms-col-8 panel-trend' : 'bbpms-col-12 panel-trend'"
           :title="`近 ${days} 日趋势`"
           subtitle="订单新建 vs 工单完成"
           :loading="trend.loading.value"
@@ -264,6 +271,7 @@ function formatTime(t?: string | null): string {
         </BBPMSPanel>
 
         <BBPMSPanel
+          v-if="canViewDispatch"
           class="bbpms-col-4"
           title="派单策略构成"
           :subtitle="`近 ${days} 日`"
@@ -302,7 +310,7 @@ function formatTime(t?: string | null): string {
         </BBPMSPanel>
 
         <BBPMSPanel
-          class="bbpms-col-8"
+          :class="canViewDispatch ? 'bbpms-col-8' : 'bbpms-col-12'"
           title="派单时效分布"
           subtitle="派单 → 接单耗时"
           :loading="buckets.loading.value"
@@ -313,6 +321,7 @@ function formatTime(t?: string | null): string {
         </BBPMSPanel>
 
         <BBPMSPanel
+          v-if="canViewDispatch"
           class="bbpms-col-4"
           title="平均派单评分"
           :subtitle="`近 ${days} 日`"
@@ -330,6 +339,7 @@ function formatTime(t?: string | null): string {
       <h3 class="section-title">待办与风险</h3>
       <div class="bbpms-grid risk-grid">
         <BBPMSPanel
+          v-if="canViewSla"
           class="bbpms-col-6"
           title="SLA 临期预警"
           subtitle="预计完成时间 30 分钟内到期"
@@ -359,7 +369,7 @@ function formatTime(t?: string | null): string {
         </BBPMSPanel>
 
         <BBPMSPanel
-          class="bbpms-col-6"
+          :class="canViewSla ? 'bbpms-col-6' : 'bbpms-col-12'"
           title="最新工单动态"
           :loading="latest.loading.value"
           :error="latest.error.value"
