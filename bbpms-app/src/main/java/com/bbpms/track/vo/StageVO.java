@@ -20,8 +20,8 @@ public class StageVO {
     @Schema(description = "节点中文名")
     private String name;
 
-    /** DONE | CURRENT | PENDING | EXCEPTION */
-    @Schema(description = "节点状态 DONE|CURRENT|PENDING|EXCEPTION")
+    /** DONE | CURRENT | PENDING | EXCEPTION | SKIP */
+    @Schema(description = "节点状态 DONE|CURRENT|PENDING|EXCEPTION|SKIP")
     private String state;
 
     @Schema(description = "真实发生时间，无则 null（格式 yyyy-MM-dd HH:mm）")
@@ -36,4 +36,7 @@ public class StageVO {
     @JsonProperty("isAuto")
     @Schema(description = "是否系统自动操作")
     private Boolean auto;
+
+    @Schema(description = "节点备注（SKIP 说明 / EXCEPTION 原因）")
+    private String remark;
 }

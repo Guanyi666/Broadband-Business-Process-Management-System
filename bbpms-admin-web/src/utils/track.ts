@@ -41,6 +41,8 @@ export function stateClass(state: StageState): string {
       return 'is-current'
     case 'EXCEPTION':
       return 'is-exception'
+    case 'SKIP':
+      return 'is-skip'
     default:
       return 'is-pending'
   }
@@ -48,14 +50,17 @@ export function stateClass(state: StageState): string {
 
 /**
  * 当前所处阶段索引（0 基）。
- * 优先取后端显式标注 CURRENT 的节点；否则取第一个 PENDING（即正在等待的节点）。
+ * 优先取后端显式标注 CURRENT 的节点；否则取第一个 PENDING（即正在等待的节点）；
+ * SKIP（系统自动跳过）不作为"当前"，若全部为 SKIP/PENDING 且无 CURRENT → 取第一个非 DONE 节点。
  * 终态（全部 DONE/EXCEPTION、无 PENDING）且无显式 CURRENT 时返回 -1。
  */
 export function currentStageIndex(stages: TrackStage[]): number {
   const explicit = stages.findIndex((s) => s.state === 'CURRENT')
   if (explicit >= 0) return explicit
   const pending = stages.findIndex((s) => s.state === 'PENDING')
-  return pending >= 0 ? pending : -1
+  if (pending >= 0) return pending
+  const skip = stages.findIndex((s) => s.state === 'SKIP')
+  return skip >= 0 ? skip : -1
 }
 
 /**

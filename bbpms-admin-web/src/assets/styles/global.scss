@@ -31,6 +31,38 @@ a {
   box-shadow: $shadow-card;
   padding: 20px;
   margin-bottom: 16px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* 卡片 Hover 浮起微阴影（UI 质感升级） */
+.app-card.is-hoverable,
+.app-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(31, 45, 61, 0.08), 0 2px 6px rgba(31, 45, 61, 0.06);
+}
+
+/* 列表项 Hover 浮起（用于可点击表格/卡片行） */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(31, 45, 61, 0.08);
+  }
+}
+
+/* 展开/收起、状态切换过渡（Accordion / 内容渐显） */
+.bbpms-collapse {
+  transition: height 0.3s ease, opacity 0.3s ease, max-height 0.3s ease;
+}
+
+/* 进度条填充动画 */
+.bbpms-progress {
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 表格行 Hover 过渡 */
+.el-table tbody tr {
+  transition: background-color 0.25s ease;
 }
 
 .flex { display: flex; }

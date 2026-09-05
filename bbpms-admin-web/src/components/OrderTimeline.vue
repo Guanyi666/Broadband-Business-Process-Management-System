@@ -93,9 +93,18 @@ function stageIcon(state: StageState): string {
       return '◉'
     case 'EXCEPTION':
       return '!'
+    case 'SKIP':
+      return '↷'
     default:
       return '○'
   }
+}
+
+/** SKIP 节点展示文案 */
+function stagePendingText(stage: TrackStage): string {
+  if (stage.state === 'SKIP') return stage.remark || '系统自动跳过'
+  if (stage.state === 'EXCEPTION') return '异常'
+  return '待处理'
 }
 
 function roleText(role?: string | null): string {
@@ -159,6 +168,7 @@ function eventSourceText(source?: string): string {
         <span class="steps__name">{{ stage.name }}</span>
         <span class="steps__meta">
           <template v-if="stage.time">{{ formatDate(stage.time, 'MM-DD HH:mm') }}</template>
+          <template v-else-if="stage.state === 'SKIP'">已跳过</template>
           <template v-else-if="stage.state === 'EXCEPTION'">异常</template>
           <template v-else>待处理</template>
         </span>
@@ -180,7 +190,7 @@ function eventSourceText(source?: string): string {
           <div class="stage-node__body">
             <strong>{{ stage.name }}</strong>
             <time v-if="stage.time">{{ formatDate(stage.time, 'MM-DD HH:mm') }}</time>
-            <span v-else class="stage-node__pending">待处理</span>
+            <span v-else class="stage-node__pending" :class="{ 'is-skip': stage.state === 'SKIP' }">{{ stagePendingText(stage) }}</span>
             <small v-if="stage.operatorName">{{ stage.operatorName }} · {{ roleText(stage.operatorRole) }}</small>
             <small v-else-if="stage.isAuto" class="is-auto">系统自动</small>
           </div>
@@ -291,6 +301,7 @@ function eventSourceText(source?: string): string {
 .steps__line {
   position: absolute; top: 13px; left: 50%; width: 100%; height: 2px;
   background: var(--el-border-color-light); z-index: 0;
+  transition: background-color 0.5s ease;
 }
 .steps__item.is-done .steps__dot { background: var(--el-color-success); }
 .steps__item.is-done .steps__name { color: var(--el-text-color-primary); }
@@ -301,6 +312,9 @@ function eventSourceText(source?: string): string {
 .steps__item.is-current .steps__name { color: var(--el-color-primary); }
 .steps__item.is-current .steps__meta { color: var(--el-color-primary); }
 .steps__item.is-pending { opacity: .55; }
+.steps__item.is-skip .steps__dot { background: var(--el-color-info-light-5); color: var(--el-text-color-placeholder); }
+.steps__item.is-skip .steps__name { color: var(--el-text-color-secondary); text-decoration: line-through; }
+.steps__item.is-skip .steps__meta { color: var(--el-text-color-placeholder); }
 .steps__item.is-exception .steps__dot { background: var(--el-color-danger); }
 .steps__item.is-exception .steps__name { color: var(--el-color-danger); }
 .steps__item.is-exception .steps__meta { color: var(--el-color-danger); }
@@ -321,6 +335,11 @@ function eventSourceText(source?: string): string {
   position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px;
   padding: 12px; border: 1px solid var(--el-border-color-lighter); border-radius: 9px;
   background: var(--el-fill-color-blank);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.stage-node:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(31, 45, 61, 0.08);
 }
 .stage-node__icon {
   display: inline-flex; width: 26px; height: 26px; align-items: center; justify-content: center;
@@ -345,6 +364,11 @@ function eventSourceText(source?: string): string {
 .stage-node.is-current .stage-node__body strong { color: var(--el-color-primary); }
 .stage-node.is-pending { opacity: .6; }
 .stage-node.is-pending .stage-node__icon { background: var(--el-color-info-light-5); color: var(--el-text-color-placeholder); }
+.stage-node.is-skip { opacity: .72; border-style: dashed; }
+.stage-node.is-skip .stage-node__icon { background: var(--el-color-info-light-5); color: var(--el-text-color-placeholder); }
+.stage-node.is-skip .stage-node__body strong { color: var(--el-text-color-secondary); text-decoration: line-through; }
+.stage-node.is-skip .stage-node__pending { color: var(--el-text-color-placeholder); }
+.stage-node.is-skip .stage-node__pending.is-skip { color: var(--el-color-info); }
 .stage-node.is-exception { border-color: var(--el-color-danger-light-7); background: var(--el-color-danger-light-9); }
 .stage-node.is-exception .stage-node__icon { background: var(--el-color-danger); }
 
@@ -352,6 +376,11 @@ function eventSourceText(source?: string): string {
 .event-node {
   padding: 12px 14px; border: 1px solid var(--el-border-color-lighter); border-radius: 9px;
   background: var(--el-fill-color-blank);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.event-node:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(31, 45, 61, 0.08);
 }
 .event-node__head { display: flex; align-items: center; gap: 8px; }
 .event-node__head strong { color: var(--el-text-color-primary); font-size: 13px; }

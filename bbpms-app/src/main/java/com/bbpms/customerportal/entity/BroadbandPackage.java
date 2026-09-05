@@ -13,6 +13,8 @@ import java.math.BigDecimal;
 public class BroadbandPackage extends BaseDO {
     private String code;
     private String name;
+    /** 英文名称（可选，如 100M Broadband） */
+    private String nameEn;
     private Integer speedMbps;
     private BigDecimal monthlyFee;
     private String description;

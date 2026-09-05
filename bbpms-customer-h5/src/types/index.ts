@@ -62,6 +62,29 @@ export interface OrderDetail {
   timeline: TimelineItem[]
 }
 
+/** 客户履约进度（H5 5 节点骨架 + 催单状态） */
+export interface CustomerTrackStage {
+  code: string
+  name: string
+  /** DONE | CURRENT | PENDING | EXCEPTION | SKIP */
+  state: 'DONE' | 'CURRENT' | 'PENDING' | 'EXCEPTION' | 'SKIP'
+  time?: string | null
+  remark?: string | null
+}
+
+export interface CustomerTrack {
+  orderNo: string
+  status: string
+  statusLabel: string
+  packageName: string
+  stages: CustomerTrackStage[]
+  progress: string
+  canUrge: boolean
+  urgeCoolDownSeconds: number
+  urgeThresholdMinutes: number
+  terminal: boolean
+}
+
 export interface ResourceCheckResult {
   status: 'RESOURCE_OK' | 'RESOURCE_INSUFFICIENT' | 'NO_COVERAGE'
   message: string

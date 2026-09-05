@@ -46,6 +46,27 @@ const statusOptions: { label: string; value: OrderStatus }[] = [
   { label: '已取消', value: 'CANCELLED' }
 ]
 
+/** 套餐名称中文化兜底（后端已映射；此处兼容旧接口/缓存数据） */
+const packageNameZh = (row: OrderItem): string => {
+  const raw = row.packageName || ''
+  const byCode: Record<string, string> = {
+    PKG_100M: '100M 宽带', 'PKG-100M': '100M 宽带',
+    PKG_300M: '300M 宽带', 'PKG-300M': '300M 宽带',
+    PKG_500M: '500M 宽带', 'PKG-500M': '500M 宽带',
+    PKG_1G: '1000M 宽带', 'PKG-1G': '1000M 宽带',
+    PKG_1000M: '1000M 宽带', 'PKG-1000M': '1000M 宽带',
+    FIBER_500M: '光纤 500M 宽带', 'FIBER-500M': '光纤 500M 宽带'
+  }
+  if (row.packageCode && byCode[row.packageCode]) return byCode[row.packageCode]
+  const lower = raw.toLowerCase()
+  if (lower.includes('宽带') || /[\u4e00-\u9fa5]/.test(raw)) return raw
+  if (lower.includes('1g') || lower.includes('1000m')) return '1000M 宽带'
+  if (lower.includes('100m')) return '100M 宽带'
+  if (lower.includes('300m')) return '300M 宽带'
+  if (lower.includes('500m')) return '500M 宽带'
+  return raw
+}
+
 async function fetchData() {
   loading.value = true
   try {
@@ -161,7 +182,9 @@ onActivated(fetchData)
       <el-table v-loading="loading" :data="list" stripe @row-click="onRowClick">
         <el-table-column prop="orderNo" label="订单号" width="180" />
         <el-table-column prop="customerName" label="客户" width="120" />
-        <el-table-column prop="packageName" label="套餐" min-width="160" show-overflow-tooltip />
+        <el-table-column prop="packageName" label="套餐" min-width="160" show-overflow-tooltip>
+          <template #default="{ row }">{{ packageNameZh(row) }}</template>
+        </el-table-column>
         <el-table-column label="状态" width="120">
           <template #default="{ row }"><BBPMSStatusTag :status="row.status" /></template>
         </el-table-column>

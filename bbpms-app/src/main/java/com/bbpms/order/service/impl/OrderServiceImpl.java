@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbpms.common.annotation.OperationLog;
+import com.bbpms.common.constant.PackageNameMap;
 import com.bbpms.common.dto.OrderSummaryDTO;
 import com.bbpms.common.enums.OrderEvent;
 import com.bbpms.common.enums.OrderStatus;
@@ -504,6 +505,8 @@ public class OrderServiceImpl implements OrderService {
         if (o == null) return null;
         OrderVO vo = new OrderVO();
         BeanUtils.copyProperties(o, vo);
+        // 套餐名称中文化：历史数据为英文（100M Broadband），统一映射为中文展示；packageCode 保留原值可溯源
+        vo.setPackageName(PackageNameMap.toChinese(o.getPackageCode(), o.getPackageName()));
         return vo;
     }
 

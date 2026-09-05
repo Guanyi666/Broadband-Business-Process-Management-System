@@ -189,6 +189,12 @@ const routes: RouteRecordRaw[] = [
         name: 'ResourceList',
         component: () => import('@/views/resource/index.vue'),
         meta: { title: '网络资源台账', icon: 'List', requiresAuth: true, permission: 'resource:view' }
+      },
+      {
+        path: 'package',
+        name: 'PackageList',
+        component: () => import('@/views/resource/package.vue'),
+        meta: { title: '套餐资源', icon: 'Goods', requiresAuth: true, permission: 'resource:view' }
       }
     ]
   },

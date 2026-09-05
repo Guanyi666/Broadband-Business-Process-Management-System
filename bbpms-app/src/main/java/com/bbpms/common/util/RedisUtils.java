@@ -50,6 +50,13 @@ public class RedisUtils {
         return redis.expire(key, ttl, unit);
     }
 
+    /** 返回 key 剩余存活秒数；key 不存在或已过期返回 0。 */
+    public long getExpireSeconds(String key) {
+        if (key == null) return 0;
+        Long ttl = redis.getExpire(key, TimeUnit.SECONDS);
+        return ttl == null || ttl < 0 ? 0 : ttl;
+    }
+
     public Long incr(String key) {
         if (key == null) return null;
         return redis.opsForValue().increment(key);

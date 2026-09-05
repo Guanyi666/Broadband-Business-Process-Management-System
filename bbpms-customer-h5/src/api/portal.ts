@@ -1,6 +1,6 @@
 import { get, post, put } from './http'
 import type {
-  MessageItem, OrderDetail, OrderSummary, PackageInfo, PageResp, Profile, ProfileChange,
+  CustomerTrack, MessageItem, OrderDetail, OrderSummary, PackageInfo, PageResp, Profile, ProfileChange,
   ResourceCheckResult, ServiceTicket, TimelineItem
 } from '@/types'
 
@@ -11,6 +11,10 @@ export const checkResource = (data: { address: string; roomNo?: string }) => pos
 export const pageOrders = (params: Record<string, unknown> = {}) => get<PageResp<OrderSummary>>('/customer-portal/orders', { params })
 export const getOrder = (id: number | string) => get<OrderDetail>(`/customer-portal/orders/${id}`)
 export const getTimeline = (id: number | string) => get<TimelineItem[]>(`/customer-portal/orders/${id}/timeline`)
+/** 履约进度（5 节点骨架 + 催单状态） */
+export const getCustomerTrack = (id: number | string) => get<CustomerTrack>(`/customer-portal/orders/${id}/track`)
+/** 超时催单 */
+export const urgeOrder = (id: number | string) => post<void>(`/customer-portal/orders/${id}/urge`)
 export const createOrder = (data: Record<string, unknown>) => post<number | string>('/customer-portal/orders', data)
 export const resubmitOrder = (id: number | string, data: Record<string, unknown>) => put<void>(`/customer-portal/orders/${id}/resubmit`, data)
 export const reschedule = (id: number | string, data: { appointmentTime: string; reason?: string }) => put<void>(`/customer-portal/orders/${id}/appointment`, data)

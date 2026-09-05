@@ -10,6 +10,7 @@ public enum ResultCode {
     TOKEN_EXPIRED(1010, "令牌已过期"), TOKEN_INVALID(1011, "令牌无效"),
     ORDER_STATUS_INVALID(2010, "订单状态不合法"), ORDER_NOT_FOUND(2001, "订单不存在"),
     CUSTOMER_NOT_FOUND(2002, "客户不存在"), PACKAGE_INVALID(2003, "套餐无效"), ADDRESS_NOT_COVERED(2004, "地址暂未覆盖"),
+    TOO_FREQUENT(2011, "操作过于频繁"),
     WORKORDER_STATUS_INVALID(3001, "工单状态不合法"), WORKORDER_NOT_FOUND(3002, "工单不存在"),
     NO_DISPATCH_CANDIDATE(4001, "无可派单人员"), FILE_UPLOAD_FAILED(6001, "文件上传失败"), SMS_SEND_FAILED(7001, "短信发送失败");
 

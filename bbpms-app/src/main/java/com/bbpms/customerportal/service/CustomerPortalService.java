@@ -6,6 +6,7 @@ import com.bbpms.common.enums.OrderStatus;
 import com.bbpms.common.enums.ResultCode;
 import com.bbpms.common.event.BbpmsEvents;
 import com.bbpms.common.exception.BizException;
+import com.bbpms.common.constant.PackageNameMap;
 import com.bbpms.common.result.PageResp;
 import com.bbpms.common.util.CryptoUtils;
 import com.bbpms.common.util.SecurityUtils;
@@ -13,6 +14,7 @@ import com.bbpms.common.util.SnowflakeIdGenerator;
 import com.bbpms.customerportal.dto.PortalDtos;
 import com.bbpms.customerportal.entity.*;
 import com.bbpms.customerportal.mapper.*;
+import com.bbpms.customerportal.vo.CustomerTrackVO;
 import com.bbpms.notify.entity.Message;
 import com.bbpms.notify.mapper.MessageMapper;
 import com.bbpms.order.config.OrderProperties;
@@ -84,13 +86,18 @@ public class CustomerPortalService {
     private final OrderService orderService;
     private final ResourceCheckService resourceCheckService;
     private final OrderProperties orderProperties;
+    private final UrgeService urgeService;
     private final SnowflakeIdGenerator snowflake;
     private final BCryptPasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper;
     private final ApplicationEventPublisher publisher;
 
-    public CustomerUserBinding requireCurrentBinding() {
-        Long userId = SecurityUtils.requireUserId();
+    /** 暴露催单服务（供 Controller 调用）。 */
+    public UrgeService getUrgeService() {
+        return urgeService;
+    }
+
+    public CustomerUserBinding requireCurrentBinding() {        Long userId = SecurityUtils.requireUserId();
         CustomerUserBinding binding = bindingMapper.selectOne(new LambdaQueryWrapper<CustomerUserBinding>()
                 .eq(CustomerUserBinding::getUserId, userId)
                 .eq(CustomerUserBinding::getStatus, 1)
@@ -260,6 +267,101 @@ public class CustomerPortalService {
     public OrderDetailVO getOwnOrder(Long orderId) {
         requireOwnedOrder(orderId);
         return orderService.getDetail(orderId);
+    }
+
+    /**
+     * 客户 H5 履约进度（5 节点客户视角骨架）。
+     * 时间严格取订单/工单真实字段，不伪造；附带催单状态。
+     */
+    public CustomerTrackVO getCustomerTrack(Long orderId) {
+        BroadbandOrder order = requireOwnedOrder(orderId);
+        WorkOrder wo = workOrderMapper.selectOne(new LambdaQueryWrapper<WorkOrder>()
+                .eq(WorkOrder::getOrderId, orderId)
+                .orderByDesc(WorkOrder::getCreateTime)
+                .last("LIMIT 1"));
+
+        // 5 节点真实时间（1 基索引）
+        LocalDateTime[] times = new LocalDateTime[5];
+        times[0] = order.getCreateTime();
+        times[1] = order.getAuditTime();
+        times[2] = order.getDispatchTime() != null ? order.getDispatchTime()
+                : (wo != null ? wo.getCreateTime() : null); // 派单时间（工单创建兜底）
+        times[3] = wo != null ? wo.getStartTime() : null;    // 装维上门/施工
+        times[4] = (wo != null ? wo.getFinishTime() : null) != null ? wo.getFinishTime() : order.getCompletedTime();
+
+        String[] names = {"已创建", "已审核", "已派单", "上门安装", "已完成"};
+        String[] codes = {"CREATED", "AUDITED", "DISPATCHED", "INSTALLING", "FINISHED"};
+
+        OrderStatus status = OrderStatus.fromCode(order.getStatus());
+        boolean exception = status == OrderStatus.REJECTED || status == OrderStatus.CANCELLED;
+        int current = customerCurrentIndex(order, wo, status, exception);
+        boolean terminal = status == OrderStatus.CLOSED;
+
+        List<CustomerTrackVO.Stage> stages = new ArrayList<>(5);
+        for (int i = 0; i < 5; i++) {
+            CustomerTrackVO.Stage s = new CustomerTrackVO.Stage();
+            s.setCode(codes[i]);
+            s.setName(names[i]);
+            int idx = i + 1;
+            if (exception && idx == current) {
+                s.setState("EXCEPTION");
+            } else if (idx == current && !terminal) {
+                s.setState("CURRENT");
+            } else if (times[i] != null) {
+                s.setState("DONE");
+            } else {
+                s.setState("PENDING");
+            }
+            s.setTime(fmt(times[i]));
+            if (idx == current && exception) s.setRemark("订单异常终止");
+            stages.add(s);
+        }
+
+        CustomerTrackVO vo = new CustomerTrackVO();
+        vo.setOrderNo(order.getOrderNo());
+        vo.setStatus(order.getStatus());
+        vo.setStatusLabel(status == null ? order.getStatus() : status.getDesc());
+        vo.setPackageName(PackageNameMap.toChinese(order.getPackageCode(), order.getPackageName()));
+        vo.setStages(stages);
+        vo.setProgress(current + "/5");
+        vo.setTerminal(terminal || exception);
+
+        // 催单状态
+        boolean[] urge = urgeService.urgeState(orderId);
+        vo.setCanUrge(urge[0]);
+        vo.setUrgeCoolDownSeconds(urge[1] ? urgeService.remainingCooldownSeconds(orderId) : 0);
+        vo.setUrgeThresholdMinutes(UrgeService.THRESHOLD_MINUTES);
+        return vo;
+    }
+
+    /** 客户视角当前节点索引（1 基）。 */
+    private int customerCurrentIndex(BroadbandOrder order, WorkOrder wo,
+                                     OrderStatus status, boolean exception) {
+        if (exception) return frontier5(order, wo) + 1;
+        if (status == null) return 1;
+        switch (status) {
+            case CREATED:    return 1;
+            case AUDITED:    return 2;
+            case WAIT_DISPATCH: return 2;
+            case DISPATCHED: return 3;
+            case INSTALLING: return (wo != null && wo.getStartTime() != null) ? 4 : 3;
+            case FINISHED:   return 5;
+            case CLOSED:     return 5;
+            default:         return 1;
+        }
+    }
+
+    /** 最后一个有真实时间的节点（1 基），全空返回 1。 */
+    private int frontier5(BroadbandOrder order, WorkOrder wo) {
+        if ((wo != null && wo.getFinishTime() != null) || order.getCompletedTime() != null) return 5;
+        if (wo != null && wo.getStartTime() != null) return 4;
+        if (order.getDispatchTime() != null) return 3;
+        if (order.getAuditTime() != null) return 2;
+        return 1;
+    }
+
+    private String fmt(LocalDateTime t) {
+        return t == null ? null : t.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
     }
 
     @Transactional(rollbackFor = Exception.class)

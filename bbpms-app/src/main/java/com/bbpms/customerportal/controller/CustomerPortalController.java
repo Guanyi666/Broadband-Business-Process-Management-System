@@ -64,6 +64,21 @@ public class CustomerPortalController {
     @PreAuthorize("hasRole('CUSTOMER') and hasAuthority('customer-portal:order:view')")
     public R<?> timeline(@PathVariable Long id) { return R.ok(service.getOwnOrder(id).getTimeline()); }
 
+    @GetMapping("/orders/{id}/track")
+    @PreAuthorize("hasRole('CUSTOMER') and hasAuthority('customer-portal:order:view')")
+    public R<com.bbpms.customerportal.vo.CustomerTrackVO> track(@PathVariable Long id) {
+        return R.ok(service.getCustomerTrack(id));
+    }
+
+    @PostMapping("/orders/{id}/urge")
+    @PreAuthorize("hasRole('CUSTOMER') and hasAuthority('customer-portal:order:view')")
+    public R<Void> urge(@PathVariable Long id) {
+        Long userId = com.bbpms.common.util.SecurityUtils.requireUserId();
+        service.getUrgeService().assertOwnedOrder(id, userId);
+        service.getUrgeService().urge(id, userId);
+        return R.ok();
+    }
+
     @PostMapping("/orders")
     @Operation(summary = "客户自助报装")
     @PreAuthorize("hasRole('CUSTOMER') and hasAuthority('customer-portal:order:create')")

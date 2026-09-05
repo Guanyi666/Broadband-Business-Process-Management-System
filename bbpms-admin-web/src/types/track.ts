@@ -4,8 +4,14 @@
  * 后端 GET /api/orders/{id}/track 与 GET /api/work-orders/{id}/track 按此返回。
  */
 
-/** 节点视觉状态（左轨业务状态轨 + Steps 共用） */
-export type StageState = 'DONE' | 'CURRENT' | 'PENDING' | 'EXCEPTION'
+/** 节点视觉状态（左轨业务状态轨 + Steps 共用）
+ *  - DONE: 已完成（有真实时间）
+ *  - CURRENT: 当前处理中
+ *  - PENDING: 待处理（未发生）
+ *  - EXCEPTION: 异常（驳回/取消等）
+ *  - SKIP: 系统自动跳过（免人工操作，如自动派单/免审）
+ */
+export type StageState = 'DONE' | 'CURRENT' | 'PENDING' | 'EXCEPTION' | 'SKIP'
 
 /** 单个流程阶段（骨架节点，恒返回全部节点，无论是否已完成） */
 export interface TrackStage {

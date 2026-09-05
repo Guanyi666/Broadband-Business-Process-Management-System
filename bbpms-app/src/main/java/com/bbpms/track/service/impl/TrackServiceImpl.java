@@ -57,6 +57,8 @@ public class TrackServiceImpl implements TrackService {
     private static final String CURRENT = "CURRENT";
     private static final String PENDING = "PENDING";
     private static final String EXCEPTION = "EXCEPTION";
+    /** 系统自动跳过（免人工操作，如自动派单），前端灰色展示 */
+    private static final String SKIP = "SKIP";
 
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
@@ -127,6 +129,7 @@ public class TrackServiceImpl implements TrackService {
         int exceptionIndex = Math.min(frontierIndex(times) + 1, times.length);
         int currentIndex = exception ? exceptionIndex : (status == OrderStatus.CLOSED ? 8 : orderCurrentIndex(status, mainWO));
         assignStates(stages, times, currentIndex, terminal, exception, exceptionIndex);
+        markSkipRemarks(stages);
 
         List<TrackEventVO> events = buildOrderEvents(order, wos, userName);
         TrackSummaryVO summary = buildOrderSummary(order, status, currentIndex, exception, terminal, times);
@@ -412,8 +415,24 @@ public class TrackServiceImpl implements TrackService {
         return stages;
     }
 
+    /**
+     * 节点状态分配（含前置连续性约束，杜绝"前序未完成、后续已完成"的跳跃）。
+     *
+     * <p>规则（按优先级）：
+     * <ol>
+     *   <li>异常节点（EXCEPTION）优先标记；</li>
+     *   <li>当前节点 CURRENT（非终态）；</li>
+     *   <li>有真实时间 → DONE；</li>
+     *   <li>前置节点存在 PENDING/CURRENT/EXCEPTION（即卡在前面的未完成节点）→ 强制 PENDING，
+     *       即使该节点时间字段非空（历史脏数据或字段复用），保证时序连续、不跳跃；</li>
+     *   <li>系统自动节点（isAuto=true，如"生成工单"）在无时间且未被前面节点阻断时 → SKIP
+     *       （免人工操作，明确标记为"系统自动跳过"，前端展示为灰色跳过态）；</li>
+     *   <li>其余 → PENDING。</li>
+     * </ol>
+     */
     private void assignStates(List<StageVO> stages, LocalDateTime[] times,
                               int currentIndex, boolean terminal, boolean exception, int exceptionIndex) {
+        int blockedUntil = Integer.MAX_VALUE; // 第一个未完成节点的索引（1 基），之后所有节点强制 PENDING
         for (int i = 0; i < stages.size(); i++) {
             int idx = i + 1;
             StageVO s = stages.get(i);
@@ -421,14 +440,32 @@ public class TrackServiceImpl implements TrackService {
                 s.setState(EXCEPTION);
             } else if (idx == currentIndex && !terminal) {
                 s.setState(CURRENT);
-            } else if (idx == currentIndex && terminal) {
-                s.setState(DONE);
             } else if (times[i] != null) {
                 s.setState(DONE);
             } else {
                 s.setState(PENDING);
             }
+            if (s.getState().equals(PENDING) || s.getState().equals(EXCEPTION)) {
+                blockedUntil = Math.min(blockedUntil, idx);
+            }
         }
+        // 连续性约束：第一个未完成节点之后的节点，若被标记为 DONE（时间字段非空但前序未完成）→ 强制 PENDING
+        for (int i = 0; i < stages.size(); i++) {
+            StageVO s = stages.get(i);
+            int idx = i + 1;
+            if (idx > blockedUntil && s.getState().equals(DONE) && times[i] != null) {
+                // 前序未完成（blockedUntil 之前存在 PENDING/EXCEPTION），此节点即使有时间也视为未发生
+                s.setState(PENDING);
+            }
+        }
+        // 系统自动节点且无时间 → SKIP（免人工操作，明确标记"系统自动跳过"）
+        for (int i = 0; i < stages.size(); i++) {
+            StageVO s = stages.get(i);
+            if (Boolean.TRUE.equals(s.getAuto()) && times[i] == null && s.getState().equals(PENDING)) {
+                s.setState(SKIP);
+            }
+        }
+        // 清理：CURRENT 之后若存在 DONE（说明状态机推进了但前置未完成，防御）→ 保持前端顺序一致性
     }
 
     /** 最后一个拥有真实时间的节点索引（1-based），全空返回 1。 */
@@ -437,6 +474,15 @@ public class TrackServiceImpl implements TrackService {
             if (times[i] != null) return i + 1;
         }
         return 1;
+    }
+
+    /** SKIP 节点补充说明文案，前端可直接展示"系统自动跳过"。 */
+    private void markSkipRemarks(List<StageVO> stages) {
+        for (StageVO s : stages) {
+            if (SKIP.equals(s.getState())) {
+                s.setRemark("系统自动跳过（免人工操作）");
+            }
+        }
     }
 
     private LocalDateTime lastNonNull(LocalDateTime[] times) {
