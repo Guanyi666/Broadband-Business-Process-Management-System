@@ -14,9 +14,18 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { showSuccessToast } from 'vant'
+import { showSuccessToast, showToast } from 'vant'
 import { reschedule } from '@/api/portal'
 const route = useRoute(); const router = useRouter(); const appointmentTime = ref(''); const reason = ref(''); const loading = ref(false)
-async function submit() { loading.value = true; try { await reschedule(route.params.id as string, { appointmentTime: appointmentTime.value, reason: reason.value }); showSuccessToast('预约时间已修改'); router.back() } finally { loading.value = false } }
+async function submit() {
+  if (!appointmentTime.value.trim()) {
+    showToast('请输入新的预约时间')
+    return
+  }
+  if (!/^\d{4}-\d{2}-\d{2}(\s+\d{2}:\d{2}(:\d{2})?)?$/.test(appointmentTime.value.trim())) {
+    showToast('时间格式应为 YYYY-MM-DD HH:mm:ss')
+    return
+  }
+  loading.value = true; try { await reschedule(route.params.id as string, { appointmentTime: appointmentTime.value.trim(), reason: reason.value.trim() }); showSuccessToast('预约时间已修改'); router.back() } finally { loading.value = false } }
 </script>
 <style scoped>.form-card { padding: 8px 2px; }.hint { padding: 0 8px 16px; line-height: 1.6; }</style>

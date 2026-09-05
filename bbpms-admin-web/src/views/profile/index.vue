@@ -27,6 +27,14 @@ function onSaveProfile() {
 }
 
 async function onChangePwd() {
+  if (!pwdForm.oldPwd || !pwdForm.newPwd) {
+    ElMessage.error('请填写原密码和新密码')
+    return
+  }
+  if (pwdForm.newPwd.length < 6 || pwdForm.newPwd.length > 32) {
+    ElMessage.error('新密码长度需为 6-32 位')
+    return
+  }
   if (pwdForm.newPwd !== pwdForm.confirm) {
     ElMessage.error('两次输入的密码不一致')
     return

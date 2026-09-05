@@ -23,14 +23,23 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { showSuccessToast } from 'vant'
+import { showSuccessToast, showToast } from 'vant'
 import { listProfileChanges, requestProfileChange } from '@/api/portal'
 import type { ProfileChange } from '@/types'
 const router = useRouter(); const loading = ref(false); const changes = ref<ProfileChange[]>([])
 const form = reactive({ name: '', phone: '', idCardNo: '', address: '' })
 const statusText = (s: string) => ({ PENDING: '待审核', APPROVED: '已通过', REJECTED: '已驳回' }[s] || s)
 async function load() { changes.value = await listProfileChanges() }
-async function submit() { loading.value = true; try { await requestProfileChange(form); showSuccessToast('变更申请已提交'); Object.assign(form, { name: '', phone: '', idCardNo: '', address: '' }); load() } finally { loading.value = false } }
+async function submit() {
+  if (!form.name.trim() && !form.phone.trim() && !form.idCardNo.trim() && !form.address.trim()) {
+    showToast('请至少填写一项要修改的资料')
+    return
+  }
+  if (form.phone.trim() && !/^1[3-9]\d{9}$/.test(form.phone.trim())) {
+    showToast('手机号格式不正确')
+    return
+  }
+  loading.value = true; try { await requestProfileChange(form); showSuccessToast('变更申请已提交'); Object.assign(form, { name: '', phone: '', idCardNo: '', address: '' }); load() } finally { loading.value = false } }
 onMounted(load)
 </script>
 <style scoped>.form-card { padding: 14px 4px; }.card-title { padding: 0 12px; }.hint { padding: 0 8px 14px; }</style>

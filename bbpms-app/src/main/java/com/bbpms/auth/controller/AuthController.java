@@ -1,5 +1,6 @@
 package com.bbpms.auth.controller;
 
+import jakarta.validation.Valid;
 import com.bbpms.auth.dto.CaptchaRespVO;
 import com.bbpms.auth.dto.LoginReq;
 import com.bbpms.auth.dto.LoginRespVO;
@@ -40,7 +41,7 @@ public class AuthController {
     private final SysDeptService deptService;
 
     @PostMapping("/login")
-    public R<LoginRespVO> login(@RequestBody LoginReq req, HttpServletRequest request) {
+    public R<LoginRespVO> login(@Valid @RequestBody LoginReq req, HttpServletRequest request) {
         String ip = request.getRemoteAddr();
         String ua = request.getHeader("User-Agent");
         return R.ok(authService.login(req, ip, ua));

@@ -1,5 +1,6 @@
 package com.bbpms.user.controller;
 
+import jakarta.validation.Valid;
 import com.bbpms.common.result.R;
 import com.bbpms.common.util.SecurityUtils;
 import com.bbpms.user.dto.MenuCreateReq;
@@ -20,13 +21,13 @@ public class SysMenuController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('system:menu:add')")
-    public R<Long> create(@RequestBody MenuCreateReq req) {
+    public R<Long> create(@Valid @RequestBody MenuCreateReq req) {
         return R.ok(menuService.create(req));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('system:menu:edit')")
-    public R<Void> update(@PathVariable Long id, @RequestBody MenuCreateReq req) {
+    public R<Void> update(@PathVariable Long id, @Valid @RequestBody MenuCreateReq req) {
         menuService.update(id, req);
         return R.ok();
     }

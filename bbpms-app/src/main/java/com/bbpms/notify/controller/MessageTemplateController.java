@@ -1,4 +1,5 @@
 package com.bbpms.notify.controller;
+import jakarta.validation.Valid;
 import com.bbpms.common.result.R;
 import com.bbpms.notify.dto.MessageTemplateCreateReq;
 import com.bbpms.notify.dto.MessageTemplatePageReq;
@@ -16,12 +17,12 @@ public class MessageTemplateController {
     private final MessageTemplateService templateService;
     @PostMapping
     @PreAuthorize("hasAuthority('notify:template:edit')")
-    public R<Long> create(@RequestBody MessageTemplateCreateReq req) {
+    public R<Long> create(@Valid @RequestBody MessageTemplateCreateReq req) {
         return R.ok(templateService.create(req));
     }
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('notify:template:edit')")
-    public R<Void> update(@PathVariable Long id, @RequestBody MessageTemplateCreateReq req) {
+    public R<Void> update(@PathVariable Long id, @Valid @RequestBody MessageTemplateCreateReq req) {
         req.setId(id);
         templateService.update(req);
         return R.ok();

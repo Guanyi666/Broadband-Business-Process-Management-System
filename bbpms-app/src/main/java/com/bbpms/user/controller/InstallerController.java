@@ -1,5 +1,6 @@
 package com.bbpms.user.controller;
 
+import jakarta.validation.Valid;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbpms.common.result.PageResp;
 import com.bbpms.common.result.R;
@@ -54,7 +55,7 @@ public class InstallerController {
 
     @PostMapping("/location")
     @PreAuthorize("hasAuthority('installer:view')")
-    public R<Void> updateLocation(@RequestBody InstallerLocationDTO dto) {
+    public R<Void> updateLocation(@Valid @RequestBody InstallerLocationDTO dto) {
         installerService.updateLocation(dto);
         return R.ok();
     }

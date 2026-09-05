@@ -13,7 +13,21 @@ const query = reactive({ pageNum: 1, pageSize: 10, keyword: '' })
 
 const dialogVisible = ref(false)
 const editing = ref<RoleInfo | null>(null)
+const formRef = ref()
 const form = reactive<Partial<RoleInfo>>({ code: '', name: '', remark: '', status: 1 })
+
+const rules = {
+  code: [
+    { required: true, message: '请输入角色编码', trigger: 'blur' },
+    { min: 2, max: 50, message: '角色编码需在 2~50 个字符之间', trigger: 'blur' },
+    { pattern: /^[A-Za-z0-9_:]+$/, message: '角色编码仅支持字母/数字/冒号/下划线', trigger: 'blur' }
+  ],
+  name: [
+    { required: true, message: '请输入角色名称', trigger: 'blur' },
+    { min: 2, max: 50, message: '角色名称需在 2~50 个字符之间', trigger: 'blur' }
+  ],
+  remark: [{ max: 200, message: '备注不能超过 200 个字符', trigger: 'blur' }]
+}
 
 const menuDialogVisible = ref(false)
 const menuLoading = ref(false)
@@ -52,6 +66,9 @@ function openEdit(row: RoleInfo) {
 }
 
 async function onSave() {
+  if (!formRef.value) return
+  const valid = await formRef.value.validate().catch(() => false)
+  if (!valid) return
   if (editing.value) {
     await updateRole(editing.value.id, form)
     ElMessage.success('更新成功')
@@ -158,10 +175,10 @@ async function onSaveMenus() {
     </div>
 
     <el-dialog v-model="dialogVisible" :title="editing ? '编辑角色' : '新增角色'" width="480px">
-      <el-form :model="form" label-width="100px">
-        <el-form-item label="编码"><el-input v-model="form.code" /></el-form-item>
-        <el-form-item label="名称"><el-input v-model="form.name" /></el-form-item>
-        <el-form-item label="备注"><el-input v-model="form.remark" type="textarea" :rows="2" /></el-form-item>
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
+        <el-form-item label="编码" prop="code"><el-input v-model="form.code" /></el-form-item>
+        <el-form-item label="名称" prop="name"><el-input v-model="form.name" /></el-form-item>
+        <el-form-item label="备注" prop="remark"><el-input v-model="form.remark" type="textarea" :rows="2" /></el-form-item>
         <el-form-item label="状态">
           <el-radio-group v-model="form.status">
             <el-radio :value="1">启用</el-radio>

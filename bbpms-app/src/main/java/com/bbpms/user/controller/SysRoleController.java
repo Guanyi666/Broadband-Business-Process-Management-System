@@ -1,5 +1,6 @@
 package com.bbpms.user.controller;
 
+import jakarta.validation.Valid;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbpms.common.result.PageResp;
@@ -24,13 +25,13 @@ public class SysRoleController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('system:role:add')")
-    public R<Long> create(@RequestBody RoleCreateReq req) {
+    public R<Long> create(@Valid @RequestBody RoleCreateReq req) {
         return R.ok(roleService.create(req));
     }
 
     @PutMapping
     @PreAuthorize("hasAuthority('system:role:edit')")
-    public R<Void> update(@RequestBody RoleUpdateReq req) {
+    public R<Void> update(@Valid @RequestBody RoleUpdateReq req) {
         roleService.update(req);
         return R.ok();
     }

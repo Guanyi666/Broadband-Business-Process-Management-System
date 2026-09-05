@@ -23,6 +23,16 @@ const form = reactive<Partial<MenuNode>>({
   status: 1
 })
 
+const formRef = ref()
+const rules = {
+  name: [
+    { required: true, message: '请输入菜单名称', trigger: 'blur' },
+    { max: 50, message: '菜单名称不能超过 50 个字符', trigger: 'blur' }
+  ],
+  path: [{ max: 200, message: '路由路径不能超过 200 个字符', trigger: 'blur' }],
+  perm: [{ max: 100, message: '权限标识不能超过 100 个字符', trigger: 'blur' }]
+}
+
 async function fetchData() {
   loading.value = true
   try {
@@ -51,6 +61,9 @@ function openEdit(row: MenuNode) {
 }
 
 async function onSave() {
+  if (!formRef.value) return
+  const valid = await formRef.value.validate().catch(() => false)
+  if (!valid) return
   if (editing.value) {
     await updateMenu(editing.value.id, form)
     ElMessage.success('更新成功')
@@ -113,7 +126,7 @@ async function onDelete(row: MenuNode) {
     </div>
 
     <el-dialog v-model="dialogVisible" :title="editing ? '编辑菜单' : '新增菜单'" width="560px">
-      <el-form :model="form" label-width="100px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="类型">
           <el-radio-group v-model="form.type">
             <el-radio :value="1">目录</el-radio>
@@ -121,11 +134,11 @@ async function onDelete(row: MenuNode) {
             <el-radio :value="3">按钮</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="名称"><el-input v-model="form.name" /></el-form-item>
-        <el-form-item label="路由地址"><el-input v-model="form.path" /></el-form-item>
+        <el-form-item label="名称" prop="name"><el-input v-model="form.name" /></el-form-item>
+        <el-form-item label="路由地址" prop="path"><el-input v-model="form.path" /></el-form-item>
         <el-form-item label="组件路径"><el-input v-model="form.component" /></el-form-item>
         <el-form-item label="图标"><el-input v-model="form.icon" /></el-form-item>
-        <el-form-item label="权限标识"><el-input v-model="form.perm" /></el-form-item>
+        <el-form-item label="权限标识" prop="perm"><el-input v-model="form.perm" /></el-form-item>
         <el-form-item label="排序"><el-input-number v-model="form.sort" :min="0" /></el-form-item>
         <el-form-item label="是否可见">
           <el-switch v-model="form.visible" />

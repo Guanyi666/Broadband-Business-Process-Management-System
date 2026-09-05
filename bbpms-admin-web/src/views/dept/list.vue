@@ -11,6 +11,15 @@ const tree = ref<DeptNode[]>([])
 const dialogVisible = ref(false)
 const editing = ref<DeptNode | null>(null)
 const form = reactive<Partial<DeptNode>>({ parentId: 0, name: '', leader: '', phone: '', sort: 0, status: 1 })
+const formRef = ref()
+const rules = {
+  name: [
+    { required: true, message: '请输入部门名称', trigger: 'blur' },
+    { max: 50, message: '部门名称不能超过 50 个字符', trigger: 'blur' }
+  ],
+  leader: [{ max: 50, message: '负责人不能超过 50 个字符', trigger: 'blur' }],
+  phone: [{ pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }]
+}
 
 async function fetchData() {
   loading.value = true
@@ -36,11 +45,14 @@ function openEdit(row: DeptNode) {
 }
 
 async function onSave() {
+  if (!formRef.value) return
+  const valid = await formRef.value.validate().catch(() => false)
+  if (!valid) return
   if (editing.value) {
-    await updateDept(editing.value.id, form)
+    await updateDept(form as any)
     ElMessage.success('更新成功')
   } else {
-    await createDept(form)
+    await createDept(form as any)
     ElMessage.success('创建成功')
   }
   dialogVisible.value = false
@@ -89,10 +101,10 @@ async function onDelete(row: DeptNode) {
     </div>
 
     <el-dialog v-model="dialogVisible" :title="editing ? '编辑部门' : '新增部门'" width="480px">
-      <el-form :model="form" label-width="100px">
-        <el-form-item label="名称"><el-input v-model="form.name" /></el-form-item>
-        <el-form-item label="负责人"><el-input v-model="form.leader" /></el-form-item>
-        <el-form-item label="手机号"><el-input v-model="form.phone" /></el-form-item>
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
+        <el-form-item label="名称" prop="name"><el-input v-model="form.name" /></el-form-item>
+        <el-form-item label="负责人" prop="leader"><el-input v-model="form.leader" /></el-form-item>
+        <el-form-item label="手机号" prop="phone"><el-input v-model="form.phone" /></el-form-item>
         <el-form-item label="排序"><el-input-number v-model="form.sort" :min="0" /></el-form-item>
         <el-form-item label="状态">
           <el-radio-group v-model="form.status">

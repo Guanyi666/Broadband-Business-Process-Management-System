@@ -17,14 +17,18 @@ const form = reactive({
 })
 
 const rules = {
-  name: [{ required: true, message: '请输入客户名称', trigger: 'blur' }],
+  name: [
+    { required: true, message: '请输入客户名称', trigger: 'blur' },
+    { min: 2, max: 50, message: '客户名称需在 2~50 个字符之间', trigger: 'blur' }
+  ],
   phone: [
     { required: true, message: '请输入手机号', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }
   ],
   idCardNo: [
     { pattern: /(^\d{15}$)|(^\d{17}(\d|X|x)$)/, message: '身份证号格式不正确', trigger: 'blur' }
-  ]
+  ],
+  address: [{ max: 200, message: '地址不能超过 200 个字符', trigger: 'blur' }]
 }
 
 async function onSubmit() {
@@ -65,7 +69,7 @@ async function onSubmit() {
         <el-form-item label="身份证号" prop="idCardNo">
           <el-input v-model="form.idCardNo" maxlength="18" placeholder="选填" />
         </el-form-item>
-        <el-form-item label="地址">
+        <el-form-item label="地址" prop="address">
           <el-input v-model="form.address" type="textarea" :rows="2" placeholder="选填" />
         </el-form-item>
 

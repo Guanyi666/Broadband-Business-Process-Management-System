@@ -54,10 +54,48 @@ const form = reactive({
 })
 
 const rules: FormRules = {
-  code: [{ required: true, message: '请输入套餐编码', trigger: 'blur' }],
-  name: [{ required: true, message: '请输入套餐名称', trigger: 'blur' }],
-  speedMbps: [{ required: true, message: '请输入带宽规格', trigger: 'blur' }],
-  monthlyFee: [{ required: true, message: '请输入月租费', trigger: 'blur' }]
+  code: [
+    { required: true, message: '请输入套餐编码', trigger: 'blur' },
+    { pattern: /^[A-Za-z][A-Za-z0-9_-]*$/, message: '套餐编码需以字母开头，仅支持字母/数字/下划线/连字符', trigger: 'blur' }
+  ],
+  name: [
+    { required: true, message: '请输入套餐名称', trigger: 'blur' },
+    { min: 2, max: 50, message: '套餐名称需在 2~50 个字符之间', trigger: 'blur' }
+  ],
+  speedMbps: [
+    { required: true, message: '请输入带宽规格', trigger: 'blur' },
+    {
+      validator: (_: unknown, value: number, callback: (err?: Error) => void) => {
+        const n = Number(value)
+        if (!Number.isInteger(n) || n < 1 || n > 10000) {
+          callback(new Error('带宽规格需在 1M - 10,000M 之间，请输入有效的整数'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ],
+  monthlyFee: [
+    { required: true, message: '请输入月租费', trigger: 'blur' },
+    {
+      validator: (_: unknown, value: number, callback: (err?: Error) => void) => {
+        const n = Number(value)
+        if (Number.isNaN(n) || n < 0) {
+          callback(new Error('月租费不能为负数'))
+        } else if (n > 100000) {
+          callback(new Error('月租费不能超过 100,000 元'))
+        } else if (String(value).split('.')[1]?.length > 2) {
+          callback(new Error('月租费最多允许 2 位小数'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ],
+  nameEn: [{ max: 128, message: '英文名称不能超过 128 个字符', trigger: 'blur' }],
+  description: [{ max: 500, message: '描述不能超过 500 个字符', trigger: 'blur' }]
 }
 
 function openCreate() {
@@ -184,7 +222,7 @@ onMounted(fetchData)
         <el-form-item label="套餐名称" prop="name">
           <el-input v-model="form.name" placeholder="如 200M 宽带" />
         </el-form-item>
-        <el-form-item label="英文名称">
+        <el-form-item label="英文名称" prop="nameEn">
           <el-input v-model="form.nameEn" placeholder="如 200M Broadband（可选）" />
         </el-form-item>
         <el-form-item label="带宽规格" prop="speedMbps">
@@ -193,7 +231,7 @@ onMounted(fetchData)
         <el-form-item label="月租费" prop="monthlyFee">
           <el-input-number v-model="form.monthlyFee" :min="0" :precision="2" :step="10" /> <span class="unit">元/月</span>
         </el-form-item>
-        <el-form-item label="描述">
+        <el-form-item label="描述" prop="description">
           <el-input v-model="form.description" type="textarea" :rows="2" placeholder="套餐描述（可选）" />
         </el-form-item>
         <el-form-item label="状态">

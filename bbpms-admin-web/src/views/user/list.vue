@@ -14,6 +14,7 @@ const roles = ref<RoleInfo[]>([])
 const dialogVisible = ref(false)
 const dialogMode = ref<'create' | 'edit'>('create')
 const editing = ref<any>(null)
+const formRef = ref()
 const form = reactive({
   username: '',
   password: '',
@@ -24,6 +25,28 @@ const form = reactive({
   status: 1,
   roleIds: [] as (number | string)[]
 })
+
+const rules = {
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 2, max: 50, message: '用户名需在 2~50 个字符之间', trigger: 'blur' },
+    { pattern: /^[a-zA-Z0-9_]+$/, message: '用户名仅支持字母/数字/下划线', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 64, message: '密码需在 6~64 位之间', trigger: 'blur' }
+  ],
+  nickname: [
+    { required: true, message: '请输入昵称', trigger: 'blur' },
+    { min: 2, max: 50, message: '昵称需在 2~50 个字符之间', trigger: 'blur' }
+  ],
+  phone: [
+    { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }
+  ],
+  email: [
+    { type: 'email', message: '邮箱格式不正确', trigger: 'blur' }
+  ]
+}
 
 const roleDialogVisible = ref(false)
 const roleTarget = ref<any>(null)
@@ -79,6 +102,9 @@ function openEdit(row: any) {
 }
 
 async function onSave() {
+  if (!formRef.value) return
+  const valid = await formRef.value.validate().catch(() => false)
+  if (!valid) return
   if (dialogMode.value === 'create') {
     await store.create(form as any)
     ElMessage.success('创建成功')
@@ -174,20 +200,20 @@ async function onSaveRoles() {
     </div>
 
     <el-dialog v-model="dialogVisible" :title="dialogMode === 'create' ? '新增用户' : '编辑用户'" width="540px">
-      <el-form :model="form" label-width="100px">
-        <el-form-item label="用户名">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
+        <el-form-item label="用户名" prop="username">
           <el-input v-model="form.username" :disabled="dialogMode === 'edit'" />
         </el-form-item>
-        <el-form-item label="Password" v-if="dialogMode === 'create'">
+        <el-form-item label="Password" prop="password" v-if="dialogMode === 'create'">
           <el-input v-model="form.password" type="password" show-password />
         </el-form-item>
-        <el-form-item label="昵称">
+        <el-form-item label="昵称" prop="nickname">
           <el-input v-model="form.nickname" />
         </el-form-item>
-        <el-form-item label="手机号">
-          <el-input v-model="form.phone" />
+        <el-form-item label="手机号" prop="phone">
+          <el-input v-model="form.phone" maxlength="11" />
         </el-form-item>
-        <el-form-item label="邮箱">
+        <el-form-item label="邮箱" prop="email">
           <el-input v-model="form.email" />
         </el-form-item>
         <el-form-item label="部门">

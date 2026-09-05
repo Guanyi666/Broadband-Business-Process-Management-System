@@ -64,8 +64,24 @@ const rules = {
     { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }
   ],
   packageId: [{ required: true, message: '请选择套餐', trigger: 'change' }],
-  address: [{ required: true, message: '请输入安装地址', trigger: 'blur' }],
-  appointmentAt: [{ required: true, message: '请选择预约时间', trigger: 'change' }]
+  address: [
+    { required: true, message: '请输入安装地址', trigger: 'blur' },
+    { min: 5, max: 200, message: '安装地址需在 5~200 个字符之间', trigger: 'blur' }
+  ],
+  appointmentAt: [
+    { required: true, message: '请选择预约时间', trigger: 'change' },
+    {
+      validator: (_: unknown, value: string, callback: (err?: Error) => void) => {
+        if (value && new Date(value).getTime() <= Date.now()) {
+          callback(new Error('预约开始时间不能早于当前时间'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'change'
+    }
+  ],
+  remark: [{ max: 500, message: '备注不能超过 500 个字符', trigger: 'blur' }]
 }
 
 const packageOptions = [

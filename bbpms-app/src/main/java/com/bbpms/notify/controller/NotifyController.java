@@ -1,4 +1,5 @@
 package com.bbpms.notify.controller;
+import jakarta.validation.Valid;
 import com.bbpms.common.result.PageResp;
 import com.bbpms.common.result.R;
 import com.bbpms.notify.dto.MessagePageReq;
@@ -18,12 +19,12 @@ public class NotifyController {
     private final NotifyService notifyService;
     @PostMapping("/sms")
     @PreAuthorize("hasAuthority('notify:sms:send')")
-    public R<SmsSendResp> sendSms(@RequestBody SmsSendReq req) {
+    public R<SmsSendResp> sendSms(@Valid @RequestBody SmsSendReq req) {
         return R.ok(notifyService.sendSms(req));
     }
     @PostMapping("/wechat/template")
     @PreAuthorize("hasAuthority('notify:wechat:send')")
-    public R<WechatSendResp> sendWechat(@RequestBody WechatTemplateSendReq req) {
+    public R<WechatSendResp> sendWechat(@Valid @RequestBody WechatTemplateSendReq req) {
         return R.ok(notifyService.sendWechat(req));
     }
     @GetMapping("/messages/page")

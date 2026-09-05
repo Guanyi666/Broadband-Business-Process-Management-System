@@ -1,5 +1,6 @@
 package com.bbpms.install.controller;
 
+import jakarta.validation.Valid;
 import com.bbpms.common.result.PageResp;
 import com.bbpms.common.result.R;
 import com.bbpms.common.util.SecurityUtils;
@@ -33,7 +34,7 @@ public class InstallController {
     @PostMapping("/{workOrderId}/arrive")
     @PreAuthorize("hasAuthority('install:arrive')")
     public R<Void> arrive(@PathVariable("workOrderId") Long workOrderId,
-                          @RequestBody InstallArriveReq req) {
+                          @Valid @RequestBody InstallArriveReq req) {
         req.setWorkOrderId(workOrderId);
         installService.arrive(workOrderId, req, SecurityUtils.getCurrentUserId());
         return R.ok();
@@ -42,7 +43,7 @@ public class InstallController {
     @PostMapping("/{workOrderId}/info")
     @PreAuthorize("hasAuthority('install:info')")
     public R<Void> saveInfo(@PathVariable("workOrderId") Long workOrderId,
-                            @RequestBody InstallInfoReq req) {
+                            @Valid @RequestBody InstallInfoReq req) {
         req.setWorkOrderId(workOrderId);
         installService.saveInfo(workOrderId, req);
         return R.ok();
@@ -51,7 +52,7 @@ public class InstallController {
     @PostMapping("/{workOrderId}/photos")
     @PreAuthorize("hasAuthority('install:photo')")
     public R<Void> addPhoto(@PathVariable("workOrderId") Long workOrderId,
-                            @RequestBody InstallPhotoReq req) {
+                            @Valid @RequestBody InstallPhotoReq req) {
         req.setWorkOrderId(workOrderId);
         installService.addPhoto(workOrderId, req);
         return R.ok();
@@ -60,7 +61,7 @@ public class InstallController {
     @PostMapping("/{workOrderId}/signature")
     @PreAuthorize("hasAuthority('install:sign')")
     public R<Void> addSignature(@PathVariable("workOrderId") Long workOrderId,
-                                @RequestBody InstallSignatureReq req) {
+                                @Valid @RequestBody InstallSignatureReq req) {
         req.setWorkOrderId(workOrderId);
         installService.addSignature(workOrderId, req);
         return R.ok();
@@ -69,7 +70,7 @@ public class InstallController {
     @PostMapping("/{workOrderId}/complete")
     @PreAuthorize("hasAuthority('install:complete')")
     public R<Void> complete(@PathVariable("workOrderId") Long workOrderId,
-                            @RequestBody InstallCompleteReq req) {
+                            @Valid @RequestBody InstallCompleteReq req) {
         req.setWorkOrderId(workOrderId);
         installService.complete(workOrderId, req, SecurityUtils.getCurrentUserId());
         return R.ok();

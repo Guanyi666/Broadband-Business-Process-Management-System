@@ -1,5 +1,6 @@
 package com.bbpms.user.controller;
 
+import jakarta.validation.Valid;
 import com.bbpms.common.result.R;
 import com.bbpms.user.entity.SysDept;
 import com.bbpms.user.service.SysDeptService;
@@ -31,13 +32,13 @@ public class SysDeptController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('system:dept:add')")
-    public R<Boolean> create(@RequestBody SysDept dept) {
+    public R<Boolean> create(@Valid @RequestBody SysDept dept) {
         return R.ok(deptService.save(dept));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('system:dept:edit')")
-    public R<Boolean> update(@PathVariable Long id, @RequestBody SysDept dept) {
+    public R<Boolean> update(@PathVariable Long id, @Valid @RequestBody SysDept dept) {
         dept.setId(id);
         return R.ok(deptService.updateById(dept));
     }

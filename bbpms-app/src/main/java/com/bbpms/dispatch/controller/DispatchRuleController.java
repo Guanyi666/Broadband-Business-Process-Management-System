@@ -1,5 +1,6 @@
 package com.bbpms.dispatch.controller;
 
+import jakarta.validation.Valid;
 import com.bbpms.common.result.R;
 import com.bbpms.dispatch.entity.DispatchRule;
 import com.bbpms.dispatch.service.DispatchRuleService;
@@ -27,7 +28,7 @@ public class DispatchRuleController {
 
     @PutMapping("/")
     @PreAuthorize("hasAuthority('dispatch:rule:config')")
-    public R<DispatchRuleVO> update(@RequestBody DispatchRule rule) {
+    public R<DispatchRuleVO> update(@Valid @RequestBody DispatchRule rule) {
         DispatchRule saved = ruleService.update(rule);
         return R.ok(ruleService.toVO(saved));
     }

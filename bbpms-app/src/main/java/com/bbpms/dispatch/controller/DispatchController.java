@@ -1,5 +1,6 @@
 package com.bbpms.dispatch.controller;
 
+import jakarta.validation.Valid;
 import com.bbpms.common.result.PageResp;
 import com.bbpms.common.result.R;
 import com.bbpms.dispatch.dto.CandidateDTO;
@@ -37,14 +38,14 @@ public class DispatchController {
 
     @PostMapping("/manual")
     @PreAuthorize("hasAuthority('dispatch:manual')")
-    public R<DispatchResultDTO> manualDispatch(@RequestBody ManualDispatchReq req) {
+    public R<DispatchResultDTO> manualDispatch(@Valid @RequestBody ManualDispatchReq req) {
         return R.ok(dispatchService.manualDispatch(req));
     }
 
     @PostMapping("/{id}/reassign")
     @PreAuthorize("hasAuthority('dispatch:reassign')")
     public R<DispatchResultDTO> reassign(@PathVariable("id") Long workOrderId,
-                                         @RequestBody ReassignReq req) {
+                                         @Valid @RequestBody ReassignReq req) {
         req.setWorkOrderId(workOrderId);
         return R.ok(dispatchService.reassign(req));
     }

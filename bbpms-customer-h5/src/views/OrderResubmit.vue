@@ -31,7 +31,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { showSuccessToast } from 'vant'
+import { showSuccessToast, showToast } from 'vant'
 import { checkResource, getOrder, resubmitOrder } from '@/api/portal'
 import type { ResourceCheckResult } from '@/types'
 
@@ -51,6 +51,14 @@ async function check() {
 }
 
 async function submit() {
+  if (!form.installAddress.trim()) {
+    showToast('请输入安装地址')
+    return
+  }
+  if (form.appointmentTime.trim() && !/^\d{4}-\d{2}-\d{2}(\s+\d{2}:\d{2}(:\d{2})?)?$/.test(form.appointmentTime.trim())) {
+    showToast('预约时间格式应为 YYYY-MM-DD HH:mm:ss')
+    return
+  }
   submitting.value = true
   try {
     await resubmitOrder(id, {

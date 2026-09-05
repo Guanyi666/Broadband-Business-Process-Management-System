@@ -2,6 +2,7 @@ package com.bbpms.workorder.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.io.Serial;
@@ -32,5 +33,6 @@ public class WorkOrderCreateReq implements Serializable {
     private Long dispatcherId;
 
     @Schema(description = "Free remark for the audit timeline")
+    @Size(max = 500, message = "备注不能超过 500 个字符")
     private String remark;
 }

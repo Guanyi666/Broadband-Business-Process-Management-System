@@ -1,5 +1,6 @@
 package com.bbpms.user.controller;
 
+import jakarta.validation.Valid;
 import com.bbpms.common.result.PageResp;
 import com.bbpms.common.result.R;
 import com.bbpms.user.dto.PasswordChangeReq;
@@ -23,13 +24,13 @@ public class SysUserController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('system:user:add')")
-    public R<Long> create(@RequestBody UserCreateReq req) {
+    public R<Long> create(@Valid @RequestBody UserCreateReq req) {
         return R.ok(userService.create(req));
     }
 
     @PutMapping
     @PreAuthorize("hasAuthority('system:user:edit')")
-    public R<Void> update(@RequestBody UserUpdateReq req) {
+    public R<Void> update(@Valid @RequestBody UserUpdateReq req) {
         userService.update(req);
         return R.ok();
     }
@@ -62,7 +63,7 @@ public class SysUserController {
 
     @PostMapping("/{id}/password")
     @PreAuthorize("hasAuthority('system:user:edit')")
-    public R<Void> changePassword(@PathVariable Long id, @RequestBody PasswordChangeReq req) {
+    public R<Void> changePassword(@PathVariable Long id, @Valid @RequestBody PasswordChangeReq req) {
         userService.changePassword(id, req);
         return R.ok();
     }

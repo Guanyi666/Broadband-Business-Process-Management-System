@@ -46,6 +46,18 @@ function openEdit(row: NotifyTemplate) {
 }
 
 async function onSave() {
+  if (!form.code?.trim()) {
+    ElMessage.error('请输入模板编码')
+    return
+  }
+  if (!form.subject?.trim()) {
+    ElMessage.error('请输入模板主题')
+    return
+  }
+  if (!form.content?.trim()) {
+    ElMessage.error('请输入模板内容')
+    return
+  }
   if (editing.value) {
     await updateTemplate(editing.value.id, form)
     ElMessage.success('更新成功')

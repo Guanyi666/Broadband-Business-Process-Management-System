@@ -26,5 +26,6 @@ public class WorkOrderStatusUpdateReq implements Serializable {
     @NotNull(message = "目标状态不能为空")
     private WorkOrderStatus status;
 
+    @jakarta.validation.constraints.Size(max = 500, message = "备注不能超过 500 个字符")
     private String remark;
 }

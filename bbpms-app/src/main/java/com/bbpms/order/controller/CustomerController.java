@@ -10,6 +10,10 @@ import com.bbpms.order.service.CustomerService;
 import com.bbpms.order.vo.CustomerVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +51,7 @@ public class CustomerController {
     @PostMapping
     @PreAuthorize("hasAuthority('customer:create')")
     @OperationLog(value = "创建客户", module = "客户")
-    public R<Long> create(@RequestBody CustomerUpsertReq req) {
+    public R<Long> create(@Valid @RequestBody CustomerUpsertReq req) {
         Customer c = new Customer();
         c.setName(req.getName());
         c.setPhone(req.getPhone());
@@ -107,12 +111,21 @@ public class CustomerController {
     public static class CustomerUpsertReq implements Serializable {
         @Serial
         private static final long serialVersionUID = 1L;
+        @NotBlank(message = "客户姓名不能为空")
+        @Size(min = 2, max = 50, message = "客户姓名需在 2~50 个字符之间")
         private String name;
+        @NotBlank(message = "手机号不能为空")
+        @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确")
         private String phone;
+        @Size(max = 18, message = "身份证号不能超过 18 位")
         private String idCardNo;
+        @Size(max = 200, message = "地址不能超过 200 个字符")
         private String address;
+        @Size(max = 50, message = "省份不能超过 50 个字符")
         private String province;
+        @Size(max = 50, message = "城市不能超过 50 个字符")
         private String city;
+        @Size(max = 50, message = "区县不能超过 50 个字符")
         private String district;
     }
 

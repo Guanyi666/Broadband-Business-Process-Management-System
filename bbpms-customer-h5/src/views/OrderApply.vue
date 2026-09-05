@@ -36,7 +36,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { showSuccessToast } from 'vant'
+import { showSuccessToast, showToast } from 'vant'
 import { checkResource, createOrder, listPackages } from '@/api/portal'
 import type { PackageInfo, ResourceCheckResult } from '@/types'
 const router = useRouter()
@@ -52,6 +52,22 @@ async function check() {
   finally { checking.value = false }
 }
 async function submit() {
+  if (!form.packageCode) {
+    showToast('请选择套餐')
+    return
+  }
+  if (!form.installAddress.trim()) {
+    showToast('请输入安装地址')
+    return
+  }
+  if (form.contactPhone.trim() && !/^1[3-9]\d{9}$/.test(form.contactPhone.trim())) {
+    showToast('手机号格式不正确')
+    return
+  }
+  if (form.appointmentTime.trim() && !/^\d{4}-\d{2}-\d{2}(\s+\d{2}:\d{2}(:\d{2})?)?$/.test(form.appointmentTime.trim())) {
+    showToast('预约时间格式应为 YYYY-MM-DD HH:mm:ss')
+    return
+  }
   submitting.value = true
   try {
     const id = await createOrder({ ...form, appointmentTime: form.appointmentTime || undefined, roomNo: form.roomNo || undefined })

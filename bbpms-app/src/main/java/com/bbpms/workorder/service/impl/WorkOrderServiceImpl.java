@@ -499,6 +499,15 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 
     @Override
     public PageResp<WorkOrderVO> page(WorkOrderQueryReq req) {
+        // 时间区间校验：结束时间不能早于开始时间，跨度不超过 1 年（防全表扫描）
+        if (req.getStartTime() != null && req.getEndTime() != null) {
+            if (req.getEndTime().isBefore(req.getStartTime())) {
+                throw new BizException(ResultCode.BAD_REQUEST, "结束时间不能早于开始时间");
+            }
+            if (req.getEndTime().isAfter(req.getStartTime().plusYears(1))) {
+                throw new BizException(ResultCode.BAD_REQUEST, "查询时间跨度不能超过 1 年");
+            }
+        }
         long pageNum  = req.getPageNum()  == null ? 1L  : req.getPageNum();
         long pageSize = req.getPageSize() == null ? 20L : req.getPageSize();
         Page<WorkOrder> page = new Page<>(pageNum, pageSize);

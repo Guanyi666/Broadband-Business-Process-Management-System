@@ -99,6 +99,20 @@ watch(() => route.query.status, (value) => {
 })
 
 function onSearch() {
+  // 时间区间校验：结束日期不能早于开始日期，跨度不超过 1 年（与后端一致）
+  if (query.dateRange?.length === 2) {
+    const [start, end] = query.dateRange
+    if (start > end) {
+      ElMessage.warning('结束日期不能早于开始日期')
+      return
+    }
+    const maxDays = 366
+    const diffDays = (new Date(end).getTime() - new Date(start).getTime()) / 86400000
+    if (diffDays > maxDays) {
+      ElMessage.warning('查询时间跨度不能超过 1 年')
+      return
+    }
+  }
   query.pageNum = 1
   fetchData()
 }

@@ -82,27 +82,33 @@ async function submitAdd() {
   try {
     switch (addKind.value) {
       case 'REGION':
-        await createRegion(addForm.regionName, addForm.regionCode)
+        if (!addForm.regionName.trim() || !addForm.regionCode.trim()) { ElMessage.warning('请输入区域名称和编码'); return }
+        await createRegion(addForm.regionName.trim(), addForm.regionCode.trim())
         await loadRegions()
         break
       case 'COMMUNITY':
         if (selRegion.value == null) { ElMessage.warning('请先选择区域'); return }
-        await createCommunity(selRegion.value, addForm.communityName, addForm.communityAddress)
+        if (!addForm.communityName.trim()) { ElMessage.warning('请输入小区名称'); return }
+        await createCommunity(selRegion.value, addForm.communityName.trim(), addForm.communityAddress.trim())
         await loadCommunities()
         break
       case 'BUILDING':
         if (selCommunity.value == null) { ElMessage.warning('请先选择小区'); return }
-        await createBuilding(selCommunity.value, addForm.buildingName, addForm.totalFloors)
+        if (!addForm.buildingName.trim()) { ElMessage.warning('请输入楼栋名称'); return }
+        if (!addForm.totalFloors || addForm.totalFloors < 1 || addForm.totalFloors > 200) { ElMessage.warning('请输入 1-200 的楼层数'); return }
+        await createBuilding(selCommunity.value, addForm.buildingName.trim(), addForm.totalFloors)
         await loadBuildings()
         break
       case 'UNIT':
         if (selBuilding.value == null) { ElMessage.warning('请先选择楼栋'); return }
-        await createUnit(selBuilding.value, addForm.unitName)
+        if (!addForm.unitName.trim()) { ElMessage.warning('请输入单元名称'); return }
+        await createUnit(selBuilding.value, addForm.unitName.trim())
         await loadUnits()
         break
       case 'ROOM':
         if (selUnit.value == null) { ElMessage.warning('请先选择单元'); return }
-        await createRoom(selUnit.value, addForm.roomNo)
+        if (!addForm.roomNo.trim()) { ElMessage.warning('请输入房号'); return }
+        await createRoom(selUnit.value, addForm.roomNo.trim())
         await loadRooms()
         break
     }
