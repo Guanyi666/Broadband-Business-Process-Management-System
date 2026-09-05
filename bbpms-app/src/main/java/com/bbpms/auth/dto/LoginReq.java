@@ -15,7 +15,6 @@ public class LoginReq {
     private String username;
 
     @NotBlank(message = "密码不能为空")
-    @Size(max = 128, message = "密码过长")
     private String password;
 
     @JsonProperty("captchaId")

@@ -118,6 +118,7 @@ public class CustomerController {
         @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确")
         private String phone;
         @Size(max = 18, message = "身份证号不能超过 18 位")
+        @Pattern(regexp = "^$|(^\\d{15}$)|(^\\d{17}(\\d|X|x)$)", message = "身份证号格式不正确")
         private String idCardNo;
         @Size(max = 200, message = "地址不能超过 200 个字符")
         private String address;

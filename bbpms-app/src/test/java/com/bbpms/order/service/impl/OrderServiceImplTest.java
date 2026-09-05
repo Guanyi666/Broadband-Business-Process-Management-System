@@ -37,6 +37,7 @@ class OrderServiceImplTest {
     @Mock private CustomerService customerService;
     @Mock private ApplicationEventPublisher publisher;
     @Mock private OrderTimelineService orderTimelineService;
+    @Mock private com.bbpms.customerportal.mapper.BroadbandPackageMapper packageMapper;
 
     private OrderServiceImpl service;
 
@@ -45,7 +46,9 @@ class OrderServiceImplTest {
         service = new OrderServiceImpl(
                 orderMapper, auditLogMapper, appointmentMapper, customerMapper,
                 customerService, new OrderProperties(), new OrderStateMachine(), publisher,
-                new SnowflakeIdGenerator(1, 2), orderTimelineService);
+                new SnowflakeIdGenerator(1, 2),
+                new com.bbpms.customerportal.service.PackageNameDictService(packageMapper),
+                orderTimelineService);
     }
 
     @Test
