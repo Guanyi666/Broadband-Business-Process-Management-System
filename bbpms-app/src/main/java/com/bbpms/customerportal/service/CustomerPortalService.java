@@ -6,7 +6,6 @@ import com.bbpms.common.enums.OrderStatus;
 import com.bbpms.common.enums.ResultCode;
 import com.bbpms.common.event.BbpmsEvents;
 import com.bbpms.common.exception.BizException;
-import com.bbpms.common.constant.PackageNameMap;
 import com.bbpms.common.result.PageResp;
 import com.bbpms.common.util.CryptoUtils;
 import com.bbpms.common.util.SecurityUtils;
@@ -86,6 +85,7 @@ public class CustomerPortalService {
     private final OrderService orderService;
     private final ResourceCheckService resourceCheckService;
     private final OrderProperties orderProperties;
+    private final PackageNameDictService packageNameDictService;
     private final UrgeService urgeService;
     private final SnowflakeIdGenerator snowflake;
     private final BCryptPasswordEncoder passwordEncoder;
@@ -321,7 +321,7 @@ public class CustomerPortalService {
         vo.setOrderNo(order.getOrderNo());
         vo.setStatus(order.getStatus());
         vo.setStatusLabel(status == null ? order.getStatus() : status.getDesc());
-        vo.setPackageName(PackageNameMap.toChinese(order.getPackageCode(), order.getPackageName()));
+        vo.setPackageName(packageNameDictService.toChinese(order.getPackageCode(), order.getPackageName()));
         vo.setStages(stages);
         vo.setProgress(current + "/5");
         vo.setTerminal(terminal || exception);

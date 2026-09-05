@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbpms.common.annotation.OperationLog;
-import com.bbpms.common.constant.PackageNameMap;
 import com.bbpms.common.dto.OrderSummaryDTO;
 import com.bbpms.common.enums.OrderEvent;
 import com.bbpms.common.enums.OrderStatus;
@@ -16,6 +15,7 @@ import com.bbpms.common.util.SecurityUtils;
 import com.bbpms.common.statemachine.OrderStateMachine;
 import com.bbpms.common.util.CryptoUtils;
 import com.bbpms.common.util.SnowflakeIdGenerator;
+import com.bbpms.customerportal.service.PackageNameDictService;
 import com.bbpms.order.config.OrderProperties;
 import com.bbpms.order.dto.OrderAuditReq;
 import com.bbpms.order.dto.OrderCancelReq;
@@ -77,6 +77,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderStateMachine orderStateMachine;
     private final ApplicationEventPublisher publisher;
     private final SnowflakeIdGenerator snowflakeIdGenerator;
+    private final PackageNameDictService packageNameDictService;
     /** Lazy to break the bidirectional dependency with OrderTimelineService. */
     private final @Lazy OrderTimelineService orderTimelineService;
 
@@ -505,8 +506,9 @@ public class OrderServiceImpl implements OrderService {
         if (o == null) return null;
         OrderVO vo = new OrderVO();
         BeanUtils.copyProperties(o, vo);
-        // 套餐名称中文化：历史数据为英文（100M Broadband），统一映射为中文展示；packageCode 保留原值可溯源
-        vo.setPackageName(PackageNameMap.toChinese(o.getPackageCode(), o.getPackageName()));
+        // 套餐名称中文化：历史数据为英文（100M Broadband），统一映射为中文展示；
+        // 数据库字典（运营可维护）优先，PackageNameMap 代码兜底；packageCode 保留原值可溯源
+        vo.setPackageName(packageNameDictService.toChinese(o.getPackageCode(), o.getPackageName()));
         return vo;
     }
 
