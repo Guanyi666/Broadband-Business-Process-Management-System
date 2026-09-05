@@ -68,7 +68,9 @@ export interface WorkorderItem {
 export interface DispatchCandidate {
   installerId: number | string
   name: string
+  username?: string
   phone?: string
+  status?: 'AVAILABLE' | 'OFF_DUTY'
   distanceKm?: number
   workload?: number
   rating?: number

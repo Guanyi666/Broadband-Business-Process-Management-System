@@ -20,7 +20,7 @@ public interface DispatchService {
     DispatchResultDTO reassign(ReassignReq req);
 
     /** Read-only candidate preview (no locks, no side effects). */
-    List<CandidateDTO> getCandidates(Long orderId);
+    List<CandidateDTO> getCandidates(Long orderId, Long excludeInstallerId, int limit);
 
     PageResp<DispatchRecordVO> pageRecords(DispatchQueryReq req);
 

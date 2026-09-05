@@ -41,6 +41,10 @@ export function deleteRole(id: number | string) {
   return request<void>({ url: `/roles/${id}`, method: 'DELETE' })
 }
 
+export function getRoleMenuIds(roleId: number | string) {
+  return request<(number | string)[]>({ url: `/roles/${roleId}/menu-ids`, method: 'GET' })
+}
+
 // Backend: POST /roles/{id}/menus with a bare List<Long> body (not {menuIds}).
 export function assignMenus(roleId: number | string, menuIds: (number | string)[]) {
   return request<void>({

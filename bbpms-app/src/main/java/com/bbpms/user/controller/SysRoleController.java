@@ -48,6 +48,12 @@ public class SysRoleController {
         return R.ok(roleService.getById(id));
     }
 
+    @GetMapping("/{id}/menu-ids")
+    @PreAuthorize("hasAuthority('system:role:view')")
+    public R<List<Long>> getMenuIds(@PathVariable Long id) {
+        return R.ok(roleService.getMenuIds(id));
+    }
+
     @GetMapping
     @PreAuthorize("hasAuthority('system:role:view')")
     public R<List<SysRole>> list() {

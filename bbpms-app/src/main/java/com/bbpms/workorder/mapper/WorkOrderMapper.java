@@ -7,6 +7,7 @@ import com.bbpms.workorder.dto.WorkOrderQueryReq;
 import com.bbpms.workorder.entity.WorkOrder;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -51,4 +52,19 @@ public interface WorkOrderMapper extends BaseMapper<WorkOrder> {
 
     /** Bulk fetch by id list (timeline rendering helper). */
     List<WorkOrder> selectByIds(@Param("ids") List<Long> ids);
+
+    /** Explicit NULL assignment; MyBatis-Plus skips null fields in updateById. */
+    @Update("""
+            UPDATE work_order
+            SET installer_id = NULL,
+                status = 'PENDING',
+                dispatch_time = NULL,
+                update_by = #{operatorId},
+                update_time = CURRENT_TIMESTAMP,
+                version = version + 1
+            WHERE id = #{id} AND version = #{version} AND deleted = 0
+            """)
+    int returnToPending(@Param("id") Long id,
+                        @Param("version") Integer version,
+                        @Param("operatorId") Long operatorId);
 }

@@ -1,34 +1,32 @@
 <script setup lang="ts">
 import { ref, onMounted, onActivated, onBeforeUnmount } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { pageOrders } from '@/api/order'
+import { pageWorkorders } from '@/api/workorder'
 import { listInstallerLocations } from '@/api/installer'
 import { dispatchCandidates, autoDispatch, manualDispatch } from '@/api/dispatch'
 import { formatDate } from '@/utils/format'
-import type { OrderItem } from '@/types/order'
-import type { DispatchCandidate } from '@/types/order'
+import type { DispatchCandidate, WorkorderItem } from '@/types/order'
 import type { InstallerLocation } from '@/types/installer'
 import PageHeader from '@/components/PageHeader.vue'
-import BBPMSStatusTag from '@/components/BBPMSStatusTag.vue'
 
 const loading = ref(false)
-const pendingOrders = ref<OrderItem[]>([])
+const pendingOrders = ref<WorkorderItem[]>([])
 const onlineInstallers = ref<InstallerLocation[]>([])
 const statusSummary = ref({ pending: 0, dispatched: 0, processing: 0, completed: 0 })
 
 const dialogVisible = ref(false)
 const dialogLoading = ref(false)
-const currentOrder = ref<OrderItem | null>(null)
+const currentOrder = ref<WorkorderItem | null>(null)
 const candidates = ref<DispatchCandidate[]>([])
 
 async function refresh() {
   loading.value = true
   try {
     const [orders, dispatched, processing, completed, locs] = await Promise.all([
-      pageOrders({ pageNum: 1, pageSize: 50, status: 'WAIT_DISPATCH' }),
-      pageOrders({ pageNum: 1, pageSize: 1, status: 'DISPATCHED' }),
-      pageOrders({ pageNum: 1, pageSize: 1, status: 'INSTALLING' }),
-      pageOrders({ pageNum: 1, pageSize: 1, status: 'FINISHED' }),
+      pageWorkorders({ pageNum: 1, pageSize: 50, status: 'PENDING' }),
+      pageWorkorders({ pageNum: 1, pageSize: 1, status: 'DISPATCHED' }),
+      pageWorkorders({ pageNum: 1, pageSize: 1, status: 'IN_PROGRESS' }),
+      pageWorkorders({ pageNum: 1, pageSize: 1, status: 'COMPLETED' }),
       listInstallerLocations().catch(() => [] as InstallerLocation[])
     ])
     pendingOrders.value = orders.list
@@ -44,12 +42,12 @@ async function refresh() {
   }
 }
 
-async function openDispatch(order: OrderItem) {
+async function openDispatch(order: WorkorderItem) {
   currentOrder.value = order
   dialogVisible.value = true
   dialogLoading.value = true
   try {
-    candidates.value = await dispatchCandidates(order.id, 10)
+    candidates.value = await dispatchCandidates(order.orderId, 10)
   } finally {
     dialogLoading.value = false
   }
@@ -61,24 +59,24 @@ async function onAutoDispatch() {
     await ElMessageBox.confirm('确定自动派单给评分最高的装维人员吗？', '自动派单确认', { type: 'info' })
   } catch { return }
   try {
-    const r = await autoDispatch(currentOrder.value.id)
+    const r = await autoDispatch(currentOrder.value.orderId)
     ElMessage.success(`已派单给 ${r.installerName || r.installerId}`)
     dialogVisible.value = false
-    refresh()
-  } catch {
-    /* error already toasted */
+    await refresh()
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.message || e?.response?.data?.msg || e?.message || '自动派单失败')
   }
 }
 
 async function onManualDispatch(c: DispatchCandidate) {
   if (!currentOrder.value) return
   try {
-    await manualDispatch(currentOrder.value.id, c.installerId)
+    await manualDispatch(currentOrder.value.orderId, c.installerId)
     ElMessage.success('派单成功')
     dialogVisible.value = false
-    refresh()
-  } catch {
-    /* toast */
+    await refresh()
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.message || e?.response?.data?.msg || e?.message || '手动派单失败')
   }
 }
 
@@ -112,17 +110,17 @@ onActivated(refresh)
     <div class="board">
       <div class="board-col">
         <div class="board-col-header">
-          <span>待处理订单</span>
+          <span>待派发工单</span>
           <el-tag size="small">{{ pendingOrders.length }}</el-tag>
         </div>
         <div class="board-col-body">
           <div v-for="o in pendingOrders" :key="o.id" class="order-card" @click="openDispatch(o)">
-            <div class="order-no">{{ o.orderNo }}</div>
-            <div class="order-meta">{{ o.customerName }} · {{ o.packageName }}</div>
-            <div class="order-addr">{{ o.address }}</div>
+            <div class="order-no">{{ o.workNo }}</div>
+            <div class="order-meta">{{ o.customerPhone || '-' }} · {{ o.packageName || '-' }}</div>
+            <div class="order-addr">{{ o.installAddress || '-' }}</div>
             <div class="order-time">
               <el-icon><Clock /></el-icon>
-              {{ formatDate(o.appointmentAt, 'MM-DD HH:mm') }}
+              {{ formatDate(o.createTime, 'MM-DD HH:mm') }}
             </div>
           </div>
           <el-empty v-if="!pendingOrders.length" description="暂无待派发工单" :image-size="60" />
@@ -157,21 +155,23 @@ onActivated(refresh)
 
     <el-dialog
       v-model="dialogVisible"
-      :title="`派单 - ${currentOrder?.orderNo || ''}`"
+      :title="`派单 - ${currentOrder?.workNo || ''}`"
       width="640px"
     >
       <div v-loading="dialogLoading">
         <el-alert type="info" :closable="false" class="mb-16">
-          <div>客户：<strong>{{ currentOrder?.customerName }}</strong></div>
-          <div>安装地址：{{ currentOrder?.address }}</div>
-          <div>预约时间：{{ formatDate(currentOrder?.appointmentAt) }}</div>
+          <div>客户电话：<strong>{{ currentOrder?.customerPhone || '-' }}</strong></div>
+          <div>安装地址：{{ currentOrder?.installAddress || '-' }}</div>
+          <div>建单时间：{{ formatDate(currentOrder?.createTime) }}</div>
         </el-alert>
 
         <div class="candidate-header">推荐装维（按评分）</div>
         <el-table :data="candidates" border>
           <el-table-column label="排名" width="60" type="index" />
           <el-table-column label="装维人员">
-            <template #default="{ row }">{{ row.name }} ({{ row.phone || '-' }})</template>
+            <template #default="{ row }">
+              {{ row.name }}<span v-if="row.username">（{{ row.username }}）</span> · {{ row.phone || '-' }}
+            </template>
           </el-table-column>
           <el-table-column label="综合评分" width="80">
             <template #default="{ row }">

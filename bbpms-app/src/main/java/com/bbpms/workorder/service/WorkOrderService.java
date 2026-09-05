@@ -25,6 +25,9 @@ public interface WorkOrderService {
      */
     WorkOrderVO create(WorkOrderCreateReq req);
 
+    /** Assign an existing PENDING pool row instead of creating a duplicate. */
+    WorkOrderVO assignPending(Long workOrderId, Long installerId, Long dispatcherId, String remark);
+
     /** DISPATCHED -> ACCEPTED. */
     WorkOrderVO accept(Long workOrderId, Long installerId);
 

@@ -11,6 +11,15 @@ import java.util.List;
 @Mapper
 public interface SysMenuMapper extends BaseMapper<SysMenu> {
 
+    /** Complete tree used by menu/role management; includes DIR, MENU and BUTTON. */
+    @Select("""
+            SELECT m.*
+            FROM sys_menu m
+            WHERE m.deleted = 0
+            ORDER BY m.sort, m.id
+            """)
+    List<SysMenu> selectAllForManagement();
+
     /** The user's visible DIR/MENU rows (buttons excluded) via role-menu bindings. */
     @Select("""
             SELECT DISTINCT m.*

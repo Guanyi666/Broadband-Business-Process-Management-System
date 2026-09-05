@@ -52,9 +52,19 @@ public class RbacServiceImpl implements RbacService {
                 voMap.get(parentId).getChildren().add(vo);
             }
         }
-        roots.sort(Comparator.comparing(SysMenuVO::getSort, Comparator.nullsLast(Integer::compareTo)));
-        roots.forEach(r -> r.getChildren().sort(Comparator.comparing(SysMenuVO::getSort, Comparator.nullsLast(Integer::compareTo))));
+        sortRecursively(roots);
         return roots;
+    }
+
+    private void sortRecursively(List<SysMenuVO> nodes) {
+        nodes.sort(Comparator
+                .comparing(SysMenuVO::getSort, Comparator.nullsLast(Integer::compareTo))
+                .thenComparing(SysMenuVO::getId, Comparator.nullsLast(Long::compareTo)));
+        for (SysMenuVO node : nodes) {
+            if (node.getChildren() != null && !node.getChildren().isEmpty()) {
+                sortRecursively(node.getChildren());
+            }
+        }
     }
 
     @Override

@@ -51,8 +51,11 @@ public class DispatchController {
 
     @GetMapping("/candidates")
     @PreAuthorize("hasAuthority('dispatch:view')")
-    public R<List<CandidateDTO>> candidates(@RequestParam Long orderId) {
-        return R.ok(dispatchService.getCandidates(orderId));
+    public R<List<CandidateDTO>> candidates(
+            @RequestParam Long orderId,
+            @RequestParam(value = "excludeInstallerId", required = false) Long excludeInstallerId,
+            @RequestParam(value = "limit", defaultValue = "20") int limit) {
+        return R.ok(dispatchService.getCandidates(orderId, excludeInstallerId, limit));
     }
 
     @GetMapping("/records/page")

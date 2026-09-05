@@ -48,6 +48,9 @@ export function reassignWorkorder(workorderId: number | string, reason?: string)
 interface CandidateDTO {
   installerId: number
   name: string
+  username?: string
+  phone?: string
+  status?: 'AVAILABLE' | 'OFF_DUTY'
   distance?: number
   workload?: number
   skillMatchScore?: number
@@ -56,20 +59,28 @@ interface CandidateDTO {
   factorBreakdown?: Record<string, number>
 }
 
-export async function dispatchCandidates(orderId: number | string, limit = 10) {
+export async function dispatchCandidates(
+  orderId: number | string,
+  limit = 10,
+  excludeInstallerId?: number | string
+) {
   const list = await request<CandidateDTO[]>({
     url: '/dispatch/candidates',
     method: 'GET',
-    params: { orderId, limit }
+    params: { orderId, limit, excludeInstallerId }
   })
   // Adapter: CandidateDTO → DispatchCandidate (score/totalScore, distanceKm/distance).
   return (list || []).map((c) => ({
     installerId: c.installerId,
     name: c.name,
+    username: c.username,
+    phone: c.phone,
+    status: c.status,
     distanceKm: c.distance,
     workload: c.workload,
     rating: c.rating,
-    score: c.totalScore
+    score: c.totalScore,
+    online: c.status === 'AVAILABLE'
   })) as DispatchCandidate[]
 }
 

@@ -11,6 +11,7 @@ interface ImportMetaEnv {
   readonly VITE_APP_TITLE: string
   readonly VITE_AMAP_KEY: string
   readonly VITE_USE_MOCK: string
+  readonly VITE_CUSTOMER_PORTAL_URL?: string
 }
 
 interface ImportMeta {

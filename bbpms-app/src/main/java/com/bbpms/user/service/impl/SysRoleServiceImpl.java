@@ -12,6 +12,7 @@ import com.bbpms.user.mapper.SysRoleMenuMapper;
 import com.bbpms.user.service.SysRoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -41,6 +42,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "user:auth", allEntries = true)
     public void update(RoleUpdateReq req) {
         SysRole role = getById(req.getId());
         if (role == null) {
@@ -58,6 +60,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "user:auth", allEntries = true)
     public void delete(Long id) {
         removeById(id);
         roleMenuMapper.deleteByRoleId(id);
@@ -65,6 +68,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "user:auth", allEntries = true)
     public void assignMenus(Long roleId, List<Long> menuIds) {
         roleMenuMapper.deleteByRoleId(roleId);
         if (menuIds == null || menuIds.isEmpty()) {
@@ -79,6 +83,14 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         for (SysRoleMenu rm : list) {
             roleMenuMapper.insert(rm);
         }
+    }
+
+    @Override
+    public List<Long> getMenuIds(Long roleId) {
+        if (getById(roleId) == null) {
+            throw new BizException(ResultCode.BAD_REQUEST.getCode(), "Role not found");
+        }
+        return roleMenuMapper.selectMenuIdsByRoleId(roleId);
     }
 
     @Override

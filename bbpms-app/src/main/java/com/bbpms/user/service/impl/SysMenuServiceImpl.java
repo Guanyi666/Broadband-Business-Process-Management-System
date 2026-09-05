@@ -8,6 +8,7 @@ import com.bbpms.user.service.RbacService;
 import com.bbpms.user.service.SysMenuService;
 import com.bbpms.user.vo.SysMenuVO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -36,6 +37,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     }
 
     @Override
+    @CacheEvict(value = "user:auth", allEntries = true)
     public void update(Long id, MenuCreateReq req) {
         SysMenu menu = new SysMenu();
         menu.setId(id);
@@ -53,8 +55,14 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     }
 
     @Override
+    @CacheEvict(value = "user:auth", allEntries = true)
     public void delete(Long id) {
         removeById(id);
+    }
+
+    @Override
+    public List<SysMenuVO> getAllMenuTree() {
+        return rbacService.buildMenuTree(baseMapper.selectAllForManagement());
     }
 
     @Override

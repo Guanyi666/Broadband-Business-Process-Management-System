@@ -92,7 +92,10 @@ public class DispatchScoringService {
                     ss,
                     inst.rating(),
                     round2(total),
-                    breakdown
+                    breakdown,
+                    inst.username(),
+                    inst.phone(),
+                    Integer.valueOf(1).equals(inst.onDuty()) ? "AVAILABLE" : "OFF_DUTY"
             ));
         }
 

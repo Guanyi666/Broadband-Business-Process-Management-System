@@ -193,7 +193,9 @@ WHERE `role_id` = 6 AND `menu_id` IN (1, 20, 21, 24, 90);
 INSERT IGNORE INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES
 (6, 500), (6, 501), (6, 502), (6, 503), (6, 504),
 (6, 505), (6, 506), (6, 507), (6, 508), (6, 509),
-(1, 510), (2, 510);
+(1, 500), (1, 501), (1, 502), (1, 503), (1, 504),
+(1, 505), (1, 506), (1, 507), (1, 508), (1, 509), (1, 510),
+(2, 510);
 
 INSERT IGNORE INTO `broadband_package`
 (`id`, `code`, `name`, `speed_mbps`, `monthly_fee`, `description`, `status`, `sort`) VALUES

@@ -32,6 +32,7 @@ public class WorkOrderStateMachine {
         put(WorkOrderStatus.IN_PROGRESS, WorkOrderStatus.COMPLETED,    List.of(5));
         put(WorkOrderStatus.IN_PROGRESS, WorkOrderStatus.FAILED,       List.of(5));
         put(WorkOrderStatus.DISPATCHED,  WorkOrderStatus.PENDING,      List.of(4, 5));
+        put(WorkOrderStatus.ACCEPTED,    WorkOrderStatus.PENDING,      List.of(4, 5));
         put(WorkOrderStatus.ACCEPTED,    WorkOrderStatus.CANCELLED,    List.of(2, 4));
 
         /* Phase 5 additions */

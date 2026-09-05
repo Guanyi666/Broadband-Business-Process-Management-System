@@ -14,6 +14,9 @@ public interface InstallerProfileService extends IService<InstallerProfile> {
 
     List<InstallerVO> getOnline();
 
+    /** Enabled installer accounts that are on duty and below the workload limit. */
+    List<InstallerVO> listAvailable(int maxWorkload);
+
     /** All installers that have reported a location (for the admin map view). */
     List<InstallerVO> listLocations();
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getWorkorderDetail, completeWorkorder, cancelWorkorder, reassignWorkOrder } from '@/api/workorder'
 import { dispatchCandidates } from '@/api/dispatch'
@@ -11,6 +12,7 @@ import BBPMSStatusTag from '@/components/BBPMSStatusTag.vue'
 
 const route = useRoute()
 const router = useRouter()
+const auth = useAuthStore()
 const loading = ref(false)
 const detail = ref<any>(null)
 
@@ -48,7 +50,9 @@ const candidates = ref<DispatchCandidate[]>([])
 const reassignForm = ref<{ newInstallerId: number | null; reason: string }>({ newInstallerId: null, reason: '' })
 
 function candidateLabel(c: DispatchCandidate): string {
-  const parts = [`${c.name}｜当前工单 ${c.workload ?? 0}｜评分 ${c.rating ?? '-'}`]
+  const identity = c.username ? `${c.name}（${c.username}）` : c.name
+  const status = c.status === 'AVAILABLE' ? '可接单' : '不可用'
+  const parts = [`${identity}｜${status}｜当前工单 ${c.workload ?? 0}｜评分 ${c.rating ?? '-'}`]
   if (c.distanceKm != null) parts.push(`距客户 ${c.distanceKm.toFixed(1)} km`)
   return parts.join('｜')
 }
@@ -60,7 +64,7 @@ async function openReassign() {
   reassignLoading.value = true
   try {
     // 复用派单候选接口：仅返回满足接单条件的装维（在岗/可接单/技能匹配/负载达标）
-    candidates.value = await dispatchCandidates(detail.value.orderId, 20)
+    candidates.value = await dispatchCandidates(detail.value.orderId, 20, detail.value.installerId)
   } catch {
     ElMessage.error('装维候选加载失败，请重试')
   } finally {
@@ -86,8 +90,8 @@ async function submitReassign() {
     ElMessage.success('改派成功')
     reassignVisible.value = false
     fetchData()
-  } catch {
-    // request 层已统一提示
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.message || e?.response?.data?.msg || e?.message || '改派失败，请重试')
   } finally {
     reassignLoading.value = false
   }
@@ -100,9 +104,9 @@ onMounted(fetchData)
   <div class="app-container" v-loading="loading">
     <PageHeader :title="`工单 ${detail?.workNo || ''}`">
       <template #extra>
-        <el-button type="primary" @click="onComplete" v-if="detail?.status === 'IN_PROGRESS'">标记完成</el-button>
-        <el-button @click="openReassign" v-if="['DISPATCHED', 'ACCEPTED', 'IN_PROGRESS', 'STALLED'].includes(detail?.status)">改派</el-button>
-        <el-button type="danger" plain @click="onCancel" v-if="['PENDING', 'DISPATCHED', 'ACCEPTED'].includes(detail?.status)">取消</el-button>
+        <el-button type="primary" @click="onComplete" v-if="detail?.status === 'IN_PROGRESS' && auth.hasPermission('workorder:complete')">标记完成</el-button>
+        <el-button @click="openReassign" v-if="['DISPATCHED', 'ACCEPTED', 'IN_PROGRESS', 'STALLED'].includes(detail?.status) && auth.hasPermission('workorder:reassign')">改派</el-button>
+        <el-button type="danger" plain @click="onCancel" v-if="['PENDING', 'DISPATCHED', 'ACCEPTED'].includes(detail?.status) && auth.hasPermission('workorder:cancel')">取消</el-button>
       </template>
     </PageHeader>
 

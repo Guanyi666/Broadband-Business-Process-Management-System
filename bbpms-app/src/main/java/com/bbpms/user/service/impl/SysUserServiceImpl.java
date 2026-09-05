@@ -124,6 +124,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "user:auth", key = "#userId")
     public void assignRoles(Long userId, List<Long> roleIds) {
         userRoleMapper.deleteByUserId(userId);
         if (roleIds == null || roleIds.isEmpty()) {

@@ -33,6 +33,12 @@ class WorkOrderStateMachineTest {
     }
 
     @Test
+    void acceptedCanReturnToPendingPool() {
+        assertEquals(WorkOrderStatus.PENDING,
+                sm.next(WorkOrderStatus.ACCEPTED, WorkOrderStatus.PENDING));
+    }
+
+    @Test
     void inProgressToCompleted() {
         assertEquals(WorkOrderStatus.COMPLETED,
                 sm.next(WorkOrderStatus.IN_PROGRESS, WorkOrderStatus.COMPLETED));

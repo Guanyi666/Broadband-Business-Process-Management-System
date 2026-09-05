@@ -3,15 +3,14 @@ package com.bbpms.dispatch.service.impl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bbpms.common.annotation.OperationLog;
-import com.bbpms.common.enums.OrderStatus;
 import com.bbpms.common.enums.ResultCode;
 import com.bbpms.common.enums.WorkOrderStatus;
-import com.bbpms.common.event.BbpmsEvents;
 import com.bbpms.common.exception.BizException;
 import com.bbpms.common.lock.RedissonDistributedLock;
 import com.bbpms.common.result.PageResp;
 import com.bbpms.common.util.JsonUtils;
 import com.bbpms.common.util.RedisUtils;
+import com.bbpms.common.util.SecurityUtils;
 import com.bbpms.dispatch.algorithm.DispatchScoringService;
 import com.bbpms.dispatch.config.DispatchProperties;
 import com.bbpms.dispatch.dto.CandidateDTO;
@@ -41,7 +40,6 @@ import com.bbpms.workorder.vo.WorkOrderVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -51,11 +49,8 @@ import org.springframework.util.StringUtils;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -76,7 +71,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DispatchServiceImpl implements DispatchService {
 
-    public static final String REDIS_ZSET_ACTIVE_INSTALLERS = "installers:active";
     public static final String REDIS_REASSIGN_COOLDOWN_PREFIX = "dispatch:cooldown:";
 
     private final OrderService orderService;
@@ -87,7 +81,6 @@ public class DispatchServiceImpl implements DispatchService {
     private final DispatchRecordMapper recordMapper;
     private final RedisUtils redisUtils;
     private final RedissonDistributedLock lock;
-    private final ApplicationEventPublisher publisher;
     private final DispatchProperties props;
     private final com.bbpms.leave.service.LeaveService leaveService;
 
@@ -125,7 +118,8 @@ public class DispatchServiceImpl implements DispatchService {
         // for this order (dispatched by an earlier auto/manual call).
         WorkOrderVO existingWo = workOrderService.findByOrderId(orderId);
         if (existingWo != null
-                && !WorkOrderStatus.isTerminal(existingWo.getStatus())) {
+                && !WorkOrderStatus.isTerminal(existingWo.getStatus())
+                && existingWo.getStatus() != WorkOrderStatus.PENDING) {
             log.info("autoDispatch orderId={} idempotent hit existing workNo={}",
                     orderId, existingWo.getWorkNo());
             return new DispatchResultDTO(existingWo.getId(), existingWo.getWorkNo(),
@@ -168,42 +162,52 @@ public class DispatchServiceImpl implements DispatchService {
             throw new BizException(ResultCode.LOCK_CONTENDED, "无空闲装维人员");
         }
 
-        try {
-            String candidatesJson = JsonUtils.toJson(ranked);
+        final String heldWinnerLockKey = winnerLockKey;
+        final InstallerDTO selectedWinner = winner;
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCompletion(int status) {
+                        lock.unlock(heldWinnerLockKey);
+                    }
+                });
 
+        String candidatesJson = JsonUtils.toJson(ranked);
+        CandidateDTO winnerCandidate = ranked.stream()
+                .filter(candidate -> selectedWinner.id().equals(candidate.installerId()))
+                .findFirst()
+                .orElseThrow(() -> new BizException(ResultCode.NO_DISPATCH_CANDIDATE));
+
+        WorkOrderVO wo;
+        if (existingWo != null && existingWo.getStatus() == WorkOrderStatus.PENDING) {
+            wo = workOrderService.assignPending(existingWo.getId(), winner.id(), null, "AUTO_DISPATCH");
+        } else {
             WorkOrderCreateReq req = new WorkOrderCreateReq();
             req.setOrderId(orderId);
             req.setInstallerId(winner.id());
             req.setRemark("AUTO_DISPATCH");
-            WorkOrderVO wo = workOrderService.create(req);
-
-            orderService.updateStatus(orderId, OrderStatus.DISPATCHED, null);
-
-            DispatchRecord rec = new DispatchRecord();
-            rec.setWorkOrderId(wo.getId());
-            rec.setInstallerId(winner.id());
-            rec.setStrategy("AUTO");
-            rec.setScore(BigDecimal.valueOf(ranked.get(0).totalScore()).setScale(2, RoundingMode.HALF_UP));
-            rec.setCandidatesJson(candidatesJson);
-            rec.setReason("AUTO");
-            recordMapper.insert(rec);
-
-            publisher.publishEvent(new BbpmsEvents.WorkOrderDispatchedEvent(
-                    wo.getId(), wo.getWorkNo(), orderId, winner.id(), ranked.get(0).totalScore()));
-
-            log.info("autoDispatch orderId={} -> workOrderId={} installerId={} score={}",
-                    orderId, wo.getId(), winner.id(), ranked.get(0).totalScore());
-
-            return new DispatchResultDTO(
-                    wo.getId(),
-                    wo.getWorkNo(),
-                    winner.id(),
-                    winner.name(),
-                    ranked.get(0).totalScore(),
-                    candidatesJson);
-        } finally {
-            lock.unlock(winnerLockKey);
+            wo = workOrderService.create(req);
         }
+
+        DispatchRecord rec = new DispatchRecord();
+        rec.setWorkOrderId(wo.getId());
+        rec.setInstallerId(winner.id());
+        rec.setStrategy("AUTO");
+        rec.setScore(BigDecimal.valueOf(winnerCandidate.totalScore()).setScale(2, RoundingMode.HALF_UP));
+        rec.setCandidatesJson(candidatesJson);
+        rec.setReason("AUTO");
+        recordMapper.insert(rec);
+
+        log.info("autoDispatch orderId={} -> workOrderId={} installerId={} score={}",
+                orderId, wo.getId(), winner.id(), winnerCandidate.totalScore());
+
+        return new DispatchResultDTO(
+                wo.getId(),
+                wo.getWorkNo(),
+                winner.id(),
+                winner.name(),
+                winnerCandidate.totalScore(),
+                candidatesJson);
     }
 
     /* ========================= MANUAL ========================= */
@@ -235,7 +239,8 @@ public class DispatchServiceImpl implements DispatchService {
         if (order == null) throw new BizException(ResultCode.ORDER_NOT_FOUND);
         WorkOrderVO existingWo = workOrderService.findByOrderId(req.getOrderId());
         if (existingWo != null
-                && !WorkOrderStatus.isTerminal(existingWo.getStatus())) {
+                && !WorkOrderStatus.isTerminal(existingWo.getStatus())
+                && existingWo.getStatus() != WorkOrderStatus.PENDING) {
             log.info("manualDispatch orderId={} idempotent hit existing workNo={}",
                     req.getOrderId(), existingWo.getWorkNo());
             return new DispatchResultDTO(existingWo.getId(), existingWo.getWorkNo(),
@@ -248,33 +253,40 @@ public class DispatchServiceImpl implements DispatchService {
         if (!locked) {
             throw new BizException(ResultCode.LOCK_CONTENDED, "该装维人员正在派单中");
         }
-        try {
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCompletion(int status) {
+                        lock.unlock(lockKey);
+                    }
+                });
+
+        Long dispatcherId = req.getDispatcherId() == null
+                ? SecurityUtils.getCurrentUserId() : req.getDispatcherId();
+        WorkOrderVO wo;
+        if (existingWo != null && existingWo.getStatus() == WorkOrderStatus.PENDING) {
+            wo = workOrderService.assignPending(existingWo.getId(), req.getInstallerId(),
+                    dispatcherId, req.getReason());
+        } else {
             WorkOrderCreateReq woReq = new WorkOrderCreateReq();
             woReq.setOrderId(req.getOrderId());
             woReq.setInstallerId(req.getInstallerId());
-            woReq.setDispatcherId(req.getDispatcherId());
+            woReq.setDispatcherId(dispatcherId);
             woReq.setRemark(req.getReason());
-            WorkOrderVO wo = workOrderService.create(woReq);
-
-            orderService.updateStatus(req.getOrderId(), OrderStatus.DISPATCHED, req.getDispatcherId());
-
-            DispatchRecord rec = new DispatchRecord();
-            rec.setWorkOrderId(wo.getId());
-            rec.setInstallerId(req.getInstallerId());
-            rec.setStrategy("MANUAL");
-            rec.setScore(BigDecimal.ZERO);
-            rec.setCandidatesJson("[]");
-            rec.setReason(req.getReason());
-            recordMapper.insert(rec);
-
-            publisher.publishEvent(new BbpmsEvents.WorkOrderDispatchedEvent(
-                    wo.getId(), wo.getWorkNo(), req.getOrderId(), req.getInstallerId(), null));
-
-            return new DispatchResultDTO(wo.getId(), wo.getWorkNo(),
-                    req.getInstallerId(), null, null, "[]");
-        } finally {
-            lock.unlock(lockKey);
+            wo = workOrderService.create(woReq);
         }
+
+        DispatchRecord rec = new DispatchRecord();
+        rec.setWorkOrderId(wo.getId());
+        rec.setInstallerId(req.getInstallerId());
+        rec.setStrategy("MANUAL");
+        rec.setScore(BigDecimal.ZERO);
+        rec.setCandidatesJson("[]");
+        rec.setReason(req.getReason());
+        recordMapper.insert(rec);
+
+        return new DispatchResultDTO(wo.getId(), wo.getWorkNo(),
+                req.getInstallerId(), wo.getInstallerName(), null, "[]");
     }
 
     /* ========================= REASSIGN ========================= */
@@ -322,14 +334,22 @@ public class DispatchServiceImpl implements DispatchService {
     /* ========================= READ PATHS ========================= */
 
     @Override
-    public List<CandidateDTO> getCandidates(Long orderId) {
+    public List<CandidateDTO> getCandidates(Long orderId, Long excludeInstallerId, int limit) {
         if (orderId == null) throw new BizException(ResultCode.BAD_REQUEST, "orderId 不能为空");
         BroadbandOrder order = orderService.findByOrderId(orderId);
         if (order == null) throw new BizException(ResultCode.ORDER_NOT_FOUND);
         DispatchRule rule = ruleService.getActive();
         OrderDTO orderDTO = toOrderDTO(order);
         List<InstallerDTO> candidates = loadCandidates();
-        return scoringService.score(orderDTO, candidates, rule);
+        if (excludeInstallerId != null) {
+            candidates = candidates.stream()
+                    .filter(i -> !excludeInstallerId.equals(i.id()))
+                    .toList();
+        }
+        int safeLimit = Math.max(1, Math.min(limit, 100));
+        return scoringService.score(orderDTO, candidates, rule).stream()
+                .limit(safeLimit)
+                .toList();
     }
 
     @Override
@@ -382,17 +402,13 @@ public class DispatchServiceImpl implements DispatchService {
     /* ========================= internals ========================= */
 
     /**
-     * Load candidates from the Redis active ZSET + the user module. Only
-     * installers that pinged in the last 5 minutes AND are onDuty=1 are kept.
-     * Online installers are also included so the first dispatch isn't starved.
+     * Load assignable installers from durable profile/account state. Redis is a
+     * presence accelerator and may be empty after restart; using it as the only
+     * source made both manual dispatch and reassignment show an empty selector
+     * even while on-duty installers existed in MySQL.
      */
     private List<InstallerDTO> loadCandidates() {
-        Set<String> active = redisUtils.zRangeByScore(REDIS_ZSET_ACTIVE_INSTALLERS,
-                System.currentTimeMillis() - Duration.ofMinutes(5).toMillis(),
-                Double.MAX_VALUE);
-        List<InstallerVO> online = installerProfileService.getOnline();
-        Map<Long, InstallerVO> byId = new HashMap<>();
-        for (InstallerVO v : online) byId.put(v.getUserId(), v);
+        List<InstallerVO> available = installerProfileService.listAvailable(props.getMaxLoad());
 
         // Phase 7: pre-fetch installers who are currently on approved leave, so we
         // can exclude them from dispatch candidates.
@@ -408,29 +424,10 @@ public class DispatchServiceImpl implements DispatchService {
         }
 
         List<InstallerDTO> result = new ArrayList<>();
-        Set<Long> seen = new HashSet<>();
-        if (active != null && !active.isEmpty()) {
-            for (String s : active) {
-                try {
-                    Long uid = Long.parseLong(s);
-                    if (onLeave.contains(uid)) continue;
-                    InstallerVO v = byId.get(uid);
-                    if (v != null && Integer.valueOf(1).equals(v.getOnDuty())) {
-                        result.add(toInstallerDTO(v));
-                        seen.add(uid);
-                    }
-                } catch (NumberFormatException ignored) {
-                    // skip malformed ZSET member
-                }
-            }
-        }
-        for (InstallerVO v : online) {
-            if (v.getUserId() == null || seen.contains(v.getUserId())) continue;
+        for (InstallerVO v : available) {
+            if (v.getUserId() == null) continue;
             if (onLeave.contains(v.getUserId())) continue;
-            if (Integer.valueOf(1).equals(v.getOnDuty())) {
-                result.add(toInstallerDTO(v));
-                seen.add(v.getUserId());
-            }
+            result.add(toInstallerDTO(v));
         }
         return result;
     }
@@ -460,7 +457,9 @@ public class DispatchServiceImpl implements DispatchService {
                 1,
                 skills,
                 List.of(),
-                v.getOnDuty()
+                v.getOnDuty(),
+                v.getUsername(),
+                v.getPhone()
         );
     }
 
@@ -522,9 +521,4 @@ public class DispatchServiceImpl implements DispatchService {
         return List.of();
     }
 
-    private static String readSkillTags(InstallerVO v) {
-        // kept for API symmetry — current implementation reads from the
-        // InstallerProfile via the service (see toInstallerDTO).
-        return null;
-    }
 }

@@ -55,6 +55,31 @@ public class InstallerProfileServiceImpl extends ServiceImpl<InstallerProfileMap
     }
 
     @Override
+    public List<InstallerVO> listAvailable(int maxWorkload) {
+        int capacity = Math.max(1, maxWorkload);
+        List<InstallerProfile> profiles = lambdaQuery()
+                .eq(InstallerProfile::getOnDuty, 1)
+                .lt(InstallerProfile::getWorkload, capacity)
+                .orderByAsc(InstallerProfile::getWorkload)
+                .orderByDesc(InstallerProfile::getScore)
+                .list();
+        if (profiles.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<Long> ids = profiles.stream().map(InstallerProfile::getUserId).toList();
+        Map<Long, SysUser> users = userMapper.selectBatchIds(ids).stream()
+                .collect(Collectors.toMap(SysUser::getId, u -> u));
+        return profiles.stream()
+                .filter(p -> {
+                    SysUser u = users.get(p.getUserId());
+                    return u != null && Integer.valueOf(1).equals(u.getStatus())
+                            && Integer.valueOf(5).equals(u.getUserType());
+                })
+                .map(p -> toInstallerVO(p, users.get(p.getUserId())))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public InstallerVO getProfile(Long userId) {
         InstallerProfile p = baseMapper.selectByUserId(userId);
         if (p == null) {

@@ -18,5 +18,7 @@ public record InstallerDTO(
         Integer level,
         List<String> skills,
         List<String> serviceAreas,
-        Integer onDuty
+        Integer onDuty,
+        String username,
+        String phone
 ) {}

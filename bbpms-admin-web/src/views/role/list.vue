@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { pageRoles, createRole, updateRole, deleteRole, assignMenus } from '@/api/role'
+import { pageRoles, createRole, updateRole, deleteRole, assignMenus, getRoleMenuIds } from '@/api/role'
 import { listMenuTree } from '@/api/menu'
 import type { RoleInfo, MenuNode } from '@/types/auth'
 import PageHeader from '@/components/PageHeader.vue'
@@ -16,6 +16,8 @@ const editing = ref<RoleInfo | null>(null)
 const form = reactive<Partial<RoleInfo>>({ code: '', name: '', remark: '', status: 1 })
 
 const menuDialogVisible = ref(false)
+const menuLoading = ref(false)
+const menuSaving = ref(false)
 const menuTarget = ref<RoleInfo | null>(null)
 const menuTree = ref<MenuNode[]>([])
 const checkedKeys = ref<any[]>([])
@@ -72,18 +74,37 @@ async function onDelete(row: RoleInfo) {
 
 async function openAssignMenus(row: RoleInfo) {
   menuTarget.value = row
-  menuTree.value = await listMenuTree()
-  checkedKeys.value = row.menus || []
   menuDialogVisible.value = true
+  menuLoading.value = true
+  menuTree.value = []
+  checkedKeys.value = []
+  try {
+    const [tree, assigned] = await Promise.all([listMenuTree(), getRoleMenuIds(row.id)])
+    menuTree.value = tree || []
+    checkedKeys.value = assigned || []
+    await nextTick()
+    treeRef.value?.setCheckedKeys?.(checkedKeys.value)
+  } catch (error: any) {
+    ElMessage.error(`菜单加载失败：${error?.response?.data?.msg || error?.message || '请稍后重试'}`)
+  } finally {
+    menuLoading.value = false
+  }
 }
 
 async function onSaveMenus() {
   if (!menuTarget.value) return
   const checked = treeRef.value?.getCheckedKeys?.() ?? checkedKeys.value
   const halfChecked = treeRef.value?.getHalfCheckedKeys?.() ?? []
-  await assignMenus(menuTarget.value.id, [...new Set([...checked, ...halfChecked])])
-  ElMessage.success('菜单已更新')
-  menuDialogVisible.value = false
+  menuSaving.value = true
+  try {
+    await assignMenus(menuTarget.value.id, [...new Set([...checked, ...halfChecked])])
+    ElMessage.success('菜单已更新')
+    menuDialogVisible.value = false
+  } catch (error: any) {
+    ElMessage.error(`菜单更新失败：${error?.response?.data?.msg || error?.message || '请稍后重试'}`)
+  } finally {
+    menuSaving.value = false
+  }
 }
 </script>
 
@@ -154,9 +175,10 @@ async function onSaveMenus() {
       </template>
     </el-dialog>
 
-    <el-dialog v-model="menuDialogVisible" :title="`Assign Menus - ${menuTarget?.name || ''}`" width="520px">
+    <el-dialog v-model="menuDialogVisible" :title="`分配菜单 - ${menuTarget?.name || ''}`" width="520px">
       <el-tree
         ref="treeRef"
+        v-loading="menuLoading"
         :data="menuTree"
         :props="{ children: 'children', label: 'name' }"
         show-checkbox
@@ -166,7 +188,7 @@ async function onSaveMenus() {
       />
       <template #footer>
         <el-button @click="menuDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="onSaveMenus">保存</el-button>
+        <el-button type="primary" :loading="menuSaving" :disabled="menuLoading" @click="onSaveMenus">保存</el-button>
       </template>
     </el-dialog>
   </div>

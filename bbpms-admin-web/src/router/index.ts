@@ -31,6 +31,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '登录', requiresAuth: false, hideInMenu: true }
   },
   {
+    path: '/customer-entry',
+    name: 'CustomerEntry',
+    component: () => import('@/views/customer-entry/index.vue'),
+    meta: { title: '客户自助服务', requiresAuth: true, hideInMenu: true, roles: ['CUSTOMER'] }
+  },
+  {
     path: '/',
     component: Layout,
     redirect: '/dashboard',

@@ -8,6 +8,7 @@ import com.bbpms.common.annotation.DataScope;
 import com.bbpms.order.entity.BroadbandOrder;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -42,4 +43,17 @@ public interface BroadbandOrderMapper extends BaseMapper<BroadbandOrder> {
                                         @Param("limit") int limit);
 
     List<BroadbandOrder> selectByCustomer(@Param("customerId") Long customerId);
+
+    /** Clear the previous audit round while atomically moving a rejected order back to CREATED. */
+    @Update("""
+            UPDATE broadband_order
+               SET status = #{nextStatus}, auditor_id = NULL, audit_time = NULL,
+                   audit_remark = NULL, update_by = #{operatorId},
+                   update_time = NOW(), version = version + 1
+             WHERE id = #{id} AND deleted = 0 AND status = #{expectedStatus}
+            """)
+    int resubmitRejected(@Param("id") Long id,
+                         @Param("expectedStatus") String expectedStatus,
+                         @Param("nextStatus") String nextStatus,
+                         @Param("operatorId") Long operatorId);
 }

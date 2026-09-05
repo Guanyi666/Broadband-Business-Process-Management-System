@@ -15,6 +15,9 @@ public interface SysMenuService extends IService<SysMenu> {
 
     void delete(Long id);
 
+    /** Complete management tree, including button permission nodes. */
+    List<SysMenuVO> getAllMenuTree();
+
     List<SysMenuVO> getMenuTreeByUserId(Long userId);
 
     List<String> getPermsByUserId(Long userId);

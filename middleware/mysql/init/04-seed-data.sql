@@ -189,6 +189,7 @@ SELECT 1, id FROM `sys_menu` WHERE deleted = 0;
 INSERT IGNORE INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES
 (2, 1), (2, 10), (2, 11), (2, 12),
 (2, 20), (2, 21), (2, 22), (2, 24),
+(2, 102),
 (2, 60), (2, 61), (2, 62),
 (2, 90);
 

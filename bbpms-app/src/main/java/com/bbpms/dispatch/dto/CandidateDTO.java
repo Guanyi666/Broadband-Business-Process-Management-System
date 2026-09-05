@@ -14,5 +14,8 @@ public record CandidateDTO(
         Double skillMatchScore,
         Double rating,
         Double totalScore,
-        Map<String, Double> factorBreakdown
+        Map<String, Double> factorBreakdown,
+        String username,
+        String phone,
+        String status
 ) {}

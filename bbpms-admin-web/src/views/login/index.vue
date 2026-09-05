@@ -89,6 +89,32 @@ function encryptPassword(pwd: string): string {
   }
 }
 
+function canEnter(path: string): boolean {
+  if (!path.startsWith('/') || path.startsWith('//') || ['/', '/login', '/403', '/404'].includes(path)) {
+    return false
+  }
+  const resolved = router.resolve(path)
+  if (!resolved.matched.length || resolved.path === '/404') return false
+  return resolved.matched.every((record) => {
+    const roles = record.meta.roles as string[] | undefined
+    if (roles?.length && !roles.some((role) => auth.roles.includes(role))) return false
+    return !record.meta.permission || auth.hasPermission(record.meta.permission)
+  })
+}
+
+function defaultLanding(): string {
+  if (auth.roles.includes('CUSTOMER')) return '/customer-entry'
+  const candidates = [
+    '/dashboard',
+    '/order/list',
+    '/workorder/dispatch-board',
+    '/workorder/list',
+    '/customer/list',
+    '/profile'
+  ]
+  return candidates.find(canEnter) || '/profile'
+}
+
 async function onLogin() {
   if (!formRef.value) return
   await formRef.value.validate(async (valid: boolean) => {
@@ -104,8 +130,8 @@ async function onLogin() {
       })
       await auth.fetchUserInfo()
       ElMessage.success('登录成功')
-      const redirect = (route.query.redirect as string) || '/dashboard'
-      router.replace(redirect)
+      const requested = typeof route.query.redirect === 'string' ? route.query.redirect : ''
+      await router.replace(requested && canEnter(requested) ? requested : defaultLanding())
     } catch (e: any) {
       ElMessage.error(e?.message || '登录失败，请检查账号或验证码')
       await loadCaptcha()

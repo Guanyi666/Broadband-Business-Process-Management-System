@@ -11,9 +11,8 @@ import java.io.Serializable;
  * Request body for {@code POST /api/work-orders}.
  *
  * <p>Issued by the dispatch team (manual) or by the
- * {@code OrderEventListener} (auto). If {@code installerId} or
- * {@code dispatcherId} is null the service falls back to mock scoring to
- * pick them.</p>
+ * {@code OrderEventListener} (auto). A missing {@code installerId} creates a
+ * real PENDING pool item; assigning a worker moves it to DISPATCHED.</p>
  */
 @Data
 @Schema(description = "Create work order request")
@@ -26,7 +25,7 @@ public class WorkOrderCreateReq implements Serializable {
     @Schema(description = "Source order id", example = "1001")
     private Long orderId;
 
-    @Schema(description = "Preselected installer id (optional — service falls back to mock scoring)")
+    @Schema(description = "Preselected installer id (optional — null keeps the work order pending)")
     private Long installerId;
 
     @Schema(description = "Dispatcher user id (optional — defaults to current user)")

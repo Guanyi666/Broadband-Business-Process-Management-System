@@ -16,6 +16,8 @@ import com.bbpms.common.util.SecurityUtils;
 import com.bbpms.common.statemachine.WorkOrderStateMachine;
 import com.bbpms.common.util.SnowflakeIdGenerator;
 import com.bbpms.order.service.OrderService;
+import com.bbpms.dispatch.config.DispatchProperties;
+import com.bbpms.user.service.InstallerProfileService;
 import com.bbpms.workorder.config.WorkOrderProperties;
 import com.bbpms.workorder.dto.WorkOrderCreateReq;
 import com.bbpms.workorder.dto.WorkOrderQueryReq;
@@ -64,6 +66,8 @@ public class WorkOrderServiceImpl implements WorkOrderService {
     private final WorkOrderStateMachine workOrderStateMachine;
     private final ApplicationEventPublisher publisher;
     private final WorkOrderProperties workOrderProperties;
+    private final InstallerProfileService installerProfileService;
+    private final DispatchProperties dispatchProperties;
     private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     public WorkOrderServiceImpl(WorkOrderMapper workOrderMapper,
@@ -73,6 +77,8 @@ public class WorkOrderServiceImpl implements WorkOrderService {
                                 WorkOrderStateMachine workOrderStateMachine,
                                 ApplicationEventPublisher publisher,
                                 WorkOrderProperties workOrderProperties,
+                                InstallerProfileService installerProfileService,
+                                DispatchProperties dispatchProperties,
                                 @Qualifier("workorderSnowflakeIdGenerator") SnowflakeIdGenerator snowflakeIdGenerator) {
         this.workOrderMapper = workOrderMapper;
         this.timelineMapper = timelineMapper;
@@ -81,6 +87,8 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         this.workOrderStateMachine = workOrderStateMachine;
         this.publisher = publisher;
         this.workOrderProperties = workOrderProperties;
+        this.installerProfileService = installerProfileService;
+        this.dispatchProperties = dispatchProperties;
         this.snowflakeIdGenerator = snowflakeIdGenerator;
     }
 
@@ -108,6 +116,10 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             if (WorkOrderStatus.isTerminal(existing.getStatusEnum())) {
                 log.info("Existing WO {} is terminal ({}); creating a new work order for orderId={}",
                         existing.getWorkNo(), existing.getStatus(), req.getOrderId());
+            } else if (existing.getStatusEnum() == WorkOrderStatus.PENDING
+                    && req.getInstallerId() != null) {
+                return assignPending(existing.getId(), req.getInstallerId(),
+                        req.getDispatcherId(), req.getRemark());
             } else {
                 log.info("Idempotent create — returning existing workNo={}", existing.getWorkNo());
                 return toVO(existing);
@@ -120,6 +132,9 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             dispatcherId = SecurityUtils.getCurrentUserId();
         }
         Long installerId = req.getInstallerId();
+        if (installerId != null && !isInstallerAvailable(installerId)) {
+            throw new BizException(ResultCode.BAD_REQUEST, "所选装维人员当前不可接单");
+        }
 
         // 3. Generate workNo = "WO" + snowflake.
         String workNo = WORK_NO_PREFIX + snowflakeIdGenerator.nextId();
@@ -129,9 +144,13 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         wo.setOrderId(req.getOrderId());
         wo.setInstallerId(installerId);
         wo.setDispatcherId(dispatcherId);
-        wo.setStatus(WorkOrderStatus.DISPATCHED.getCode());
+        WorkOrderStatus initialStatus = installerId == null
+                ? WorkOrderStatus.PENDING : WorkOrderStatus.DISPATCHED;
+        wo.setStatus(initialStatus.getCode());
         wo.setBusinessType("BROADBAND_INSTALL");
-        wo.setDispatchTime(LocalDateTime.now());
+        if (installerId != null) {
+            wo.setDispatchTime(LocalDateTime.now());
+        }
         wo.setCreateBy(dispatcherId);
         wo.setUpdateBy(dispatcherId);
 
@@ -150,24 +169,67 @@ public class WorkOrderServiceImpl implements WorkOrderService {
 
         workOrderMapper.insert(wo);
 
-        // Timeline row: null -> DISPATCHED.
-        appendTimeline(wo.getId(), null, WorkOrderStatus.DISPATCHED,
+        appendTimeline(wo.getId(), null, initialStatus,
                 dispatcherId, "DISPATCHER", req.getRemark());
 
-        // Flip parent order -> DISPATCHED via direct OrderService injection.
+        // Keep the order/work-order status pair aligned for the dispatch board.
         try {
-            orderService.updateStatus(req.getOrderId(), OrderStatus.DISPATCHED, dispatcherId);
+            orderService.updateStatus(req.getOrderId(), installerId == null
+                    ? OrderStatus.WAIT_DISPATCH : OrderStatus.DISPATCHED, dispatcherId);
         } catch (Exception ex) {
-            log.warn("Parent order status flip failed orderId={}: {}", req.getOrderId(), ex.getMessage());
+            log.warn("Parent order status alignment failed orderId={}: {}", req.getOrderId(), ex.getMessage());
         }
 
-        // Outbound internal event replaces RabbitMQ.
-        publisher.publishEvent(new BbpmsEvents.WorkOrderDispatchedEvent(
-                wo.getId(), wo.getWorkNo(), wo.getOrderId(),
-                wo.getInstallerId(), null));
+        if (installerId != null) {
+            installerProfileService.incrementWorkload(installerId);
+            publisher.publishEvent(new BbpmsEvents.WorkOrderDispatchedEvent(
+                    wo.getId(), wo.getWorkNo(), wo.getOrderId(), installerId, null));
+        }
 
         log.info("Created work order {} for order {}", workNo, req.getOrderId());
         return toVO(wo);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @OperationLog(value = "派发待处理工单", module = "workorder")
+    public WorkOrderVO assignPending(Long workOrderId, Long installerId,
+                                     Long dispatcherId, String remark) {
+        if (workOrderId == null || installerId == null) {
+            throw new BizException(ResultCode.BAD_REQUEST, "workOrderId / installerId 必填");
+        }
+        if (!isInstallerAvailable(installerId)) {
+            throw new BizException(ResultCode.BAD_REQUEST, "所选装维人员当前不可接单");
+        }
+        WorkOrder current = mustLoad(workOrderId);
+        if (current.getStatusEnum() != WorkOrderStatus.PENDING) {
+            throw new BizException(ResultCode.WORKORDER_STATUS_INVALID,
+                    "仅待派发工单可以执行派单，当前状态 " + current.getStatus());
+        }
+        workOrderStateMachine.assertSystemTransition(WorkOrderStatus.PENDING, WorkOrderStatus.DISPATCHED);
+        Long actorId = dispatcherId == null ? SecurityUtils.getCurrentUserId() : dispatcherId;
+
+        WorkOrder update = new WorkOrder();
+        update.setId(workOrderId);
+        update.setVersion(current.getVersion());
+        update.setInstallerId(installerId);
+        update.setDispatcherId(actorId);
+        update.setStatusEnum(WorkOrderStatus.DISPATCHED);
+        update.setDispatchTime(LocalDateTime.now());
+        update.setUpdateBy(actorId);
+        if (workOrderMapper.updateById(update) == 0) {
+            throw new BizException(ResultCode.VERSION_CONFLICT, "工单版本冲突，请刷新后重试");
+        }
+
+        appendTimeline(workOrderId, WorkOrderStatus.PENDING, WorkOrderStatus.DISPATCHED,
+                actorId, "DISPATCHER", remark);
+        installerProfileService.incrementWorkload(installerId);
+        orderService.updateStatus(current.getOrderId(), OrderStatus.DISPATCHED, actorId);
+
+        WorkOrder assigned = workOrderMapper.selectById(workOrderId);
+        publisher.publishEvent(new BbpmsEvents.WorkOrderDispatchedEvent(
+                assigned.getId(), assigned.getWorkNo(), assigned.getOrderId(), installerId, null));
+        return toVO(assigned);
     }
 
     /* ============================================================ */
@@ -249,6 +311,9 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         if (rows == 0) {
             throw new BizException(ResultCode.VERSION_CONFLICT, "工单版本冲突，请刷新后重试");
         }
+        if (current.getInstallerId() != null) {
+            installerProfileService.decrementWorkload(current.getInstallerId());
+        }
         String remark = installRecordId == null
                 ? "completed"
                 : "completed, installRecordId=" + installRecordId;
@@ -291,19 +356,19 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             throw new BizException(ResultCode.WORKORDER_STATUS_INVALID,
                     "当前状态 " + current.getStatusEnum() + " 不允许转单");
         }
-        WorkOrder update = new WorkOrder();
-        update.setId(workOrderId);
-        update.setVersion(current.getVersion());
-        update.setInstallerId(null);          // returned to pool
-        update.setStatus(WorkOrderStatus.DISPATCHED.getCode());
-        update.setDispatchTime(LocalDateTime.now());
-        update.setUpdateBy(installerId);
-        int rows = workOrderMapper.updateById(update);
+        workOrderStateMachine.assertSystemTransition(current.getStatusEnum(), WorkOrderStatus.PENDING);
+        int rows = workOrderMapper.returnToPending(workOrderId, current.getVersion(), installerId);
         if (rows == 0) {
             throw new BizException(ResultCode.VERSION_CONFLICT, "工单版本冲突，请刷新后重试");
         }
-        appendTimeline(workOrderId, current.getStatusEnum(), WorkOrderStatus.DISPATCHED,
+        appendTimeline(workOrderId, current.getStatusEnum(), WorkOrderStatus.PENDING,
                 installerId, "INSTALLER", "transfer: " + reason);
+        if (current.getInstallerId() != null) {
+            installerProfileService.decrementWorkload(current.getInstallerId());
+        }
+        if (current.getOrderId() != null) {
+            orderService.updateStatus(current.getOrderId(), OrderStatus.WAIT_DISPATCH, installerId);
+        }
 
         // Notify listeners — the workorder pool may re-pick this back to a fresh installer.
         publisher.publishEvent(new BbpmsEvents.WorkOrderTransferEvent(
@@ -320,8 +385,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
             throw new BizException(ResultCode.BAD_REQUEST, "workOrderId 不能为空");
         }
         WorkOrder current = mustLoad(workOrderId);
-        if (current.getStatusEnum() == WorkOrderStatus.COMPLETED
-                || current.getStatusEnum() == WorkOrderStatus.CANCELLED) {
+        if (WorkOrderStatus.isTerminal(current.getStatusEnum())) {
             throw new BizException(ResultCode.WORKORDER_STATUS_INVALID,
                     "工单已结束，无法取消");
         }
@@ -337,6 +401,9 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         }
         appendTimeline(workOrderId, current.getStatusEnum(), WorkOrderStatus.CANCELLED,
                 operatorId, "OPERATOR", reason == null ? "cancelled" : reason);
+        if (current.getInstallerId() != null) {
+            installerProfileService.decrementWorkload(current.getInstallerId());
+        }
 
         if (current.getOrderId() != null) {
             try {
@@ -585,6 +652,12 @@ public class WorkOrderServiceImpl implements WorkOrderService {
                     "工单已结束，无法改派");
         }
         Long fromInstaller = current.getInstallerId();
+        if (newInstallerId.equals(fromInstaller)) {
+            throw new BizException(ResultCode.BAD_REQUEST, "新装维人员不能与当前负责人相同");
+        }
+        if (!isInstallerAvailable(newInstallerId)) {
+            throw new BizException(ResultCode.BAD_REQUEST, "所选装维人员当前不可接单");
+        }
         // Mark this row DISPATCHED, clear installer, dispatch to new installer
         workOrderStateMachine.assertSystemTransition(current.getStatusEnum(), WorkOrderStatus.REASSIGNING);
 
@@ -592,7 +665,6 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         update.setId(workOrderId);
         update.setVersion(current.getVersion());
         update.setStatusEnum(WorkOrderStatus.REASSIGNING);
-        update.setInstallerId(null);
         update.setUpdateBy(operatorId);
         if (workOrderMapper.updateById(update) == 0) {
             throw new BizException(ResultCode.VERSION_CONFLICT, "工单版本冲突，请刷新后重试");
@@ -615,6 +687,11 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         }
         appendTimeline(workOrderId, WorkOrderStatus.REASSIGNING, WorkOrderStatus.DISPATCHED,
                 operatorId, "DISPATCHER", "reassigned to installer #" + newInstallerId);
+
+        if (fromInstaller != null) {
+            installerProfileService.decrementWorkload(fromInstaller);
+        }
+        installerProfileService.incrementWorkload(newInstallerId);
 
         publisher.publishEvent(new BbpmsEvents.WorkOrderReassignedEvent(
                 workOrderId, fromInstaller, newInstallerId, reason));
@@ -649,6 +726,9 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         appendTimeline(workOrderId, current.getStatusEnum(), WorkOrderStatus.AUTO_CANCELLED,
                 SecurityUtils.getCurrentUserId(), "SYSTEM",
                 (reason == null ? "" : reason) + " [auto]");
+        if (current.getInstallerId() != null) {
+            installerProfileService.decrementWorkload(current.getInstallerId());
+        }
         log.info("autoCancel: work order {} → AUTO_CANCELLED (reason={}, type={})",
                 workOrderId, reason, cancelType);
     }
@@ -678,6 +758,9 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         }
         appendTimeline(workOrderId, current.getStatusEnum(), WorkOrderStatus.CANCELLED,
                 operatorId, "ADMIN", "[FORCE] " + (reason == null ? "" : reason));
+        if (current.getInstallerId() != null) {
+            installerProfileService.decrementWorkload(current.getInstallerId());
+        }
         publisher.publishEvent(new BbpmsEvents.WorkOrderForceClosedEvent(
                 workOrderId, operatorId, reason, cancelType));
     }
@@ -717,5 +800,11 @@ public class WorkOrderServiceImpl implements WorkOrderService {
      */
     public List<WorkOrder> selectList(LambdaQueryWrapper<WorkOrder> w) {
         return workOrderMapper.selectList(w);
+    }
+
+    private boolean isInstallerAvailable(Long installerId) {
+        if (installerId == null) return false;
+        return installerProfileService.listAvailable(dispatchProperties.getMaxLoad()).stream()
+                .anyMatch(i -> installerId.equals(i.getUserId()));
     }
 }

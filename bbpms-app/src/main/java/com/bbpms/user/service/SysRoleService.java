@@ -17,6 +17,8 @@ public interface SysRoleService extends IService<SysRole> {
 
     void assignMenus(Long roleId, List<Long> menuIds);
 
+    List<Long> getMenuIds(Long roleId);
+
     List<SysRole> list();
 
     SysRole getById(Long id);

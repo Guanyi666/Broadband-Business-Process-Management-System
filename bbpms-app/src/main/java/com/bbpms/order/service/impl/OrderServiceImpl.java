@@ -229,11 +229,11 @@ public class OrderServiceImpl implements OrderService {
         OrderStatus next = orderStateMachine.next(current, OrderEvent.RESUBMIT);
 
         String before = current.name();
-        order.setStatus(next.name());
-        // A fresh audit round should not carry the previous rejection remark.
-        order.setAuditRemark(null);
-        order.setUpdateBy(operatorId);
-        orderMapper.updateById(order);
+        // Explicit SQL is required here because MyBatis-Plus skips null fields
+        // in updateById; a fresh audit round must clear all previous audit data.
+        if (orderMapper.resubmitRejected(order.getId(), before, next.name(), operatorId) == 0) {
+            throw new BizException(ResultCode.VERSION_CONFLICT, "订单状态已变化，请刷新后重试");
+        }
 
         appendAuditLog(order.getId(), operatorId,
                 before, next.name(), "驳回后重新提交，重新进入审核队列");
@@ -262,7 +262,9 @@ public class OrderServiceImpl implements OrderService {
         order.setCancelledTime(LocalDateTime.now());
         order.setCancelReason(req == null ? null : req.getReason());
         order.setUpdateBy(operatorId);
-        orderMapper.updateById(order);
+        if (orderMapper.updateById(order) == 0) {
+            throw new BizException(ResultCode.VERSION_CONFLICT, "订单状态已变化，请刷新后重试");
+        }
 
         appendAuditLog(order.getId(), operatorId,
                 before, next.name(),

@@ -7,6 +7,7 @@ import com.bbpms.common.security.SecurityContextHolder;
 import com.bbpms.workorder.dto.WorkOrderCreateReq;
 import com.bbpms.workorder.dto.WorkOrderQueryReq;
 import com.bbpms.workorder.dto.WorkOrderTransferReq;
+import com.bbpms.workorder.dto.WorkOrderReassignReq;
 import com.bbpms.workorder.entity.WorkOrder;
 import com.bbpms.workorder.service.WorkOrderService;
 import com.bbpms.workorder.vo.WorkOrderDetailVO;
@@ -184,11 +185,9 @@ public class WorkOrderController {
     @PreAuthorize("hasAuthority('workorder:reassign')")
     @PostMapping("/{id}/reassign")
     public R<WorkOrderVO> reassign(@PathVariable("id") Long id,
-                                    @RequestBody Map<String, Object> body) {
+                                    @Valid @RequestBody WorkOrderReassignReq req) {
         Long uid = SecurityContextHolder.userId();
-        Long newInstallerId = body == null ? null : Long.valueOf(String.valueOf(body.get("newInstallerId")));
-        String reason = body == null ? null : String.valueOf(body.get("reason"));
-        return R.ok(workOrderService.reassign(id, newInstallerId, uid, reason));
+        return R.ok(workOrderService.reassign(id, req.getNewInstallerId(), uid, req.getReason()));
     }
 
     @Operation(summary = "管理员强制关闭工单")

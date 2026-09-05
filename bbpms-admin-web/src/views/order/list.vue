@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onActivated, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import { pageOrders, cancelOrder, resubmitOrder } from '@/api/order'
 import type { OrderItem, OrderStatus } from '@/types/order'
 import { formatDate } from '@/utils/format'
@@ -9,10 +10,12 @@ import PageHeader from '@/components/PageHeader.vue'
 import BBPMSStatusTag from '@/components/BBPMSStatusTag.vue'
 
 const router = useRouter()
+const auth = useAuthStore()
 
 const loading = ref(false)
 const list = ref<OrderItem[]>([])
 const total = ref(0)
+const actionLoading = ref('')
 
 const activeTab = ref<'ALL' | OrderStatus>('ALL')
 
@@ -81,18 +84,32 @@ async function onCancel(row: OrderItem) {
   try {
     await ElMessageBox.confirm(`确定取消订单 ${row.orderNo} 吗？`, '确认', { type: 'warning' })
   } catch { return }
-  await cancelOrder(row.id)
-  ElMessage.success('已取消')
-  fetchData()
+  actionLoading.value = `cancel-${row.id}`
+  try {
+    await cancelOrder(row.id)
+    ElMessage.success('已取消')
+    await fetchData()
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.message || e?.response?.data?.msg || e?.message || '取消订单失败')
+  } finally {
+    actionLoading.value = ''
+  }
 }
 
 async function onResubmit(row: OrderItem) {
   try {
     await ElMessageBox.confirm(`确定重新提交订单 ${row.orderNo} 吗？将重新进入审核队列。`, '确认', { type: 'warning' })
   } catch { return }
-  await resubmitOrder(row.id)
-  ElMessage.success('已重新提交，等待审核')
-  fetchData()
+  actionLoading.value = `resubmit-${row.id}`
+  try {
+    await resubmitOrder(row.id)
+    ElMessage.success('已重新提交，等待审核')
+    await fetchData()
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.message || e?.response?.data?.msg || e?.message || '重新提交失败')
+  } finally {
+    actionLoading.value = ''
+  }
 }
 
 function onRowClick(row: OrderItem) {
@@ -107,7 +124,7 @@ onActivated(fetchData)
   <div class="app-container">
     <PageHeader title="订单管理">
       <template #extra>
-        <el-button type="primary" @click="router.push('/order/create')">
+        <el-button v-if="auth.hasPermission('order:create')" type="primary" @click="router.push('/order/create')">
           <el-icon><Plus /></el-icon> 创建订单
         </el-button>
       </template>
@@ -148,9 +165,21 @@ onActivated(fetchData)
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button link type="primary" @click.stop="onAudit(row)" v-if="row.status === 'CREATED'">审核</el-button>
-            <el-button link type="warning" @click.stop="onResubmit(row)" v-if="row.status === 'REJECTED'">重新提交</el-button>
-            <el-button link type="danger" @click.stop="onCancel(row)" v-if="['CREATED','REJECTED','AUDITED','WAIT_DISPATCH'].includes(row.status)">取消</el-button>
+            <el-button link type="primary" @click.stop="onAudit(row)" v-if="row.status === 'CREATED' && auth.hasPermission('order:audit')">审核</el-button>
+            <el-button
+              v-if="row.status === 'REJECTED' && auth.hasPermission('order:create')"
+              link
+              type="warning"
+              :loading="actionLoading === `resubmit-${row.id}`"
+              @click.stop="onResubmit(row)"
+            >重新提交</el-button>
+            <el-button
+              v-if="['CREATED','REJECTED'].includes(row.status) && auth.hasPermission('order:cancel')"
+              link
+              type="danger"
+              :loading="actionLoading === `cancel-${row.id}`"
+              @click.stop="onCancel(row)"
+            >取消</el-button>
             <el-button link @click.stop="onRowClick(row)">详情</el-button>
           </template>
         </el-table-column>
