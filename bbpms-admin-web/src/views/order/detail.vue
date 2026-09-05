@@ -3,22 +3,62 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getOrderDetail, cancelOrder, resubmitOrder } from '@/api/order'
+import { getOrderTrack, buildMockOrderTrack } from '@/api/track'
+import type { OrderTrack, TrackEvent } from '@/types/track'
 import { maskPhone, maskName, maskIdCard, formatDate } from '@/utils/format'
 import PageHeader from '@/components/PageHeader.vue'
 import BBPMSStatusTag from '@/components/BBPMSStatusTag.vue'
 import OrderTimeline from '@/components/OrderTimeline.vue'
 import PermissionButton from '@/components/PermissionButton.vue'
 
+/** 后端 /track 接口未就绪时的本地验证开关（默认关闭，生产走真实接口） */
+const TRACK_MOCK = false
+
 const route = useRoute()
 const router = useRouter()
 
 const detail = ref<any>(null)
 const loading = ref(false)
+const track = ref<OrderTrack | null>(null)
+
+/** 后端 /track 未就绪时，用已有 timeline 兜底为右轨事件（不伪造，仅映射字段） */
+const legacyEvents = computed<TrackEvent[]>(() =>
+  (detail.value?.timeline ?? []).map((t: any) => ({
+    time: t.eventTime || t.createdAt || null,
+    title: t.eventType || t.action || '状态更新',
+    desc: t.toStatusDesc || t.description || '',
+    operatorName: t.operatorName || null,
+    operatorRole: t.operatorRole || null,
+    source: t.source || '',
+    isAuto: t.operatorRole === 'SYSTEM',
+    remark: t.remark || null
+  }))
+)
+
+async function loadTrack() {
+  const id = route.params.id as string
+  try {
+    track.value = await getOrderTrack(id)
+  } catch {
+    // 真实接口尚未就绪：保持 null，组件降级渲染 legacyEvents；
+    // TRACK_MOCK 仅用于本地验证渲染（按真实状态/时间字段构造，不伪造）
+    if (TRACK_MOCK && detail.value) {
+      track.value = buildMockOrderTrack({
+        status: detail.value.status,
+        realTimes: { CREATED: detail.value.createdAt, AUDITED: detail.value.auditAt },
+        isTerminal: ['CLOSED', 'CANCELLED'].includes(detail.value.status)
+      })
+    } else {
+      track.value = null
+    }
+  }
+}
 
 async function fetchData() {
   loading.value = true
   try {
     detail.value = await getOrderDetail(route.params.id as string)
+    await loadTrack()
   } finally {
     loading.value = false
   }
@@ -116,7 +156,13 @@ const canReassign = computed(() => ['AUDITED', 'WAIT_DISPATCH'].includes(detail.
       </div>
     </div>
 
-    <OrderTimeline :events="detail?.timeline || []" title="订单与履约双轨时间线" :current-status="detail?.status || ''" />
+    <OrderTimeline
+      :stages="track?.stages"
+      :events="track ? track.events : legacyEvents"
+      :summary="track?.summary ?? null"
+      title="订单与履约双轨时间线"
+      :current-status="detail?.status || ''"
+    />
   </div>
 </template>
 

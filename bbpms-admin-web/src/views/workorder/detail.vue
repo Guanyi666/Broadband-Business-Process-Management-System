@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getWorkorderDetail, completeWorkorder, cancelWorkorder, reassignWorkOrder } from '@/api/workorder'
+import { getWorkorderTrack } from '@/api/track'
+import type { OrderTrack, TrackEvent } from '@/types/track'
 import { dispatchCandidates } from '@/api/dispatch'
 import type { DispatchCandidate, WorkorderDetail } from '@/types/order'
 import { formatDate } from '@/utils/format'
@@ -17,11 +19,36 @@ const router = useRouter()
 const auth = useAuthStore()
 const loading = ref(false)
 const detail = ref<WorkorderDetail | null>(null)
+const track = ref<OrderTrack | null>(null)
+
+/** 后端 /track 未就绪时，用已有 timeline 兜底为右轨事件 */
+const legacyEvents = computed<TrackEvent[]>(() =>
+  (detail.value?.timeline ?? []).map((t: any) => ({
+    time: t.createTime || null,
+    title: t.toStatusDesc || t.toStatus || '状态更新',
+    desc: t.fromStatusDesc && t.toStatusDesc ? `${t.fromStatusDesc} → ${t.toStatusDesc}` : (t.toStatusDesc || ''),
+    operatorName: t.operatorName || null,
+    operatorRole: t.operatorRole || null,
+    source: 'WORKORDER',
+    isAuto: t.operatorRole === 'SYSTEM',
+    remark: t.remark || null
+  }))
+)
+
+async function loadTrack() {
+  const id = route.params.id as string
+  try {
+    track.value = await getWorkorderTrack(id)
+  } catch {
+    track.value = null
+  }
+}
 
 async function fetchData() {
   loading.value = true
   try {
     detail.value = await getWorkorderDetail(route.params.id as string)
+    await loadTrack()
   } finally {
     loading.value = false
   }
@@ -126,9 +153,11 @@ onMounted(fetchData)
     </div>
 
     <OrderTimeline
-      :events="detail?.timeline || []"
+      :stages="track?.stages"
+      :events="track ? track.events : legacyEvents"
+      :summary="track?.summary ?? null"
       title="工单状态与人员操作双轨时间线"
-      :current-status="detail?.statusDesc || detail?.status || ''"
+      :current-status="detail?.status || ''"
     />
 
     <!-- 改派弹窗（只展示满足接单条件的装维人员） -->

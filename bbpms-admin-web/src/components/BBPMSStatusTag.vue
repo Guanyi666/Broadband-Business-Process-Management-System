@@ -29,6 +29,8 @@ const STATUS_TEXT: Record<string, string> = {
   // 订单 OrderStatus
   CREATED: '已创建',
   REJECTED: '已驳回',
+  PENDING_CS_CONFIRM: '待客服确认',
+  CS_REJECTED: '客服已退回',
   AUDITED: '已审核',
   WAIT_DISPATCH: '待派单',
   DISPATCHED: '已派单',
@@ -62,6 +64,8 @@ const map: Record<string, TagType> = {
   PENDING: 'warning',
   CREATED: 'warning',
   REJECTED: 'danger',
+  PENDING_CS_CONFIRM: 'warning',
+  CS_REJECTED: 'danger',
   AUDITED: 'primary',
   WAIT_DISPATCH: 'warning',
   AUDIT_PASS: 'primary',

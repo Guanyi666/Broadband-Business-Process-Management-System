@@ -1,37 +1,34 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { formatDate } from '@/utils/format'
-
-interface TimelineEvent {
-  id?: string | number
-  eventType?: string
-  description?: string
-  source?: string
-  fromStatus?: string | null
-  fromStatusDesc?: string | null
-  toStatus?: string | null
-  toStatusDesc?: string | null
-  operatorId?: string | number | null
-  operatorName?: string | null
-  operatorRole?: string | null
-  eventTime?: string
-  remark?: string | null
-  action?: string
-  operator?: string
-  createdAt?: string
-  createTime?: string
-  status?: string
-  [key: string]: any
-}
+import {
+  parseTimeToMs,
+  formatDuration,
+  stateClass,
+  currentStageIndex,
+  waitingBaseMs
+} from '@/utils/track'
+import type { TrackStage, TrackEvent, TrackSummary, StageState } from '@/types/track'
+import BBPMSStatusTag from '@/components/BBPMSStatusTag.vue'
 
 interface Props {
-  events: TimelineEvent[]
+  /** 流程骨架（§7.6 stages），恒返回全部节点，驱动左侧业务状态轨与顶部 Steps */
+  stages?: TrackStage[]
+  /** 右轨人员 / 操作事件（§7.6 events） */
+  events?: TrackEvent[]
+  /** 顶部汇总卡数据（§7.6 summary） */
+  summary?: TrackSummary | null
+  /** 标题 */
   title?: string
+  /** 兼容旧调用：裸状态码（优先由 summary.currentStatus 覆盖） */
   currentStatus?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  title: '业务轨迹',
+  stages: () => [],
+  events: () => [],
+  summary: null,
+  title: '订单与履约双轨时间线',
   currentStatus: ''
 })
 
@@ -46,75 +43,73 @@ const roleMap: Record<string, string> = {
   CUSTOMER: '客户'
 }
 
-function timestampOf(event: TimelineEvent): string {
-  return event.eventTime || event.createdAt || event.createTime || ''
-}
+const hasStages = computed(() => (props.stages?.length ?? 0) > 0)
 
-const normalizedEvents = computed(() => [...(props.events || [])]
-  .filter(Boolean)
-  .sort((left, right) => {
-    const a = new Date(timestampOf(left).replace(/-/g, '/')).getTime()
-    const b = new Date(timestampOf(right).replace(/-/g, '/')).getTime()
-    return (Number.isNaN(a) ? Number.MAX_SAFE_INTEGER : a) - (Number.isNaN(b) ? Number.MAX_SAFE_INTEGER : b)
-  }))
+/* ---------- 当前节点 / 实时等待 ---------- */
+const now = ref(Date.now())
+let timer: ReturnType<typeof setInterval> | undefined
 
-function businessText(event: TimelineEvent): string {
-  if (event.fromStatusDesc && event.toStatusDesc) return `${event.fromStatusDesc} → ${event.toStatusDesc}`
-  if (event.fromStatus && event.toStatus) return `${event.fromStatus} → ${event.toStatus}`
-  return event.description || event.toStatusDesc || event.toStatus || event.eventType || event.action || '状态更新'
-}
-
-function sourceText(event: TimelineEvent): string {
-  if (event.source === 'ORDER_AUDIT') return '订单流程'
-  if (event.source === 'WORKORDER') return '工单流程'
-  if (event.source === 'DISPATCH') return '派单流程'
-  if (event.workOrderId) return '工单流程'
-  return event.source || '业务流程'
-}
-
-function operatorText(event: TimelineEvent): string {
-  const name = event.operatorName || event.operator
-  const role = roleMap[String(event.operatorRole || '').toUpperCase()] || event.operatorRole
-  if (name && role) return `${name} · ${role}`
-  if (name) return name
-  if (role) return role
-  if (event.operatorId) return `操作人 #${event.operatorId}`
-  return event.source === 'WORKORDER' ? '工单处理人员' : '系统或业务人员'
-}
-
-function isException(event: TimelineEvent): boolean {
-  const text = `${event.eventType || ''} ${event.toStatus || ''} ${event.description || ''}`.toUpperCase()
-  return ['REJECT', 'CANCEL', 'STALLED', 'FAILED', 'AUTO_CANCEL'].some((key) => text.includes(key))
-}
-
-function isSuccess(event: TimelineEvent): boolean {
-  const text = `${event.eventType || ''} ${event.toStatus || ''}`.toUpperCase()
-  return ['AUDIT_PASS', 'ACCEPTED', 'COMPLETE', 'COMPLETED', 'FINISHED', 'CLOSED'].some((key) => text.includes(key))
-}
-
-function durationBetween(index: number): string {
-  if (index <= 0) return '流程起点'
-  const previous = new Date(timestampOf(normalizedEvents.value[index - 1]).replace(/-/g, '/')).getTime()
-  const current = new Date(timestampOf(normalizedEvents.value[index]).replace(/-/g, '/')).getTime()
-  if (Number.isNaN(previous) || Number.isNaN(current) || current < previous) return '间隔未知'
-  const minutes = Math.max(0, Math.round((current - previous) / 60_000))
-  if (minutes < 1) return '即时流转'
-  if (minutes < 60) return `等待 ${minutes} 分钟`
-  const hours = Math.floor(minutes / 60)
-  const remain = minutes % 60
-  if (hours < 24) return `等待 ${hours} 小时${remain ? ` ${remain} 分钟` : ''}`
-  const days = Math.floor(hours / 24)
-  return `等待 ${days} 天 ${hours % 24} 小时`
-}
-
-const totalDuration = computed(() => {
-  if (normalizedEvents.value.length < 2) return '暂无完整耗时'
-  const first = new Date(timestampOf(normalizedEvents.value[0]).replace(/-/g, '/')).getTime()
-  const last = new Date(timestampOf(normalizedEvents.value[normalizedEvents.value.length - 1]).replace(/-/g, '/')).getTime()
-  if (Number.isNaN(first) || Number.isNaN(last)) return '暂无完整耗时'
-  const hours = Math.max(0, Math.round((last - first) / 3_600_000 * 10) / 10)
-  return hours < 24 ? `已记录 ${hours} 小时` : `已记录 ${(hours / 24).toFixed(1)} 天`
+onMounted(() => {
+  // 每分钟刷新一次，保证「当前等待」实时递增；组件卸载时清理，避免内存泄漏
+  timer = setInterval(() => {
+    now.value = Date.now()
+  }, 60_000)
 })
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+})
+
+const activeIndex = computed(() => (hasStages.value ? currentStageIndex(props.stages) : -1))
+const isTerminal = computed(() => !!props.summary?.isTerminal)
+
+const liveWaiting = computed<string | null>(() => {
+  if (isTerminal.value) return null
+  const base = hasStages.value ? waitingBaseMs(props.stages) : null
+  return formatDuration(base, now.value)
+})
+
+/* ---------- 汇总卡 ---------- */
+const summaryView = computed(() => {
+  const s = props.summary
+  const stages = props.stages ?? []
+  const doneCount = stages.filter((st) => st.state === 'DONE').length
+  const statusCode = s?.currentStatus || props.currentStatus || ''
+  return {
+    status: statusCode,
+    statusDesc: s?.currentStatusDesc || '',
+    progress: s?.progress || (stages.length ? `${doneCount}/${stages.length}` : ''),
+    elapsed: s?.elapsed || '',
+    waiting: liveWaiting.value || s?.waiting || (isTerminal.value ? '—' : '')
+  }
+})
+
+/* ---------- 阶段图标 ---------- */
+function stageIcon(state: StageState): string {
+  switch (state) {
+    case 'DONE':
+      return '✓'
+    case 'CURRENT':
+      return '◉'
+    case 'EXCEPTION':
+      return '!'
+    default:
+      return '○'
+  }
+}
+
+function roleText(role?: string | null): string {
+  if (!role) return ''
+  return roleMap[String(role).toUpperCase()] || role
+}
+
+/* ---------- 右轨事件辅助 ---------- */
+function eventSourceText(source?: string): string {
+  if (source === 'ORDER_AUDIT') return '订单流程'
+  if (source === 'WORKORDER') return '工单流程'
+  if (source === 'DISPATCH') return '派单流程'
+  return source || '业务流程'
+}
 </script>
 
 <template>
@@ -122,98 +117,268 @@ const totalDuration = computed(() => {
     <header class="dual-timeline__header">
       <div>
         <h3>{{ title }}</h3>
-        <p>左侧追踪业务状态，右侧追踪人员与操作，等待时长按相邻事件计算。</p>
+        <p>左侧追踪业务状态，右侧追踪人员与操作；骨架恒在，空数据不再整块消失。</p>
       </div>
-      <div class="dual-timeline__summary">
-        <el-tag v-if="currentStatus" effect="plain">当前 {{ currentStatus }}</el-tag>
-        <span>{{ normalizedEvents.length }} 个事件 · {{ totalDuration }}</span>
+
+      <!-- 汇总卡 -->
+      <div class="summary-card">
+        <div class="summary-card__item">
+          <span class="summary-card__label">当前状态</span>
+          <BBPMSStatusTag
+            v-if="summaryView.status"
+            :status="summaryView.status"
+            :label="summaryView.statusDesc || undefined"
+            size="small"
+          />
+          <span v-else class="summary-card__muted">—</span>
+        </div>
+        <div class="summary-card__item">
+          <span class="summary-card__label">流程进度</span>
+          <strong class="summary-card__value">{{ summaryView.progress || '—' }}</strong>
+        </div>
+        <div class="summary-card__item">
+          <span class="summary-card__label">已用时</span>
+          <strong class="summary-card__value">{{ summaryView.elapsed || '—' }}</strong>
+        </div>
+        <div class="summary-card__item">
+          <span class="summary-card__label">当前等待</span>
+          <strong class="summary-card__value" :class="{ 'is-live': liveWaiting }">{{ summaryView.waiting || '—' }}</strong>
+        </div>
       </div>
     </header>
 
-    <div v-if="normalizedEvents.length" class="lane-head" aria-hidden="true">
-      <span>业务状态轨</span>
-      <i />
-      <span>人员操作轨</span>
-    </div>
-
-    <div class="timeline-events">
-      <article
-        v-for="(event, index) in normalizedEvents"
-        :key="event.id ?? `${timestampOf(event)}-${index}`"
-        class="timeline-event"
-        :class="{ 'is-exception': isException(event), 'is-success': isSuccess(event) }"
+    <!-- 顶部 Steps：横向展示完整流程与当前位置（四种视觉状态） -->
+    <ol v-if="hasStages" class="steps" aria-label="流程步骤">
+      <li
+        v-for="(stage, index) in stages"
+        :key="stage.code"
+        class="steps__item"
+        :class="[stateClass(stage.state), { 'is-active': index === activeIndex }]"
       >
-        <div class="business-lane">
-          <div class="lane-label">
-            <el-tag size="small" effect="plain" :type="isException(event) ? 'danger' : isSuccess(event) ? 'success' : 'info'">
-              {{ sourceText(event) }}
-            </el-tag>
-            <span>{{ durationBetween(index) }}</span>
+        <span class="steps__dot">{{ stageIcon(stage.state) }}</span>
+        <span class="steps__name">{{ stage.name }}</span>
+        <span class="steps__meta">
+          <template v-if="stage.time">{{ formatDate(stage.time, 'MM-DD HH:mm') }}</template>
+          <template v-else-if="stage.state === 'EXCEPTION'">异常</template>
+          <template v-else>待处理</template>
+        </span>
+        <span v-if="index < stages.length - 1" class="steps__line" aria-hidden="true" />
+      </li>
+    </ol>
+
+    <!-- 双轨主体：左业务状态轨 | 中时间轴 | 右人员操作轨 -->
+    <div v-if="hasStages" class="dual-rail">
+      <!-- 左轨：业务状态（骨架节点，恒渲染） -->
+      <div class="rail rail--left">
+        <div
+          v-for="(stage, index) in stages"
+          :key="stage.code"
+          class="stage-node"
+          :class="[stateClass(stage.state), { 'is-active': index === activeIndex }]"
+        >
+          <span class="stage-node__icon">{{ stageIcon(stage.state) }}</span>
+          <div class="stage-node__body">
+            <strong>{{ stage.name }}</strong>
+            <time v-if="stage.time">{{ formatDate(stage.time, 'MM-DD HH:mm') }}</time>
+            <span v-else class="stage-node__pending">待处理</span>
+            <small v-if="stage.operatorName">{{ stage.operatorName }} · {{ roleText(stage.operatorRole) }}</small>
+            <small v-else-if="stage.isAuto" class="is-auto">系统自动</small>
           </div>
-          <strong>{{ businessText(event) }}</strong>
-          <p v-if="event.description && event.description !== businessText(event)">{{ event.description }}</p>
+          <div v-if="index === activeIndex && !isTerminal && liveWaiting" class="stage-node__waiting">
+            已等待 {{ liveWaiting }}
+          </div>
+          <p v-if="stage.state === 'EXCEPTION' && stage.remark" class="stage-node__remark">{{ stage.remark }}</p>
         </div>
+      </div>
 
-        <div class="time-axis">
-          <span class="time-axis__dot" />
-          <time>{{ formatDate(timestampOf(event), 'MM-DD HH:mm') }}</time>
-        </div>
+      <!-- 中轴：装饰性时间主轴 -->
+      <div class="rail-axis" aria-hidden="true"><span /></div>
 
-        <div class="people-lane">
-          <div class="people-lane__operator">
+      <!-- 右轨：人员 / 操作事件 -->
+      <div class="rail rail--right">
+        <el-empty v-if="!events.length" description="暂无操作记录" :image-size="56" />
+        <article
+          v-for="(event, index) in events"
+          :key="`${event.time ?? ''}-${index}`"
+          class="event-node"
+        >
+          <div class="event-node__head">
+            <strong>{{ event.title }}</strong>
+            <el-tag v-if="event.isAuto" size="small" type="info" effect="plain">自动</el-tag>
+            <el-tag v-else size="small" type="primary" effect="plain">人工</el-tag>
+          </div>
+          <p v-if="event.desc" class="event-node__desc">{{ event.desc }}</p>
+          <div class="event-node__meta">
             <span class="people-avatar"><el-icon><User /></el-icon></span>
             <div>
-              <strong>{{ operatorText(event) }}</strong>
-              <small>{{ event.operatorRole ? (roleMap[String(event.operatorRole).toUpperCase()] || event.operatorRole) : sourceText(event) }}</small>
+              <strong>{{ event.operatorName || '系统或业务人员' }}</strong>
+              <small v-if="event.operatorName">{{ roleText(event.operatorRole) }} · {{ eventSourceText(event.source) }}</small>
+              <small v-else>{{ eventSourceText(event.source) }}</small>
             </div>
+            <time class="event-node__time">{{ event.time ? formatDate(event.time, 'MM-DD HH:mm') : '待处理' }}</time>
           </div>
-          <p>{{ event.remark || '完成状态流转，未填写额外备注' }}</p>
-        </div>
-      </article>
+          <p v-if="event.remark" class="event-node__remark">{{ event.remark }}</p>
+        </article>
+      </div>
     </div>
 
-    <el-empty v-if="!normalizedEvents.length" description="暂无业务轨迹" :image-size="68" />
+    <!-- 降级：后端未提供骨架时，仅渲染事件（不整块消失） -->
+    <div v-else class="legacy-events">
+      <el-empty v-if="!events.length" description="暂无业务轨迹" :image-size="68" />
+      <article
+        v-for="(event, index) in events"
+        :key="`${event.time ?? ''}-${index}`"
+        class="event-node"
+      >
+        <div class="event-node__head">
+          <strong>{{ event.title }}</strong>
+          <el-tag v-if="event.isAuto" size="small" type="info" effect="plain">自动</el-tag>
+          <el-tag v-else size="small" type="primary" effect="plain">人工</el-tag>
+        </div>
+        <p v-if="event.desc" class="event-node__desc">{{ event.desc }}</p>
+        <div class="event-node__meta">
+          <span class="people-avatar"><el-icon><User /></el-icon></span>
+          <div>
+            <strong>{{ event.operatorName || '系统或业务人员' }}</strong>
+            <small v-if="event.operatorName">{{ roleText(event.operatorRole) }} · {{ eventSourceText(event.source) }}</small>
+            <small v-else>{{ eventSourceText(event.source) }}</small>
+          </div>
+          <time class="event-node__time">{{ event.time ? formatDate(event.time, 'MM-DD HH:mm') : '待处理' }}</time>
+        </div>
+        <p v-if="event.remark" class="event-node__remark">{{ event.remark }}</p>
+      </article>
+    </div>
   </section>
 </template>
 
 <style scoped lang="scss">
 .dual-timeline { margin-top: 16px; overflow: hidden; }
-.dual-timeline__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+
+/* ---------- 头部 + 汇总卡 ---------- */
+.dual-timeline__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
 .dual-timeline__header h3 { margin: 0; color: var(--el-text-color-primary); font-size: 16px; }
 .dual-timeline__header p { margin: 5px 0 0; color: var(--el-text-color-secondary); font-size: 12px; }
-.dual-timeline__summary { display: flex; align-items: center; gap: 10px; color: var(--el-text-color-secondary); font-size: 12px; white-space: nowrap; }
-.lane-head { display: grid; grid-template-columns: minmax(0, 1fr) 116px minmax(0, 1fr); align-items: center; margin-bottom: 8px; color: var(--el-text-color-secondary); font-size: 12px; font-weight: 600; }
-.lane-head span:first-child { padding-right: 18px; text-align: right; }
-.lane-head span:last-child { padding-left: 18px; }
-.lane-head i { height: 1px; background: var(--el-border-color-lighter); }
-.timeline-events { position: relative; }
-.timeline-events::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; transform: translateX(-1px); background: var(--el-border-color-light); }
-.timeline-event { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 116px minmax(0, 1fr); align-items: center; min-height: 118px; }
-.business-lane, .people-lane { padding: 14px; border: 1px solid var(--el-border-color-lighter); border-radius: 9px; background: var(--el-fill-color-blank); }
-.business-lane { margin-right: 18px; text-align: right; }
-.people-lane { margin-left: 18px; }
-.business-lane strong, .people-lane strong { color: var(--el-text-color-primary); font-size: 13px; }
-.business-lane p, .people-lane p { margin: 6px 0 0; color: var(--el-text-color-secondary); font-size: 12px; line-height: 1.5; }
-.lane-label { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-bottom: 7px; color: var(--el-text-color-secondary); font-size: 11px; }
-.time-axis { z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 7px; color: var(--el-text-color-secondary); font-size: 11px; }
-.time-axis__dot { width: 13px; height: 13px; border: 3px solid var(--el-bg-color); border-radius: 50%; background: var(--el-color-primary); box-shadow: 0 0 0 2px var(--el-color-primary-light-5); }
-.timeline-event.is-exception .time-axis__dot { background: var(--el-color-danger); box-shadow: 0 0 0 2px var(--el-color-danger-light-5); }
-.timeline-event.is-success .time-axis__dot { background: var(--el-color-success); box-shadow: 0 0 0 2px var(--el-color-success-light-5); }
-.timeline-event.is-exception .business-lane { border-color: var(--el-color-danger-light-7); background: var(--el-color-danger-light-9); }
-.people-lane__operator { display: flex; align-items: center; gap: 9px; }
-.people-lane__operator > div { display: flex; min-width: 0; flex-direction: column; }
-.people-lane__operator small { margin-top: 2px; color: var(--el-text-color-secondary); font-size: 11px; }
-.people-avatar { display: inline-flex; width: 30px; height: 30px; flex: 0 0 30px; align-items: center; justify-content: center; border-radius: 50%; background: var(--el-color-primary-light-9); color: var(--el-color-primary); }
 
+.summary-card { display: flex; gap: 10px; flex-wrap: wrap; }
+.summary-card__item {
+  display: flex; flex-direction: column; gap: 4px; min-width: 92px;
+  padding: 8px 12px; border: 1px solid var(--el-border-color-lighter); border-radius: 8px;
+  background: var(--el-fill-color-blank);
+}
+.summary-card__label { color: var(--el-text-color-secondary); font-size: 11px; }
+.summary-card__value { color: var(--el-text-color-primary); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.summary-card__value.is-live { color: var(--el-color-warning-dark-2); }
+.summary-card__muted { color: var(--el-text-color-placeholder); }
+
+/* ---------- 顶部 Steps ---------- */
+.steps {
+  display: flex; align-items: flex-start; gap: 0; list-style: none;
+  margin: 0 0 18px; padding: 14px 8px; overflow-x: auto;
+  border: 1px solid var(--el-border-color-lighter); border-radius: 10px;
+  background: var(--el-fill-color-blank);
+}
+.steps__item {
+  position: relative; flex: 1 1 0; min-width: 84px; display: flex; flex-direction: column; align-items: center; gap: 5px;
+  color: var(--el-text-color-secondary);
+}
+.steps__dot {
+  display: inline-flex; width: 26px; height: 26px; align-items: center; justify-content: center;
+  border-radius: 50%; font-size: 13px; font-weight: 700; color: #fff;
+  background: var(--el-color-info); flex: 0 0 auto;
+}
+.steps__name { font-size: 12px; font-weight: 600; white-space: nowrap; }
+.steps__meta { font-size: 10px; color: var(--el-text-color-placeholder); white-space: nowrap; }
+.steps__line {
+  position: absolute; top: 13px; left: 50%; width: 100%; height: 2px;
+  background: var(--el-border-color-light); z-index: 0;
+}
+.steps__item.is-done .steps__dot { background: var(--el-color-success); }
+.steps__item.is-done .steps__name { color: var(--el-text-color-primary); }
+.steps__item.is-done .steps__line { background: var(--el-color-success-light-5); }
+.steps__item.is-current .steps__dot {
+  background: var(--el-color-primary); box-shadow: 0 0 0 4px var(--el-color-primary-light-8);
+}
+.steps__item.is-current .steps__name { color: var(--el-color-primary); }
+.steps__item.is-current .steps__meta { color: var(--el-color-primary); }
+.steps__item.is-pending { opacity: .55; }
+.steps__item.is-exception .steps__dot { background: var(--el-color-danger); }
+.steps__item.is-exception .steps__name { color: var(--el-color-danger); }
+.steps__item.is-exception .steps__meta { color: var(--el-color-danger); }
+
+/* ---------- 双轨 ---------- */
+.dual-rail {
+  display: grid; grid-template-columns: minmax(0, 1fr) 116px minmax(0, 1fr);
+  align-items: stretch; max-height: 520px; overflow-y: auto; padding: 4px;
+}
+.rail--left { display: flex; flex-direction: column; gap: 4px; padding-right: 10px; }
+.rail--right { display: flex; flex-direction: column; gap: 12px; padding-left: 10px; }
+
+.rail-axis { display: flex; justify-content: center; }
+.rail-axis span { width: 2px; background: var(--el-border-color-light); border-radius: 2px; }
+
+/* 左轨节点 */
+.stage-node {
+  position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px;
+  padding: 12px; border: 1px solid var(--el-border-color-lighter); border-radius: 9px;
+  background: var(--el-fill-color-blank);
+}
+.stage-node__icon {
+  display: inline-flex; width: 26px; height: 26px; align-items: center; justify-content: center;
+  border-radius: 50%; font-size: 13px; font-weight: 700; color: #fff; background: var(--el-color-info);
+}
+.stage-node__body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.stage-node__body strong { color: var(--el-text-color-primary); font-size: 13px; }
+.stage-node__body time { color: var(--el-text-color-secondary); font-size: 11px; font-variant-numeric: tabular-nums; }
+.stage-node__body small { color: var(--el-text-color-secondary); font-size: 11px; }
+.stage-node__pending { color: var(--el-text-color-placeholder); font-size: 11px; }
+.stage-node__body small.is-auto { color: var(--el-color-info); }
+.stage-node__waiting {
+  grid-column: 1 / -1; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--el-border-color-lighter);
+  color: var(--el-color-warning-dark-2); font-size: 11px; font-weight: 600;
+}
+.stage-node__remark { grid-column: 1 / -1; margin: 4px 0 0; color: var(--el-color-danger); font-size: 11px; }
+
+.stage-node.is-done .stage-node__icon { background: var(--el-color-success); }
+.stage-node.is-done { border-color: var(--el-color-success-light-7); }
+.stage-node.is-current { border-color: var(--el-color-primary); box-shadow: 0 0 0 3px var(--el-color-primary-light-9); }
+.stage-node.is-current .stage-node__icon { background: var(--el-color-primary); box-shadow: 0 0 0 4px var(--el-color-primary-light-8); }
+.stage-node.is-current .stage-node__body strong { color: var(--el-color-primary); }
+.stage-node.is-pending { opacity: .6; }
+.stage-node.is-pending .stage-node__icon { background: var(--el-color-info-light-5); color: var(--el-text-color-placeholder); }
+.stage-node.is-exception { border-color: var(--el-color-danger-light-7); background: var(--el-color-danger-light-9); }
+.stage-node.is-exception .stage-node__icon { background: var(--el-color-danger); }
+
+/* 右轨事件 */
+.event-node {
+  padding: 12px 14px; border: 1px solid var(--el-border-color-lighter); border-radius: 9px;
+  background: var(--el-fill-color-blank);
+}
+.event-node__head { display: flex; align-items: center; gap: 8px; }
+.event-node__head strong { color: var(--el-text-color-primary); font-size: 13px; }
+.event-node__desc { margin: 6px 0 0; color: var(--el-text-color-regular); font-size: 12px; }
+.event-node__meta { display: flex; align-items: center; gap: 9px; margin-top: 8px; }
+.event-node__meta > div { display: flex; min-width: 0; flex-direction: column; flex: 1; }
+.event-node__meta strong { font-size: 12px; color: var(--el-text-color-primary); }
+.event-node__meta small { margin-top: 2px; color: var(--el-text-color-secondary); font-size: 11px; }
+.event-node__time { color: var(--el-text-color-secondary); font-size: 11px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.event-node__remark { margin: 6px 0 0; color: var(--el-text-color-secondary); font-size: 11px; }
+
+.people-avatar {
+  display: inline-flex; width: 30px; height: 30px; flex: 0 0 30px; align-items: center; justify-content: center;
+  border-radius: 50%; background: var(--el-color-primary-light-9); color: var(--el-color-primary);
+}
+
+/* 降级事件列表 */
+.legacy-events { display: flex; flex-direction: column; gap: 12px; }
+
+/* ---------- 响应式 ---------- */
 @media (max-width: 760px) {
   .dual-timeline__header { flex-direction: column; }
-  .dual-timeline__summary { flex-wrap: wrap; white-space: normal; }
-  .lane-head { display: none; }
-  .timeline-events::before { left: 12px; }
-  .timeline-event { display: grid; grid-template-columns: 25px minmax(0, 1fr); gap: 0; padding: 8px 0; }
-  .time-axis { grid-column: 1; grid-row: 1 / span 2; align-self: stretch; justify-content: flex-start; padding-top: 18px; }
-  .time-axis time { display: none; }
-  .business-lane, .people-lane { grid-column: 2; margin: 0 0 7px 8px; text-align: left; }
-  .lane-label { justify-content: flex-start; }
+  .summary-card { width: 100%; }
+  .dual-rail { grid-template-columns: 1fr; max-height: none; overflow: visible; }
+  .rail--left { padding-right: 0; }
+  .rail--right { padding-left: 0; margin-top: 12px; }
+  .rail-axis { display: none; }
+  .steps { flex-wrap: nowrap; }
 }
 </style>
