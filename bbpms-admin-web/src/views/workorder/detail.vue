@@ -5,16 +5,18 @@ import { useAuthStore } from '@/stores/auth'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getWorkorderDetail, completeWorkorder, cancelWorkorder, reassignWorkOrder } from '@/api/workorder'
 import { dispatchCandidates } from '@/api/dispatch'
-import type { DispatchCandidate } from '@/types/order'
+import type { DispatchCandidate, WorkorderDetail } from '@/types/order'
 import { formatDate } from '@/utils/format'
 import PageHeader from '@/components/PageHeader.vue'
 import BBPMSStatusTag from '@/components/BBPMSStatusTag.vue'
+import OrderTimeline from '@/components/OrderTimeline.vue'
+import DispatchDecisionPanel from '@/components/DispatchDecisionPanel.vue'
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const loading = ref(false)
-const detail = ref<any>(null)
+const detail = ref<WorkorderDetail | null>(null)
 
 async function fetchData() {
   loading.value = true
@@ -49,14 +51,6 @@ const reassignLoading = ref(false)
 const candidates = ref<DispatchCandidate[]>([])
 const reassignForm = ref<{ newInstallerId: number | null; reason: string }>({ newInstallerId: null, reason: '' })
 
-function candidateLabel(c: DispatchCandidate): string {
-  const identity = c.username ? `${c.name}（${c.username}）` : c.name
-  const status = c.status === 'AVAILABLE' ? '可接单' : '不可用'
-  const parts = [`${identity}｜${status}｜当前工单 ${c.workload ?? 0}｜评分 ${c.rating ?? '-'}`]
-  if (c.distanceKm != null) parts.push(`距客户 ${c.distanceKm.toFixed(1)} km`)
-  return parts.join('｜')
-}
-
 async function openReassign() {
   reassignForm.value = { newInstallerId: null, reason: '' }
   candidates.value = []
@@ -65,6 +59,7 @@ async function openReassign() {
   try {
     // 复用派单候选接口：仅返回满足接单条件的装维（在岗/可接单/技能匹配/负载达标）
     candidates.value = await dispatchCandidates(detail.value.orderId, 20, detail.value.installerId)
+    reassignForm.value.newInstallerId = candidates.value.length ? Number(candidates.value[0].installerId) : null
   } catch {
     ElMessage.error('装维候选加载失败，请重试')
   } finally {
@@ -130,24 +125,22 @@ onMounted(fetchData)
       </el-descriptions>
     </div>
 
+    <OrderTimeline
+      :events="detail?.timeline || []"
+      title="工单状态与人员操作双轨时间线"
+      :current-status="detail?.statusDesc || detail?.status || ''"
+    />
+
     <!-- 改派弹窗（只展示满足接单条件的装维人员） -->
-    <el-dialog v-model="reassignVisible" title="改派工单" width="560px" :close-on-click-modal="false">
-      <el-form label-width="110px" v-loading="reassignLoading">
-        <el-form-item label="接单装维人员" required>
-          <el-select
-            v-model="reassignForm.newInstallerId"
-            filterable
-            placeholder="请选择可接单的装维人员"
-            style="width: 100%"
-            :empty-text="candidates.length ? '搜索无结果' : '暂无可接单装维人员'"
-          >
-            <el-option
-              v-for="c in candidates"
-              :key="c.installerId"
-              :value="c.installerId"
-              :label="candidateLabel(c)"
-            />
-          </el-select>
+    <el-dialog v-model="reassignVisible" title="改派工单 · 决策透视" width="820px" :close-on-click-modal="false">
+      <el-form label-position="top">
+        <el-form-item label="候选装维人员" required>
+          <DispatchDecisionPanel
+            :candidates="candidates"
+            :selected-id="reassignForm.newInstallerId"
+            :loading="reassignLoading"
+            @select="(candidate) => reassignForm.newInstallerId = Number(candidate.installerId)"
+          />
         </el-form-item>
         <el-form-item label="改派原因" required>
           <el-input v-model="reassignForm.reason" type="textarea" :rows="2" placeholder="请填写改派原因" maxlength="200" show-word-limit />

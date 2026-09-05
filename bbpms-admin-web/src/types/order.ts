@@ -25,10 +25,34 @@ export interface OrderTimelineItem {
   id: number | string
   orderId: number | string
   action: string
+  eventType?: string
+  description?: string
+  source?: 'ORDER_AUDIT' | 'WORKORDER' | 'DISPATCH' | string
+  fromStatus?: string
+  fromStatusDesc?: string
+  toStatus?: string
+  toStatusDesc?: string
+  operatorId?: number | string
   operator?: string
   operatorName?: string
+  operatorRole?: string
   remark?: string
+  eventTime?: string
   createdAt: string
+}
+
+export interface WorkOrderTimelineItem {
+  id?: number | string
+  workOrderId?: number | string
+  fromStatus?: WorkorderStatus | null
+  fromStatusDesc?: string | null
+  toStatus?: WorkorderStatus | null
+  toStatusDesc?: string | null
+  operatorId?: number | string | null
+  operatorName?: string | null
+  operatorRole?: string | null
+  remark?: string | null
+  createTime?: string
 }
 
 // Mirrors com.bbpms.workorder.vo.WorkOrderVO (aligned in Sprint A Phase 8).
@@ -65,6 +89,15 @@ export interface WorkorderItem {
   updateTime?: string | null
 }
 
+export interface WorkorderDetail extends WorkorderItem {
+  expectedFinishTime?: string | null
+  lastActiveAt?: string | null
+  stallReason?: string | null
+  cancelType?: string | null
+  priority?: number | null
+  timeline?: WorkOrderTimelineItem[]
+}
+
 export interface DispatchCandidate {
   installerId: number | string
   name: string
@@ -75,6 +108,15 @@ export interface DispatchCandidate {
   workload?: number
   rating?: number
   score?: number
+  skillMatchScore?: number
+  factorBreakdown?: {
+    distance?: number
+    sd?: number
+    sl?: number
+    ss?: number
+    sr?: number
+    [key: string]: number | undefined
+  }
   online?: boolean
   lng?: number
   lat?: number

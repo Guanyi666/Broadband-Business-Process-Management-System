@@ -10,17 +10,23 @@
  *       空数据显示空态；绝不显示随机 / 硬编码数据。
  */
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { Refresh, WarningFilled } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import BBPMSChart from '@/components/BBPMSChart.vue'
 import BBPMSKpiCard from '@/components/BBPMSKpiCard.vue'
 import BBPMSPanel from '@/components/BBPMSPanel.vue'
 import BBPMSStatusTag from '@/components/BBPMSStatusTag.vue'
+import BusinessProcessMetro from '@/components/BusinessProcessMetro.vue'
 import { useDashboard } from '@/composables/useDashboard'
+import { useAuthStore } from '@/stores/auth'
 import { buildBarOption, buildDonutOption, buildGaugeOption, buildLineOption } from '@/utils/chart-theme'
 import type { KpiItem } from '@/types/dashboard'
 
 // ---------- 数据编排 ----------
 const days = ref(7)
+const router = useRouter()
+const auth = useAuthStore()
 const dashboard = useDashboard(days)
 const { overview, trend, dispatch, buckets, sla, latest, counts } = dashboard
 
@@ -136,6 +142,18 @@ const latestList = computed(() => latest.data.value ?? [])
 
 function formatTime(t?: string | null): string {
   return t ? t.slice(5, 16) : '-'
+}
+
+function openProcessNode(payload: { target: 'order' | 'workorder'; status: string }) {
+  const permission = payload.target === 'order' ? 'order:view' : 'workorder:view'
+  if (!auth.hasPermission(permission)) {
+    ElMessage.warning('当前账号没有对应业务明细的查看权限')
+    return
+  }
+  router.push({
+    path: payload.target === 'order' ? '/order/list' : '/workorder/list',
+    query: { status: payload.status, from: 'process-metro' }
+  })
 }
 </script>
 
@@ -258,6 +276,18 @@ function formatTime(t?: string | null): string {
     <!-- ② 流程健康 -->
     <section class="dash-section">
       <h3 class="section-title">流程健康</h3>
+
+      <BusinessProcessMetro
+        class="flow-metro"
+        :order-statuses="overview.data.value?.orderStatusDist || []"
+        :work-order-statuses="overview.data.value?.workOrderStatusDist || []"
+        :sla-risk-count="canViewSla ? slaList.length : 0"
+        :loading="overview.loading.value"
+        :error="overview.error.value"
+        @select="openProcessNode"
+        @retry="overview.load()"
+      />
+
       <div class="bbpms-grid chart-grid">
         <BBPMSPanel
           :class="canViewDispatch ? 'bbpms-col-8 panel-trend' : 'bbpms-col-12 panel-trend'"
@@ -438,6 +468,10 @@ function formatTime(t?: string | null): string {
 
 .dash-section {
   min-width: 0; // 防 grid 子项被长内容撑破
+}
+
+.flow-metro {
+  margin-bottom: 16px;
 }
 
 // —— ① KPI 栅格：≥1440 五列（L1 跨 2）→ 1024-1439 三列 → <1024 两列 ——

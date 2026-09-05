@@ -31,4 +31,22 @@ public class OrderTimelineVO {
 
     @Schema(description = "操作人姓名")
     private String operatorName;
+
+    @Schema(description = "操作人角色")
+    private String operatorRole;
+
+    @Schema(description = "变更前状态编码")
+    private String fromStatus;
+
+    @Schema(description = "变更前状态名称")
+    private String fromStatusDesc;
+
+    @Schema(description = "变更后状态编码")
+    private String toStatus;
+
+    @Schema(description = "变更后状态名称")
+    private String toStatusDesc;
+
+    @Schema(description = "操作备注或变更原因")
+    private String remark;
 }

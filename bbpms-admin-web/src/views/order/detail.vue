@@ -116,7 +116,7 @@ const canReassign = computed(() => ['AUDITED', 'WAIT_DISPATCH'].includes(detail.
       </div>
     </div>
 
-    <OrderTimeline :events="detail?.timeline || []" title="订单时间线" />
+    <OrderTimeline :events="detail?.timeline || []" title="订单与履约双轨时间线" :current-status="detail?.status || ''" />
   </div>
 </template>
 

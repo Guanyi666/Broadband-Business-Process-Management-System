@@ -1,6 +1,6 @@
 import request from '@/utils/request'
 import type { PageQuery, PageResult } from '@/types/common'
-import type { WorkorderItem } from '@/types/order'
+import type { WorkorderDetail, WorkorderItem } from '@/types/order'
 
 /** Backend pagination envelope (com.bbpms.common.result.PageResp). */
 interface PageResp<T> {
@@ -29,7 +29,7 @@ export async function pageWorkorders(
 }
 
 export function getWorkorderDetail(id: number | string) {
-  return request<WorkorderItem>({
+  return request<WorkorderDetail>({
     url: `/work-orders/${id}`,
     method: 'GET'
   })

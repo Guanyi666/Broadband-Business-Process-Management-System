@@ -88,12 +88,14 @@ export async function getOrderDetail(id: number | string) {
     appointmentAt: detail.appointment?.appointmentTime || order.appointmentAt,
     contactPhone: detail.appointment?.contactPhone,
     timeline: (detail.timeline || []).map((t: any, index: number) => ({
+      ...t,
       id: `${id}-${index}`,
       orderId: id,
       action: t.eventType || t.description,
       operator: t.operatorName,
       operatorName: t.operatorName,
-      remark: t.description,
+      remark: t.remark,
+      eventTime: t.eventTime,
       createdAt: t.eventTime
     })) as OrderTimelineItem[]
   }

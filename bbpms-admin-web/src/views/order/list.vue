@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onActivated, reactive, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { pageOrders, cancelOrder, resubmitOrder } from '@/api/order'
 import type { OrderItem, OrderStatus } from '@/types/order'
@@ -10,6 +10,7 @@ import PageHeader from '@/components/PageHeader.vue'
 import BBPMSStatusTag from '@/components/BBPMSStatusTag.vue'
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
 
 const loading = ref(false)
@@ -17,7 +18,14 @@ const list = ref<OrderItem[]>([])
 const total = ref(0)
 const actionLoading = ref('')
 
-const activeTab = ref<'ALL' | OrderStatus>('ALL')
+const validStatuses: OrderStatus[] = ['CREATED', 'REJECTED', 'AUDITED', 'WAIT_DISPATCH', 'DISPATCHED', 'INSTALLING', 'FINISHED', 'CLOSED', 'CANCELLED']
+
+function statusFromRoute(value: unknown): 'ALL' | OrderStatus {
+  const status = Array.isArray(value) ? value[0] : value
+  return validStatuses.includes(status as OrderStatus) ? status as OrderStatus : 'ALL'
+}
+
+const activeTab = ref<'ALL' | OrderStatus>(statusFromRoute(route.query.status))
 
 const query = reactive({
   pageNum: 1,
@@ -62,6 +70,11 @@ async function fetchData() {
 watch(activeTab, () => {
   query.pageNum = 1
   fetchData()
+})
+
+watch(() => route.query.status, (value) => {
+  const next = statusFromRoute(value)
+  if (next !== activeTab.value) activeTab.value = next
 })
 
 function onSearch() {
@@ -131,14 +144,10 @@ onActivated(fetchData)
     </PageHeader>
 
     <div class="app-card">
-      <el-tabs v-model="activeTab" class="mb-16">
-        <el-tab-pane label="全部" name="ALL" />
-        <el-tab-pane label="待审核" name="CREATED" />
-        <el-tab-pane label="已驳回" name="REJECTED" />
-        <el-tab-pane label="待派单" name="WAIT_DISPATCH" />
-        <el-tab-pane label="安装中" name="INSTALLING" />
-        <el-tab-pane label="已完成" name="FINISHED" />
-      </el-tabs>
+        <el-tabs v-model="activeTab" class="mb-16">
+          <el-tab-pane label="全部" name="ALL" />
+          <el-tab-pane v-for="item in statusOptions" :key="item.value" :label="item.label" :name="item.value" />
+        </el-tabs>
 
       <div class="page-toolbar">
         <div class="flex" style="gap: 8px; flex-wrap: wrap">

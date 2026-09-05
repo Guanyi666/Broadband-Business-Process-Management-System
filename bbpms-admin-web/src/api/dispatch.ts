@@ -80,6 +80,8 @@ export async function dispatchCandidates(
     workload: c.workload,
     rating: c.rating,
     score: c.totalScore,
+    skillMatchScore: c.skillMatchScore,
+    factorBreakdown: c.factorBreakdown,
     online: c.status === 'AVAILABLE'
   })) as DispatchCandidate[]
 }

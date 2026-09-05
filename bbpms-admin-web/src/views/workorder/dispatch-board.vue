@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, onActivated, onBeforeUnmount } from 'vue'
+import { computed, ref, onMounted, onActivated, onBeforeUnmount } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { pageWorkorders } from '@/api/workorder'
 import { listInstallerLocations } from '@/api/installer'
@@ -8,6 +9,9 @@ import { formatDate } from '@/utils/format'
 import type { DispatchCandidate, WorkorderItem } from '@/types/order'
 import type { InstallerLocation } from '@/types/installer'
 import PageHeader from '@/components/PageHeader.vue'
+import DispatchDecisionPanel from '@/components/DispatchDecisionPanel.vue'
+
+const route = useRoute()
 
 const loading = ref(false)
 const pendingOrders = ref<WorkorderItem[]>([])
@@ -18,6 +22,16 @@ const dialogVisible = ref(false)
 const dialogLoading = ref(false)
 const currentOrder = ref<WorkorderItem | null>(null)
 const candidates = ref<DispatchCandidate[]>([])
+const selectedCandidateId = ref<number | string | null>(null)
+const candidateError = ref('')
+const actionLoading = ref<'auto' | 'manual' | ''>('')
+const handledRouteOrder = ref(false)
+
+const selectedCandidate = computed(() =>
+  candidates.value.find((candidate) => String(candidate.installerId) === String(selectedCandidateId.value))
+  || candidates.value[0]
+  || null
+)
 
 async function refresh() {
   loading.value = true
@@ -44,20 +58,27 @@ async function refresh() {
 
 async function openDispatch(order: WorkorderItem) {
   currentOrder.value = order
+  candidates.value = []
+  selectedCandidateId.value = null
+  candidateError.value = ''
   dialogVisible.value = true
   dialogLoading.value = true
   try {
     candidates.value = await dispatchCandidates(order.orderId, 10)
+    selectedCandidateId.value = candidates.value[0]?.installerId ?? null
+  } catch (e: any) {
+    candidateError.value = e?.response?.data?.message || e?.response?.data?.msg || e?.message || '候选装维加载失败'
   } finally {
     dialogLoading.value = false
   }
 }
 
 async function onAutoDispatch() {
-  if (!currentOrder.value) return
+  if (!currentOrder.value || !candidates.value.length) return
   try {
-    await ElMessageBox.confirm('确定自动派单给评分最高的装维人员吗？', '自动派单确认', { type: 'info' })
+    await ElMessageBox.confirm(`确定按系统排名自动派单给 ${candidates.value[0].name} 吗？`, '自动派单确认', { type: 'info' })
   } catch { return }
+  actionLoading.value = 'auto'
   try {
     const r = await autoDispatch(currentOrder.value.orderId)
     ElMessage.success(`已派单给 ${r.installerName || r.installerId}`)
@@ -65,25 +86,40 @@ async function onAutoDispatch() {
     await refresh()
   } catch (e: any) {
     ElMessage.error(e?.response?.data?.message || e?.response?.data?.msg || e?.message || '自动派单失败')
+  } finally {
+    actionLoading.value = ''
   }
 }
 
-async function onManualDispatch(c: DispatchCandidate) {
-  if (!currentOrder.value) return
+async function onManualDispatch() {
+  if (!currentOrder.value || !selectedCandidate.value) return
+  const candidate = selectedCandidate.value
   try {
-    await manualDispatch(currentOrder.value.orderId, c.installerId)
-    ElMessage.success('派单成功')
+    await ElMessageBox.confirm(`确定人工选择 ${candidate.name} 承接该工单吗？`, '人工派单确认', { type: 'warning' })
+  } catch { return }
+  actionLoading.value = 'manual'
+  try {
+    await manualDispatch(currentOrder.value.orderId, candidate.installerId, `调度员从候选排名中选择第 ${candidates.value.indexOf(candidate) + 1} 名`)
+    ElMessage.success(`已人工派单给 ${candidate.name}`)
     dialogVisible.value = false
     await refresh()
   } catch (e: any) {
     ElMessage.error(e?.response?.data?.message || e?.response?.data?.msg || e?.message || '手动派单失败')
+  } finally {
+    actionLoading.value = ''
   }
 }
 
 let timer: ReturnType<typeof setInterval> | null = null
 
-onMounted(() => {
-  refresh()
+onMounted(async () => {
+  await refresh()
+  const targetOrderId = Array.isArray(route.query.orderId) ? route.query.orderId[0] : route.query.orderId
+  const target = pendingOrders.value.find((order) => String(order.orderId) === String(targetOrderId || ''))
+  if (target && !handledRouteOrder.value) {
+    handledRouteOrder.value = true
+    await openDispatch(target)
+  }
   timer = setInterval(refresh, 30000)
 })
 onBeforeUnmount(() => {
@@ -155,47 +191,39 @@ onActivated(refresh)
 
     <el-dialog
       v-model="dialogVisible"
-      :title="`派单 - ${currentOrder?.workNo || ''}`"
-      width="640px"
+      :title="`派单决策透视 - ${currentOrder?.workNo || ''}`"
+      width="900px"
     >
-      <div v-loading="dialogLoading">
+      <div>
         <el-alert type="info" :closable="false" class="mb-16">
           <div>客户电话：<strong>{{ currentOrder?.customerPhone || '-' }}</strong></div>
           <div>安装地址：{{ currentOrder?.installAddress || '-' }}</div>
           <div>建单时间：{{ formatDate(currentOrder?.createTime) }}</div>
         </el-alert>
 
-        <div class="candidate-header">推荐装维（按评分）</div>
-        <el-table :data="candidates" border>
-          <el-table-column label="排名" width="60" type="index" />
-          <el-table-column label="装维人员">
-            <template #default="{ row }">
-              {{ row.name }}<span v-if="row.username">（{{ row.username }}）</span> · {{ row.phone || '-' }}
-            </template>
-          </el-table-column>
-          <el-table-column label="综合评分" width="80">
-            <template #default="{ row }">
-              <el-tag :type="(row.score ?? 0) >= 80 ? 'success' : (row.score ?? 0) >= 60 ? 'warning' : 'info'">
-                {{ row.score ?? '-' }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column label="距离" width="100">
-            <template #default="{ row }">{{ row.distanceKm?.toFixed?.(1) ?? '-' }} km</template>
-          </el-table-column>
-          <el-table-column label="当前负载" width="100">
-            <template #default="{ row }">{{ row.workload ?? 0 }}</template>
-          </el-table-column>
-          <el-table-column label="操作" width="120" align="center">
-            <template #default="{ row }">
-              <el-button size="small" type="primary" @click="onManualDispatch(row)">分配</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
+        <el-alert v-if="candidateError" type="error" :closable="false" class="mb-16" :title="candidateError" />
+        <DispatchDecisionPanel
+          :candidates="candidates"
+          :selected-id="selectedCandidateId"
+          :loading="dialogLoading"
+          @select="(candidate) => selectedCandidateId = candidate.installerId"
+        />
       </div>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="success" @click="onAutoDispatch">自动派单</el-button>
+        <el-button
+          type="primary"
+          plain
+          :disabled="!selectedCandidate"
+          :loading="actionLoading === 'manual'"
+          @click="onManualDispatch"
+        >人工分配给{{ selectedCandidate?.name ? ` ${selectedCandidate.name}` : '' }}</el-button>
+        <el-button
+          type="success"
+          :disabled="!candidates.length"
+          :loading="actionLoading === 'auto'"
+          @click="onAutoDispatch"
+        >采用系统首选</el-button>
       </template>
     </el-dialog>
   </div>
@@ -265,7 +293,4 @@ onActivated(refresh)
   display: flex; gap: 16px; font-size: 12px; color: #606266; margin-top: 6px;
 }
 .installer-loc { font-size: 11px; margin-top: 4px; }
-.candidate-header {
-  font-weight: 600; margin-bottom: 8px;
-}
 </style>

@@ -5,12 +5,17 @@ import com.bbpms.workorder.entity.WorkOrderTimeline;
 import com.bbpms.workorder.mapper.WorkOrderTimelineMapper;
 import com.bbpms.workorder.service.WorkOrderTimelineService;
 import com.bbpms.workorder.vo.WorkOrderTimelineVO;
+import com.bbpms.user.entity.SysUser;
+import com.bbpms.user.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -23,13 +28,14 @@ import java.util.stream.Collectors;
 public class WorkOrderTimelineServiceImpl implements WorkOrderTimelineService {
 
     private final WorkOrderTimelineMapper timelineMapper;
+    private final SysUserMapper userMapper;
 
     @Override
     public List<WorkOrderTimelineVO> getTimeline(Long workOrderId) {
         if (workOrderId == null) return Collections.emptyList();
         List<WorkOrderTimeline> rows = timelineMapper.selectByWorkOrderId(workOrderId);
         if (rows == null || rows.isEmpty()) return Collections.emptyList();
-        return rows.stream().map(this::toVO).collect(Collectors.toList());
+        return toVOList(rows);
     }
 
     @Override
@@ -37,7 +43,7 @@ public class WorkOrderTimelineServiceImpl implements WorkOrderTimelineService {
         if (orderId == null) return Collections.emptyList();
         List<WorkOrderTimeline> rows = timelineMapper.selectByOrderId(orderId);
         if (rows == null || rows.isEmpty()) return Collections.emptyList();
-        return rows.stream().map(this::toVO).collect(Collectors.toList());
+        return toVOList(rows);
     }
 
     @Override
@@ -60,6 +66,31 @@ public class WorkOrderTimelineServiceImpl implements WorkOrderTimelineService {
         vo.setRemark(t.getRemark());
         vo.setCreateTime(t.getCreateTime());
         return vo;
+    }
+
+    private List<WorkOrderTimelineVO> toVOList(List<WorkOrderTimeline> rows) {
+        List<WorkOrderTimelineVO> result = rows.stream().map(this::toVO).collect(Collectors.toList());
+        List<Long> operatorIds = result.stream()
+                .map(WorkOrderTimelineVO::getOperatorId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        if (operatorIds.isEmpty()) return result;
+
+        try {
+            Map<Long, SysUser> users = userMapper.selectBatchIds(operatorIds).stream()
+                    .collect(Collectors.toMap(SysUser::getId, Function.identity(), (left, right) -> left));
+            for (WorkOrderTimelineVO item : result) {
+                SysUser user = users.get(item.getOperatorId());
+                if (user != null) {
+                    item.setOperatorName(user.getRealName() == null || user.getRealName().isBlank()
+                            ? user.getUsername() : user.getRealName());
+                }
+            }
+        } catch (Exception ex) {
+            log.warn("Unable to enrich work-order timeline operator names: {}", ex.getMessage());
+        }
+        return result;
     }
 
     private String desc(WorkOrderStatus s) {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onActivated, reactive, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { pageWorkorders } from '@/api/workorder'
 import type { WorkorderItem } from '@/types/order'
 import { formatDate } from '@/utils/format'
@@ -8,11 +8,30 @@ import PageHeader from '@/components/PageHeader.vue'
 import BBPMSStatusTag from '@/components/BBPMSStatusTag.vue'
 
 const router = useRouter()
+const route = useRoute()
 
 const loading = ref(false)
 const list = ref<WorkorderItem[]>([])
 const total = ref(0)
-const activeTab = ref<'ALL' | WorkorderItem['status']>('ALL')
+const statusOptions: { label: string; value: WorkorderItem['status'] }[] = [
+  { label: '待派单', value: 'PENDING' },
+  { label: '已派单', value: 'DISPATCHED' },
+  { label: '已接单', value: 'ACCEPTED' },
+  { label: '施工中', value: 'IN_PROGRESS' },
+  { label: '已停滞', value: 'STALLED' },
+  { label: '改派中', value: 'REASSIGNING' },
+  { label: '已完成', value: 'COMPLETED' },
+  { label: '失败', value: 'FAILED' },
+  { label: '已取消', value: 'CANCELLED' },
+  { label: '自动取消', value: 'AUTO_CANCELLED' }
+]
+
+function statusFromRoute(value: unknown): 'ALL' | WorkorderItem['status'] {
+  const status = Array.isArray(value) ? value[0] : value
+  return statusOptions.some((item) => item.value === status) ? status as WorkorderItem['status'] : 'ALL'
+}
+
+const activeTab = ref<'ALL' | WorkorderItem['status']>(statusFromRoute(route.query.status))
 
 const query = reactive({
   pageNum: 1,
@@ -44,6 +63,10 @@ async function fetchData() {
 }
 
 watch(activeTab, () => { query.pageNum = 1; fetchData() })
+watch(() => route.query.status, (value) => {
+  const next = statusFromRoute(value)
+  if (next !== activeTab.value) activeTab.value = next
+})
 
 function onRowClick(row: WorkorderItem) {
   router.push(`/workorder/detail/${row.id}`)
@@ -67,14 +90,10 @@ onActivated(fetchData)
     </PageHeader>
 
     <div class="app-card">
-      <el-tabs v-model="activeTab" class="mb-16">
-        <el-tab-pane label="全部" name="ALL" />
-        <el-tab-pane label="待处理" name="PENDING" />
-        <el-tab-pane label="派单时间" name="DISPATCHED" />
-        <el-tab-pane label="施工中" name="IN_PROGRESS" />
-        <el-tab-pane label="完成时间" name="COMPLETED" />
-        <el-tab-pane label="已取消" name="CANCELLED" />
-      </el-tabs>
+        <el-tabs v-model="activeTab" class="mb-16">
+          <el-tab-pane label="全部" name="ALL" />
+          <el-tab-pane v-for="item in statusOptions" :key="item.value" :label="item.label" :name="item.value" />
+        </el-tabs>
 
       <div class="page-toolbar">
         <div class="flex" style="gap: 8px">
