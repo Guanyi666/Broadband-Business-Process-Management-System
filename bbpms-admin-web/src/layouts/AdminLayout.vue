@@ -257,7 +257,10 @@ export const allMenus: MenuConfig[] = [
     title: '资源管理',
     icon: 'OfficeBuilding',
     perms: 'resource:view',
-    children: [{ path: '/resource/list', title: '网络资源台账', icon: 'List', perms: 'resource:view' }]
+    children: [
+      { path: '/resource/list', title: '网络资源台账', icon: 'List', perms: 'resource:view' },
+      { path: '/resource/package', title: '套餐资源', icon: 'Goods', perms: 'resource:view' }
+    ]
   },
   {
     path: '/installer',
