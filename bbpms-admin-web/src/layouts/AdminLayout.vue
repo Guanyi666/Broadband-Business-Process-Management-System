@@ -3,6 +3,7 @@ import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { useAuthStore } from '@/stores/auth'
+import { unreadCount as fetchUnreadCount } from '@/api/notify'
 import { useFullscreen } from '@vueuse/core'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import SidebarItem from './components/SidebarItem.vue'
@@ -117,6 +118,7 @@ function filterByLocal(items: MenuConfig[]): MenuConfig[] {
 }
 
 const menusReady = ref(false)
+const unreadCount = ref(0)
 
 const dynamicMenus = computed(() => {
   const backendPaths = collectBackendPaths(auth.menus as MenuNode[])
@@ -144,9 +146,24 @@ async function loadMenus() {
   }
 }
 
+let unreadTimer: ReturnType<typeof setInterval> | null = null
+
+async function loadUnread() {
+  if (!auth.isLoggedIn) return
+  try {
+    unreadCount.value = await fetchUnreadCount()
+  } catch (e) {
+    // 未读接口失败不打扰用户，下次轮询重试
+    console.warn('[AdminLayout] fetch unread count failed', e)
+  }
+}
+
 onMounted(() => {
   loadMenus()
   setupResponsive()
+  loadUnread()
+  // 每 60s 刷新一次未读数（轻量接口，轮询成本可忽略）
+  unreadTimer = setInterval(loadUnread, 60_000)
 })
 
 // =============================================================================
@@ -171,6 +188,7 @@ function setupResponsive() {
 
 onBeforeUnmount(() => {
   mql?.removeEventListener('change', mqlHandler as EventListener)
+  if (unreadTimer) clearInterval(unreadTimer)
 })
 
 async function onMenuSelect(index: string) {
@@ -188,6 +206,8 @@ function goProfile() {
 }
 
 function goNotify() {
+  // 进入消息记录页立即清零角标（页面内还会调用接口标记已读）
+  unreadCount.value = 0
   router.push('/notify/record')
 }
 
@@ -324,8 +344,10 @@ const userInitial = computed(() => {
               <component :is="isFullscreen ? Aim : FullScreen" />
             </el-icon>
           </el-tooltip>
-          <el-tooltip content="通知记录">
-            <el-icon class="topbar-icon" @click="goNotify"><Bell /></el-icon>
+          <el-tooltip :content="unreadCount > 0 ? `通知记录（${unreadCount} 条未读）` : '通知记录'">
+            <el-badge :value="unreadCount" :hidden="unreadCount === 0" :max="99" class="topbar-notify-badge">
+              <el-icon class="topbar-icon" @click="goNotify"><Bell /></el-icon>
+            </el-badge>
           </el-tooltip>
           <el-dropdown>
             <div class="user-area">
@@ -561,6 +583,13 @@ export const allMenus: MenuConfig[] = [
     .topbar-icon {
       font-size: 18px;
       cursor: pointer;
+    }
+    .topbar-notify-badge {
+      display: inline-flex;
+      line-height: 1;
+      :deep(.el-badge__content) {
+        transform: translateY(-40%) translateX(60%);
+      }
     }
     .user-area {
       display: flex;

@@ -107,6 +107,27 @@ public class NotifyServiceImpl implements NotifyService {
     }
 
     @Override
+    public long countUnread(Long userId) {
+        if (userId == null) return 0;
+        return messageMapper.selectCount(new LambdaQueryWrapper<Message>()
+                .eq(Message::getUserId, userId)
+                .eq(Message::getChannel, "INAPP")
+                .eq(Message::getStatus, "SUCCESS")
+                .eq(Message::getIsRead, 0));
+    }
+
+    @Override
+    public void markAllRead(Long userId) {
+        if (userId == null) return;
+        Message upd = new Message();
+        upd.setIsRead(1);
+        messageMapper.update(upd, new LambdaQueryWrapper<Message>()
+                .eq(Message::getUserId, userId)
+                .eq(Message::getChannel, "INAPP")
+                .eq(Message::getIsRead, 0));
+    }
+
+    @Override
     public PageResp<MessageVO> pageMessages(MessagePageReq req) {
         Page<Message> page = new Page<>(req.getPageNum(), req.getPageSize());
         LambdaQueryWrapper<Message> qw = new LambdaQueryWrapper<>();

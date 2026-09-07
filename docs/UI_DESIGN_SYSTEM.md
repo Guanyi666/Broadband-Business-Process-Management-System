@@ -1,7 +1,7 @@
 # BBPMS UI Design System
 
 > 阶段：Phase 2（设计统一规范）＋ Phase 3（信息架构落地）＋ Phase 4（核心页面优化）
-> 版本：v1.3　日期：2026-09-06
+> 版本：v1.4　日期：2026-09-07
 > 适用范围：`bbpms-admin-web`（管理端）。装维 H5 / 客户 H5 另有移动端规范，本版不覆盖。
 > 落地状态：**已实施**（Design Token + 动态菜单 + Tabs 优化 + 状态收口 + 中文化 + 暗色收口 + 响应式 + EP 中文语言包 + PageHeader 升级，`npm run build` 通过）
 
@@ -377,7 +377,7 @@ theme.scss（CSS 变量 --bbpms-*，运行时）
 
 ## 15. 后续待办（v1.3 之后）
 
-1. 通知未读数角标：后端需补 `GET /notify/unread` 接口 + `message` 表加 `is_read` 字段（落地路径已记录于工作日志，含 UrgeService/InstallNotifyListener 真实站内信业务链路；当前 MySQL/后端环境不可用，暂缓）。当前前端维持点击铃铛跳 `/notify/record` 真实消息页。
+1. 通知未读数角标 —— **✅ 已落地（v1.4）**：`message` 表加 `is_read` 字段；后端新增 `GET /api/notify/unread/count`（当前用户 INAPP+SUCCESS 未读数，仅登录即可访问）+ `POST /api/notify/messages/read`（标记全部已读，仅限本人消息）；前端 AdminLayout 顶部铃铛接 `el-badge` 未读角标（60s 轮询 + 进入通知页立即清零）、notify/record 页进入时自动标记已读并展示「已读/未读」列（仅 INAPP 显示）。真实业务链路：UrgeService 催单 / InstallNotifyListener 安装完成写入的 INAPP 站内信。
 2. P1 页面容器统一 —— **✅ 已审查完毕无需改**：installer/map、attendance/Report、leave/Approval、sla/Expiring 均已用 `BBPMSTable`（统一容器+空态）或 `el-card`+真实接口。
 3. sla/Expiring 死代码：`pageWorkOrders` 无效导入已删、`确认恢复工单 ?` 中文标点已修 —— **✅ 已落地（v1.3）**
 4. Element Plus 中文语言包：`app.use(ElementPlus, { locale: zhCn })` —— **✅ 已落地（v1.3）**：EP 组件内置文案（表格空态/分页/日期）全中文

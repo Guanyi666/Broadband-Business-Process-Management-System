@@ -411,6 +411,7 @@ CREATE TABLE IF NOT EXISTS `message` (
     `id`           BIGINT       NOT NULL AUTO_INCREMENT,
     `user_id`      BIGINT       DEFAULT NULL,
     `channel`      VARCHAR(16)  NOT NULL DEFAULT 'SMS' COMMENT 'SMS/WECHAT/INAPP',
+    `is_read`      TINYINT      NOT NULL DEFAULT 0 COMMENT '是否已读 0未读/1已读',
     `template_code` VARCHAR(64) DEFAULT NULL,
     `params`       JSON          DEFAULT NULL,
     `content`      TEXT          DEFAULT NULL,

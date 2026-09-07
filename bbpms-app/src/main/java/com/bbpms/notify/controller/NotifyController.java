@@ -2,6 +2,7 @@ package com.bbpms.notify.controller;
 import jakarta.validation.Valid;
 import com.bbpms.common.result.PageResp;
 import com.bbpms.common.result.R;
+import com.bbpms.common.util.SecurityUtils;
 import com.bbpms.notify.dto.MessagePageReq;
 import com.bbpms.notify.dto.SmsSendReq;
 import com.bbpms.notify.dto.WechatTemplateSendReq;
@@ -31,5 +32,16 @@ public class NotifyController {
     @PreAuthorize("hasAuthority('notify:view')")
     public R<PageResp<MessageVO>> pageMessages(MessagePageReq req) {
         return R.ok(notifyService.pageMessages(req));
+    }
+    @GetMapping("/unread/count")
+    @PreAuthorize("isAuthenticated()")
+    public R<Long> unreadCount() {
+        return R.ok(notifyService.countUnread(SecurityUtils.requireUserId()));
+    }
+    @PostMapping("/messages/read")
+    @PreAuthorize("isAuthenticated()")
+    public R<Void> markRead() {
+        notifyService.markAllRead(SecurityUtils.requireUserId());
+        return R.ok();
     }
 }

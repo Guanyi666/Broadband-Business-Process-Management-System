@@ -15,5 +15,7 @@ public interface NotifyService {
     WechatSendResp sendWechat(WechatTemplateSendReq req);
     void sendInApp(Long userId, String content);
     PageResp<MessageVO> pageMessages(MessagePageReq req);
+    long countUnread(Long userId);
+    void markAllRead(Long userId);
     void handleNotifyEvent(BbpmsEvents.NotifyEvent event);
 }

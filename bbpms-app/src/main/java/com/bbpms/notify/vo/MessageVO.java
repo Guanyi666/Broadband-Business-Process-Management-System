@@ -6,6 +6,7 @@ public class MessageVO {
     private Long id;
     private Long userId;
     private String channel;
+    private Integer isRead;
     private String templateCode;
     private String params;
     private String content;

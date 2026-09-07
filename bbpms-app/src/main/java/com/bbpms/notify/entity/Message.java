@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
 public class Message extends BaseDO {
     @TableField("user_id") private Long userId;
     @TableField("channel") private String channel;
+    @TableField("is_read") private Integer isRead; // 0未读/1已读
+
     @TableField("template_code") private String templateCode;
     @TableField("params") private String params; // JSON
     @TableField("content") private String content;

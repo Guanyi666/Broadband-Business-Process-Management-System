@@ -23,6 +23,7 @@ export interface NotifyMessage {
   subject?: string
   content: string
   status: 'PENDING' | 'SUCCESS' | 'FAILED'
+  isRead?: number
   errorMsg?: string
   sentAt?: string
 }
@@ -97,4 +98,15 @@ export async function pageMessages(params: PageQuery & { channel?: string; statu
     pageNum: res?.pageNum ?? 1,
     pageSize: res?.pageSize ?? 10
   } as PageResult<NotifyMessage>
+}
+
+/** 当前用户站内信未读数 */
+export async function unreadCount() {
+  const res = await request<number>({ url: '/notify/unread/count', method: 'GET' })
+  return res ?? 0
+}
+
+/** 标记当前用户全部站内信为已读 */
+export function markAllMessagesRead() {
+  return request<void>({ url: '/notify/messages/read', method: 'POST' })
 }

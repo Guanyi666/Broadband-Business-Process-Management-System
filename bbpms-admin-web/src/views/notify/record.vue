@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { pageMessages, sendSms } from '@/api/notify'
+import { pageMessages, sendSms, markAllMessagesRead } from '@/api/notify'
 import type { NotifyMessage } from '@/api/notify'
 import { formatDate } from '@/utils/format'
 import PageHeader from '@/components/PageHeader.vue'
@@ -34,7 +34,20 @@ async function fetchData() {
   }
 }
 
-onMounted(fetchData)
+/** 进入消息记录页：将当前用户全部站内信标记为已读，并让顶部角标归零 */
+async function markAllReadOnEnter() {
+  try {
+    await markAllMessagesRead()
+  } catch (e) {
+    // 标记已读失败不阻断页面浏览
+    console.warn('[record] mark all read failed', e)
+  }
+}
+
+onMounted(() => {
+  fetchData()
+  markAllReadOnEnter()
+})
 
 function onSearch() { query.pageNum = 1; fetchData() }
 function onReset() { query.channel = ''; query.status = ''; query.pageNum = 1; fetchData() }
@@ -95,7 +108,7 @@ async function onSend() {
           <el-select v-model="query.channel" placeholder="渠道" clearable style="width: 140px">
             <el-option value="SMS" label="短信" />
             <el-option value="WECHAT" label="微信" />
-            <el-option value="APP_PUSH" label="推送" />
+            <el-option value="INAPP" label="站内信" />
           </el-select>
           <el-select v-model="query.status" placeholder="状态" clearable style="width: 140px">
             <el-option value="PENDING" label="待处理" />
@@ -120,6 +133,14 @@ async function onSend() {
             <el-tag :type="row.status === 'SUCCESS' ? 'success' : row.status === 'FAILED' ? 'danger' : 'warning'">
               {{ statusText(row.status) }}
             </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="已读" width="80">
+          <template #default="{ row }">
+            <el-tag v-if="row.channel === 'INAPP'" :type="row.isRead ? 'info' : 'danger'" effect="plain">
+              {{ row.isRead ? '已读' : '未读' }}
+            </el-tag>
+            <span v-else>-</span>
           </template>
         </el-table-column>
         <el-table-column label="发送时间" width="170">
