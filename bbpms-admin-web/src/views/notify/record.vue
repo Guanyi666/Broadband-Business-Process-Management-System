@@ -39,6 +39,26 @@ onMounted(fetchData)
 function onSearch() { query.pageNum = 1; fetchData() }
 function onReset() { query.channel = ''; query.status = ''; query.pageNum = 1; fetchData() }
 
+/** 渠道码 → 中文（下拉筛选值保持原始码，仅展示处映射） */
+const CHANNEL_TEXT: Record<string, string> = {
+  SMS: '短信',
+  WECHAT: '微信',
+  INAPP: '站内信'
+}
+function channelText(code?: string) {
+  return (code && CHANNEL_TEXT[code]) || code || '-'
+}
+
+/** 发送状态 → 中文标签 */
+const STATUS_TEXT: Record<string, string> = {
+  PENDING: '待发送',
+  SUCCESS: '成功',
+  FAILED: '失败'
+}
+function statusText(code?: string) {
+  return (code && STATUS_TEXT[code]) || code || '-'
+}
+
 async function onSend() {
   if (!sendForm.phone || !sendForm.templateCode) {
     ElMessage.warning('请输入手机号和模板编码')
@@ -48,11 +68,11 @@ async function onSend() {
   try {
     params = JSON.parse(sendForm.params || '{}')
   } catch {
-    ElMessage.warning('Template parameters must be valid JSON')
+    ElMessage.warning('变量参数必须是合法的 JSON 格式')
     return
   }
   const r = await sendSms({ phone: sendForm.phone, templateCode: sendForm.templateCode, params })
-  ElMessage.success(`Message status: ${r.status}`)
+  ElMessage.success(`短信已发送（状态：${r.status}）`)
   sendDialog.value = false
   sendForm.phone = ''
   sendForm.templateCode = ''
@@ -90,13 +110,15 @@ async function onSend() {
       <el-table v-loading="loading" :data="list" stripe>
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="templateCode" label="模板" width="160" />
-        <el-table-column prop="channel" label="渠道" width="100" />
+        <el-table-column label="渠道" width="100">
+          <template #default="{ row }">{{ channelText(row.channel) }}</template>
+        </el-table-column>
         <el-table-column prop="receiver" label="接收人" width="160" />
         <el-table-column prop="content" label="内容" show-overflow-tooltip />
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.status === 'SUCCESS' ? 'success' : row.status === 'FAILED' ? 'danger' : 'warning'">
-              {{ row.status }}
+              {{ statusText(row.status) }}
             </el-tag>
           </template>
         </el-table-column>
@@ -123,7 +145,7 @@ async function onSend() {
           <el-input v-model="sendForm.phone" placeholder="请输入手机号（逗号分隔）" />
         </el-form-item>
         <el-form-item label="模板">
-          <el-input v-model="sendForm.templateCode" placeholder="e.g. ORDER_CREATED" />
+          <el-input v-model="sendForm.templateCode" placeholder="如 ORDER_CREATED" />
         </el-form-item>
         <el-form-item label="变量参数">
           <el-input v-model="sendForm.params" type="textarea" :rows="5" placeholder='{"name":"Alice"}' />

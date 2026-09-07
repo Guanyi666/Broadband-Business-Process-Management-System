@@ -19,15 +19,15 @@ const router = useRouter()
   align-items: center;
   justify-content: center;
   gap: 12px;
-  background: #fff;
+  background: var(--el-bg-color);
   padding: 80px 20px;
   .error-code {
     font-size: 80px;
     font-weight: 700;
-    color: #f56c6c;
+    color: var(--el-color-danger);
   }
   .error-msg {
-    color: #606266;
+    color: var(--el-text-color-regular);
     font-size: 16px;
   }
 }

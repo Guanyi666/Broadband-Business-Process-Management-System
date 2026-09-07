@@ -91,7 +91,7 @@ watch(
   <div ref="mapEl" class="map-picker" :style="{ height: '320px' }">
     <div v-if="!AMapRef" class="map-fallback">
       <el-icon><Location /></el-icon>
-      <span>Map disabled (AMap key missing)</span>
+      <span>地图组件未启用（未配置地图密钥）</span>
     </div>
   </div>
 </template>
@@ -102,7 +102,7 @@ watch(
   width: 100%;
   border-radius: $radius-base;
   overflow: hidden;
-  border: 1px solid #dcdfe6;
+  border: 1px solid var(--el-border-color);
 }
 .map-fallback {
   position: absolute;
@@ -111,8 +111,8 @@ watch(
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  color: #909399;
-  background: #f5f7fa;
+  color: var(--el-text-color-secondary);
+  background: var(--el-fill-color-light);
   gap: 8px;
 }
 </style>

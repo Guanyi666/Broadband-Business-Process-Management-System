@@ -88,7 +88,7 @@ function onSizeChange(s: number) {
           <slot :name="col.slot" :row="row" :index="$index" />
         </template>
       </el-table-column>
-      <el-table-column v-if="$slots.action" label="Action" width="180" fixed="right" align="center">
+      <el-table-column v-if="$slots.action" label="操作" width="180" fixed="right" align="center">
         <template #default="{ row, $index }">
           <slot name="action" :row="row" :index="$index" />
         </template>
@@ -112,11 +112,33 @@ function onSizeChange(s: number) {
 
 <style scoped lang="scss">
 .bbpms-table {
-  background: #fff;
+  background: var(--el-bg-color);
   border-radius: $radius-base;
   padding: 16px;
   .table-toolbar {
     margin-bottom: 12px;
+  }
+
+  // 列多时小屏允许横向滚动（el-table 自身行内滚动 + 外层兜底）
+  :deep(.el-table) {
+    .el-table__body-wrapper {
+      overflow-x: auto;
+    }
+  }
+}
+
+// —— 响应式：<1024px 分页换行、内边距收紧 ——
+@media (max-width: 1023px) {
+  .bbpms-table {
+    padding: 12px;
+    .pagination-wrap {
+      margin-top: 12px;
+      overflow-x: auto;
+      :deep(.el-pagination) {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
   }
 }
 </style>

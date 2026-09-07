@@ -21,7 +21,14 @@ const orderStatusOptions = [
   { label: '待客服确认', value: 'PENDING_CS_CONFIRM' },
   { label: '客服已退回', value: 'CS_REJECTED' }
 ]
-const ticketStatusOptions = ['SUBMITTED', 'ACCEPTED', 'PROCESSING', 'WAIT_CONFIRM', 'CLOSED', 'REJECTED']
+const ticketStatusOptions = [
+  { label: '已提交', value: 'SUBMITTED' },
+  { label: '已接单', value: 'ACCEPTED' },
+  { label: '处理中', value: 'PROCESSING' },
+  { label: '待确认', value: 'WAIT_CONFIRM' },
+  { label: '已关闭', value: 'CLOSED' },
+  { label: '已驳回', value: 'REJECTED' }
+]
 
 async function load() {
   loading.value = true
@@ -92,7 +99,7 @@ onMounted(load)
       <div class="page-toolbar">
         <el-select v-model="query.status" clearable placeholder="状态" style="width: 180px" @change="load">
           <el-option v-if="activeTab === 'orders'" v-for="o in orderStatusOptions" :key="o.value" :label="o.label" :value="o.value" />
-          <el-option v-else-if="activeTab === 'tickets'" v-for="s in ticketStatusOptions" :key="s" :label="s" :value="s" />
+          <el-option v-else-if="activeTab === 'tickets'" v-for="s in ticketStatusOptions" :key="s.value" :label="s.label" :value="s.value" />
           <template v-else>
             <el-option label="待审核" value="PENDING" />
             <el-option label="已通过" value="APPROVED" />

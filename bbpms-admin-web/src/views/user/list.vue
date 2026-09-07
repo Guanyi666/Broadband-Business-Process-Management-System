@@ -118,7 +118,7 @@ async function onSave() {
 
 async function onDelete(row: any) {
   try {
-    await ElMessageBox.confirm(`Delete user ${row.username}?`, '确认', { type: 'warning' })
+    await ElMessageBox.confirm(`确认删除用户「${row.username}」？删除后不可恢复。`, '删除确认', { type: 'warning' })
   } catch { return }
   await store.remove(row.id)
   ElMessage.success('删除成功')
@@ -133,7 +133,7 @@ function openAssignRoles(row: any) {
 
 async function onSaveRoles() {
   await assignRoles(roleTarget.value.id, roleIds.value)
-  ElMessage.success('Roles updated')
+  ElMessage.success('角色更新成功')
   roleDialogVisible.value = false
   fetchData()
 }
@@ -170,7 +170,7 @@ async function onSaveRoles() {
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'info'">
-              {{ row.status === 1 ? 'Enabled' : 'Disabled' }}
+              {{ row.status === 1 ? '启用' : '停用' }}
             </el-tag>
           </template>
         </el-table-column>

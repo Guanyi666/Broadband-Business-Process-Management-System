@@ -20,6 +20,8 @@ interface Props {
   prev?: number | null
   trend?: number | null
   loading?: boolean
+  /** 点击跳转目标（相对路由路径）；提供后卡片显示可点击态 */
+  to?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -29,8 +31,17 @@ const props = withDefaults(defineProps<Props>(), {
   icon: undefined,
   prev: null,
   trend: null,
-  loading: false
+  loading: false,
+  to: undefined
 })
+
+const emit = defineEmits<{ (e: 'click'): void }>()
+
+const isClickable = computed(() => !!props.to)
+
+function onClick() {
+  if (isClickable.value) emit('click')
+}
 
 const toneColor = computed(() => `var(--el-color-${props.tone}, #409eff)`)
 
@@ -102,6 +113,20 @@ const trendClass = computed(() => {
 
   &:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  }
+
+  &.is-clickable {
+    cursor: pointer;
+
+    &:hover {
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+      transform: translateY(-1px);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--el-color-primary, #409eff);
+      outline-offset: 2px;
+    }
   }
 
   &__stripe {
@@ -185,7 +210,7 @@ const trendClass = computed(() => {
 
   &__skeleton {
     border-radius: 4px;
-    background: linear-gradient(90deg, #f0f2f5 25%, #e6e8eb 37%, #f0f2f5 63%);
+    background: linear-gradient(90deg, var(--el-fill-color) 25%, var(--el-border-color-lighter) 37%, var(--el-fill-color) 63%);
     background-size: 400% 100%;
     animation: kpi-shimmer 1.2s ease infinite;
 

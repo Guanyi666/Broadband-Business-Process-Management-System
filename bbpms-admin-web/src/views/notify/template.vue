@@ -71,7 +71,7 @@ async function onSave() {
 
 async function onDelete(row: NotifyTemplate) {
   try {
-    await ElMessageBox.confirm(`Delete template ${row.code}?`, '确认', { type: 'warning' })
+    await ElMessageBox.confirm(`确认删除模板「${row.code}」？删除后不可恢复。`, '删除确认', { type: 'warning' })
   } catch { return }
   await deleteTemplate(row.id)
   ElMessage.success('删除成功')
@@ -90,7 +90,7 @@ async function onDelete(row: NotifyTemplate) {
     <div class="app-card">
       <div class="page-toolbar">
         <div class="flex" style="gap: 8px">
-          <el-input v-model="query.keyword" placeholder="Code / Subject / Content" clearable style="width: 240px" @keyup.enter="onSearch" />
+          <el-input v-model="query.keyword" placeholder="模板编码 / 主题 / 内容" clearable style="width: 240px" @keyup.enter="onSearch" />
           <el-button type="primary" @click="onSearch">搜索</el-button>
           <el-button @click="onReset">重置</el-button>
         </div>

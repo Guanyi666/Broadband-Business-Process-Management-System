@@ -48,6 +48,10 @@ async function fetchData() {
   loading.value = true
   try {
     detail.value = await getWorkorderDetail(route.params.id as string)
+    // Tab 标题带业务标识：工单详情 → 工单 WO...001
+    if (detail.value?.workNo) {
+      router.replace({ query: { ...route.query, __title: `工单 ${detail.value.workNo}` } })
+    }
     await loadTrack()
   } finally {
     loading.value = false
@@ -124,7 +128,7 @@ onMounted(fetchData)
 
 <template>
   <div class="app-container" v-loading="loading">
-    <PageHeader :title="`工单 ${detail?.workNo || ''}`">
+    <PageHeader :title="`工单 ${detail?.workNo || ''}`" back>
       <template #extra>
         <el-button type="primary" @click="onComplete" v-if="detail?.status === 'IN_PROGRESS' && auth.hasPermission('workorder:complete')">标记完成</el-button>
         <el-button @click="openReassign" v-if="['DISPATCHED', 'ACCEPTED', 'IN_PROGRESS', 'STALLED'].includes(detail?.status) && auth.hasPermission('workorder:reassign')">改派</el-button>
@@ -139,7 +143,11 @@ onMounted(fetchData)
         <el-descriptions-item label="状态">
           <BBPMSStatusTag :status="detail.status" :label="detail.statusDesc || detail.status" />
         </el-descriptions-item>
-        <el-descriptions-item label="订单 ID">{{ detail.orderId }}</el-descriptions-item>
+        <el-descriptions-item label="关联订单">
+          <router-link :to="`/order/detail/${detail.orderId}`" class="link-primary">
+            {{ detail.orderNo || `#${detail.orderId}` }} →
+          </router-link>
+        </el-descriptions-item>
         <el-descriptions-item label="装维人员">{{ detail.installerName || '-' }}</el-descriptions-item>
         <el-descriptions-item label="调度员">{{ detail.dispatcherName || '-' }}</el-descriptions-item>
         <el-descriptions-item label="客户电话">{{ detail.customerPhone || '-' }}</el-descriptions-item>
@@ -183,4 +191,10 @@ onMounted(fetchData)
   </div>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.link-primary {
+  color: var(--bbpms-color-primary);
+  font-weight: 500;
+  &:hover { text-decoration: underline; }
+}
+</style>

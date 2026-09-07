@@ -155,6 +155,66 @@ function openProcessNode(payload: { target: 'order' | 'workorder'; status: strin
     query: { status: payload.status, from: 'process-metro' }
   })
 }
+
+// =============================================================================
+// KPI 钻取：点击指标卡 → 跳列表并自动筛选对应状态
+// =============================================================================
+function drillTo(target: 'order' | 'workorder', status?: string, extra: Record<string, string> = {}) {
+  const permission = target === 'order' ? 'order:view' : 'workorder:view'
+  if (!auth.hasPermission(permission)) {
+    ElMessage.warning('当前账号没有对应业务明细的查看权限')
+    return
+  }
+  router.push({
+    path: target === 'order' ? '/order/list' : '/workorder/list',
+    query: { ...(status ? { status } : {}), from: 'dashboard-kpi', ...extra }
+  })
+}
+
+const kpiDrill = {
+  runningWorkorders: () => drillTo('workorder', 'IN_PROGRESS'),
+  todayOrders: () => drillTo('order'),
+  // 看板口径与后端 countPendingAuditOrders 一致：待审核 = CREATED
+  pendingAuditOrders: () => drillTo('order', 'CREATED'),
+  todayFinishedWorkorders: () => drillTo('workorder', 'COMPLETED'),
+  stalledWorkorders: () => drillTo('workorder', 'STALLED')
+}
+
+// =============================================================================
+// 待办中心：聚合「现在最需要处理什么」，全部可点击钻取
+// 数据全部来自真实接口（KPI + SLA + 流程状态分布），无伪造
+// =============================================================================
+interface TodoItem {
+  key: string
+  label: string
+  count: number
+  tone: 'danger' | 'warning' | 'primary'
+  drill: () => void
+}
+
+const todoItems = computed<TodoItem[]>(() => {
+  const items: TodoItem[] = []
+  const stalled = stalledWorkorders.value?.value
+  if (stalled && Number(stalled) > 0) {
+    items.push({ key: 'stalled', label: '工单已停滞，需优先处理', count: Number(stalled), tone: 'danger', drill: kpiDrill.stalledWorkorders })
+  }
+  const pendingAudit = pendingAuditOrders.value?.value
+  if (pendingAudit && Number(pendingAudit) > 0) {
+    items.push({ key: 'pending-audit', label: '订单待审核', count: Number(pendingAudit), tone: 'warning', drill: kpiDrill.pendingAuditOrders })
+  }
+  // 待派单（流程 Metro 数据：WAIT_DISPATCH 订单 + PENDING 工单）
+  const pendingDispatch = Math.max(
+    (overview.data.value?.orderStatusDist ?? []).filter((i) => i.status === 'WAIT_DISPATCH').reduce((s, i) => s + Number(i.count || 0), 0),
+    (overview.data.value?.workOrderStatusDist ?? []).filter((i) => i.status === 'PENDING').reduce((s, i) => s + Number(i.count || 0), 0)
+  )
+  if (pendingDispatch > 0) {
+    items.push({ key: 'pending-dispatch', label: '工单待派单', count: pendingDispatch, tone: 'primary', drill: () => drillTo('workorder', 'PENDING') })
+  }
+  if (canViewSla && slaList.value.length > 0) {
+    items.push({ key: 'sla-risk', label: '工单临近 SLA 到期', count: slaList.value.length, tone: 'warning', drill: () => drillTo('workorder') })
+  }
+  return items
+})
 </script>
 
 <template>
@@ -183,7 +243,7 @@ function openProcessNode(payload: { target: 'order' | 'workorder'; status: strin
 
       <!-- overview 失败：仅此区块降级 + 重试，不影响下方模块 -->
       <div v-if="overview.error.value" class="dash-error">
-        <el-icon :size="32" color="#f56c6c"><WarningFilled /></el-icon>
+        <el-icon :size="32" color="var(--el-color-danger)"><WarningFilled /></el-icon>
         <p class="dash-error__text">今日态势加载失败：{{ overview.error }}</p>
         <el-button type="primary" size="small" @click="overview.load()">重试</el-button>
       </div>
@@ -198,6 +258,8 @@ function openProcessNode(payload: { target: 'order' | 'workorder'; status: strin
             :value="runningWorkorders?.value ?? null"
             :unit="runningWorkorders?.unit || '个'"
             :loading="overview.loading.value"
+            to="/workorder/list"
+            @click="kpiDrill.runningWorkorders"
           />
         </div>
         <BBPMSKpiCard
@@ -209,6 +271,8 @@ function openProcessNode(payload: { target: 'order' | 'workorder'; status: strin
           :prev="todayOrders?.prevValue ?? null"
           :trend="todayOrders?.deltaRate ?? null"
           :loading="overview.loading.value"
+          to="/order/list"
+          @click="kpiDrill.todayOrders"
         />
         <BBPMSKpiCard
           tone="warning"
@@ -217,6 +281,8 @@ function openProcessNode(payload: { target: 'order' | 'workorder'; status: strin
           :value="pendingAuditOrders?.value ?? null"
           :unit="pendingAuditOrders?.unit || '单'"
           :loading="overview.loading.value"
+          to="/order/list"
+          @click="kpiDrill.pendingAuditOrders"
         />
         <BBPMSKpiCard
           tone="success"
@@ -227,6 +293,8 @@ function openProcessNode(payload: { target: 'order' | 'workorder'; status: strin
           :prev="todayFinishedWorkorders?.prevValue ?? null"
           :trend="todayFinishedWorkorders?.deltaRate ?? null"
           :loading="overview.loading.value"
+          to="/workorder/list"
+          @click="kpiDrill.todayFinishedWorkorders"
         />
         <BBPMSKpiCard
           tone="danger"
@@ -235,6 +303,8 @@ function openProcessNode(payload: { target: 'order' | 'workorder'; status: strin
           :value="stalledWorkorders?.value ?? null"
           :unit="stalledWorkorders?.unit || '个'"
           :loading="overview.loading.value"
+          to="/workorder/list"
+          @click="kpiDrill.stalledWorkorders"
         />
 
         <!-- 人员侧计数：counts 模块独立失败，单独降级；无权限则整体隐藏 -->
@@ -364,6 +434,31 @@ function openProcessNode(payload: { target: 'order' | 'workorder'; status: strin
       </div>
     </section>
 
+    <!-- ② 待办中心：现在最需要处理什么（可点击钻取） -->
+    <section class="dash-section">
+      <h3 class="section-title">待办中心</h3>
+      <div v-if="overview.loading.value && !todoItems.length" class="todo-loading">
+        <el-skeleton :rows="2" animated />
+      </div>
+      <div v-else-if="todoItems.length" class="todo-list">
+        <button
+          v-for="item in todoItems"
+          :key="item.key"
+          class="todo-item"
+          :class="`todo-item--${item.tone}`"
+          @click="item.drill"
+        >
+          <span class="todo-item__dot" />
+          <span class="todo-item__label">{{ item.label }}</span>
+          <span class="todo-item__count">{{ item.count }}</span>
+          <span class="todo-item__arrow">→</span>
+        </button>
+      </div>
+      <div v-else class="todo-empty">
+        <el-empty description="暂无待办，一切正常" :image-size="56" />
+      </div>
+    </section>
+
     <!-- ③ 待办与风险 -->
     <section class="dash-section">
       <h3 class="section-title">待办与风险</h3>
@@ -451,12 +546,12 @@ function openProcessNode(payload: { target: 'order' | 'workorder'; status: strin
     margin: 0;
     font-size: 20px;
     font-weight: 700;
-    color: #303133;
+    color: var(--el-text-color-primary);
   }
 
   &__time {
     font-size: 12px;
-    color: #909399;
+    color: var(--el-text-color-secondary);
   }
 
   &__actions {
@@ -497,7 +592,7 @@ function openProcessNode(payload: { target: 'order' | 'workorder'; status: strin
 
   &__counts-error-text {
     font-size: 13px;
-    color: #909399;
+    color: var(--el-text-color-secondary);
   }
 }
 
@@ -515,7 +610,7 @@ function openProcessNode(payload: { target: 'order' | 'workorder'; status: strin
   &__text {
     margin: 0;
     font-size: 13px;
-    color: #909399;
+    color: var(--el-text-color-secondary);
   }
 }
 
@@ -526,6 +621,68 @@ function openProcessNode(payload: { target: 'order' | 'workorder'; status: strin
       height: 320px;
     }
   }
+}
+
+// —— ② 待办中心 ——
+.todo-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+
+  .todo-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    background: var(--el-bg-color, #fff);
+    border: 1px solid var(--el-border-color-lighter, #ebeef5);
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    font: inherit;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transform: translateY(-1px);
+    }
+
+    &__dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    &__label {
+      flex: 1;
+      font-size: 14px;
+      color: var(--el-text-color-primary, #303133);
+    }
+
+    &__count {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--el-text-color-primary, #303133);
+      font-variant-numeric: tabular-nums;
+    }
+
+    &__arrow {
+      color: var(--el-text-color-placeholder, #c0c4cc);
+      font-size: 14px;
+    }
+
+    &--danger .todo-item__dot { background: var(--el-color-danger, #f56c6c); }
+    &--warning .todo-item__dot { background: var(--el-color-warning, #e6a23c); }
+    &--primary .todo-item__dot { background: var(--el-color-primary, #409eff); }
+  }
+}
+
+.todo-empty {
+  background: var(--el-bg-color, #fff);
+  border: 1px dashed var(--el-border-color-lighter, #ebeef5);
+  border-radius: 8px;
+  padding: 12px;
 }
 
 // —— ③ 待办与风险列表 ——
@@ -549,7 +706,7 @@ function openProcessNode(payload: { target: 'order' | 'workorder'; status: strin
     justify-content: space-between;
     gap: 12px;
     padding: 10px 4px;
-    border-bottom: 1px solid #f0f2f5;
+    border-bottom: 1px solid var(--el-border-color-lighter);
 
     &:last-child {
       border-bottom: none;
@@ -566,12 +723,12 @@ function openProcessNode(payload: { target: 'order' | 'workorder'; status: strin
   &__no {
     font-size: 13px;
     font-weight: 600;
-    color: #303133;
+    color: var(--el-text-color-primary);
   }
 
   &__addr {
     font-size: 12px;
-    color: #909399;
+    color: var(--el-text-color-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -587,7 +744,7 @@ function openProcessNode(payload: { target: 'order' | 'workorder'; status: strin
 
   &__time {
     font-size: 12px;
-    color: #c0c4cc;
+    color: var(--el-text-color-placeholder);
   }
 }
 

@@ -10,7 +10,7 @@
       <el-tab-pane :label="`即将超时 (${expiring.length})`" name="expiring">
         <BBPMSTable :data="expiring" :columns="columns" :loading="loading">
           <template #status="{ row }">
-            <BBPMSStatusTag :status="row.status" :type-map="STATUS_MAP" />
+            <BBPMSStatusTag :status="row.status" />
           </template>
           <template #action="{ row }">
             <PermissionButton v-hasPermi="'workorder:reassign'">
@@ -23,7 +23,7 @@
       <el-tab-pane :label="`已停滞 (${stalled.length})`" name="stalled">
         <BBPMSTable :data="stalled" :columns="columns" :loading="loading">
           <template #status="{ row }">
-            <BBPMSStatusTag :status="row.status" :type-map="STATUS_MAP" />
+            <BBPMSStatusTag :status="row.status" />
           </template>
           <template #action="{ row }">
             <PermissionButton v-hasPermi="'workorder:resume'">
@@ -42,7 +42,7 @@
       <el-tab-pane :label="`已自动取消 (${cancelled.length})`" name="cancelled">
         <BBPMSTable :data="cancelled" :columns="columns" :loading="loading">
           <template #status="{ row }">
-            <BBPMSStatusTag :status="row.status" :type-map="STATUS_MAP" />
+            <BBPMSStatusTag :status="row.status" />
           </template>
         </BBPMSTable>
       </el-tab-pane>
@@ -82,17 +82,6 @@ import PageHeader from '@/components/PageHeader.vue'
 
 defineOptions({ name: 'SlaMonitor' })
 
-const STATUS_MAP: Record<string, any> = {
-  DISPATCHED: 'primary',
-  ACCEPTED: 'warning',
-  IN_PROGRESS: 'success',
-  STALLED: 'warning',
-  COMPLETED: 'success',
-  FAILED: 'danger',
-  CANCELLED: 'info',
-  AUTO_CANCELLED: 'danger',
-  REASSIGNING: 'primary'
-}
 
 const activeTab = ref('expiring')
 const loading = ref(false)
@@ -161,7 +150,7 @@ async function onReassignSubmit() {
 }
 
 async function onResume(row: WorkOrderVO) {
-  try { await ElMessageBox.confirm(`确认恢复工单 ${row.workNo} ?`, '确认') } catch { return }
+  try { await ElMessageBox.confirm(`确认恢复工单 ${row.workNo}？`, '确认') } catch { return }
   try { await resumeWorkOrder(row.id); ElMessage.success('已恢复'); await loadAll() } catch (e: any) { ElMessage.error(e?.message || '失败') }
 }
 

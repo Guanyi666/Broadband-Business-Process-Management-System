@@ -35,6 +35,14 @@ export function getWorkorderDetail(id: number | string) {
   })
 }
 
+/** 按订单查询其关联工单（订单详情「关联工单」卡片用；后端 /work-orders/by-order/{orderId}） */
+export function getWorkorderByOrder(orderId: number | string) {
+  return request<{ id: number; workNo: string; status: string; installerName?: string; scheduledAt?: string } | null>({
+    url: `/work-orders/by-order/${orderId}`,
+    method: 'GET'
+  })
+}
+
 export function acceptWorkorder(id: number | string) {
   return request<void>({ url: `/work-orders/${id}/accept`, method: 'POST' })
 }

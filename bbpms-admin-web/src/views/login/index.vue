@@ -240,7 +240,7 @@ async function onLogin() {
   z-index: 1;
   width: 420px;
   max-width: 100%;
-  background: #fff;
+  background: var(--el-bg-color);
   border-radius: 12px;
   padding: 32px 36px 24px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
@@ -262,10 +262,10 @@ async function onLogin() {
   &-name {
     font-size: 22px;
     font-weight: 700;
-    color: #303133;
+    color: var(--el-text-color-primary);
   }
   &-sub {
-    color: #909399;
+    color: var(--el-text-color-secondary);
     font-size: 13px;
     margin-top: 4px;
   }
@@ -281,9 +281,9 @@ async function onLogin() {
     flex: 0 0 120px; // 不被输入框挤压
     width: 120px;
     height: 45px;
-    border: 1px solid #dcdfe6;
+    border: 1px solid var(--el-border-color);
     border-radius: 4px;
-    background: #f5f7fa;
+    background: var(--el-fill-color-light);
     overflow: hidden;
     cursor: pointer;
     display: flex;
@@ -331,7 +331,7 @@ async function onLogin() {
 
     .captcha-placeholder {
       font-size: 12px;
-      color: #909399;
+      color: var(--el-text-color-secondary);
     }
   }
 }
@@ -352,7 +352,7 @@ async function onLogin() {
 .footer {
   text-align: center;
   font-size: 12px;
-  color: #c0c4cc;
+  color: var(--el-text-color-disabled);
   margin-top: 16px;
 }
 </style>

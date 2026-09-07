@@ -16,7 +16,7 @@
         <el-table-column prop="installerName" label="姓名" />
         <el-table-column label="签到时间" width="180">
           <template #default="{ row }">
-            <BBPMSStatusTag :status="row.status" :type-map="STATUS_MAP" />
+            <BBPMSStatusTag :status="row.status" />
             <span style="margin-left: 8px">{{ formatTime(row.clockInAt) }}</span>
           </template>
         </el-table-column>
@@ -70,7 +70,7 @@
         <el-table-column prop="workDate" label="日期" width="120" />
         <el-table-column label="状态">
           <template #default="{ row }">
-            <BBPMSStatusTag :status="row.status" :type-map="STATUS_MAP" />
+            <BBPMSStatusTag :status="row.status" />
           </template>
         </el-table-column>
         <el-table-column label="签到">
@@ -104,12 +104,6 @@ import PageHeader from '@/components/PageHeader.vue'
 
 defineOptions({ name: 'AttendanceReport' })
 
-const STATUS_MAP: Record<string, any> = {
-  ON_DUTY: 'success',
-  ON_BREAK: 'warning',
-  OFF_DUTY: 'info',
-  AUTO_OFF: 'danger'
-}
 
 const onDuty = ref<AttendanceVO[]>([])
 const month = ref<string>(new Date().toISOString().substring(0, 7))

@@ -87,7 +87,7 @@ async function onPresign() {
 
 <style scoped lang="scss">
 .presign-result {
-  background: #f5f7fa;
+  background: var(--el-fill-color-light);
   border-radius: $radius-base;
   padding: 12px;
   font-size: 12px;

@@ -139,7 +139,7 @@ defineExpose({
   &__bar {
     flex: 1;
     border-radius: 4px;
-    background: linear-gradient(90deg, #f0f2f5 25%, #e6e8eb 37%, #f0f2f5 63%);
+    background: linear-gradient(90deg, var(--el-fill-color) 25%, var(--el-border-color-lighter) 37%, var(--el-fill-color) 63%);
     background-size: 400% 100%;
     animation: bbpms-chart-shimmer 1.2s ease infinite;
   }
@@ -148,7 +148,7 @@ defineExpose({
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #909399;
+    color: var(--el-text-color-secondary);
   }
 
   &__empty-text {

@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { useAuthStore } from '@/stores/auth'
 import { useFullscreen } from '@vueuse/core'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import SidebarItem from './components/SidebarItem.vue'
+import type { MenuNode } from '@/types/auth'
+import type { TagItem } from '@/stores/app'
 import {
   Fold,
   Expand,
@@ -30,39 +32,146 @@ const breadcrumbs = computed(() =>
 
 const activeMenu = computed(() => route.path)
 
+// =============================================================================
+// 动态菜单（Phase 3：后端按角色下发菜单，前端决定文案/图标）
+// -----------------------------------------------------------------------------
+// 后端 /api/auth/menus 返回该用户可访问的 sys_menu 树（type1目录/type2菜单/type3按钮）。
+// sys_menu.path 与前端 allMenus.path 一一对应，但 name 为英文、icon 为旧体系，
+// 因此「后端节点集合」决定显示哪些菜单，「前端 allMenus 元数据」决定显示什么。
+// 双层一致性校验：前端元数据仍必须通过 perms/roles 校验（后端不可用时兜底）。
+// 后端不可用 / 未返回菜单时，回退到本地的 perms/roles 静态过滤，功能不降级。
+// =============================================================================
+
 /**
- * 权限过滤后的可见菜单（P0-1）
- * - 节点标注 perms/roles 与后端 sys_menu.perms、角色一致；
- * - 叶子节点需通过 auth.hasPermission / 角色校验；
- * - 分组节点仅在至少存在一个可见子节点时展示。
+ * 从后端菜单树中收集「已授权 path」集合。
+ * - 目录 path 为绝对（'/order'），叶子 path 相对（'list'/'create'/…）→ 拼接父路径规范化
+ * - 'detail/:id' 等带参数的隐藏详情页不参与菜单匹配，直接过滤
  */
-function menuVisible(item: MenuConfig): boolean {
+function collectBackendPaths(nodes: MenuNode[] | null | undefined, parentPath = '', acc: Set<string> = new Set()): Set<string> {
+  if (!nodes || !nodes.length) return acc
+  for (const n of nodes) {
+    if (n.path) {
+      // type 1=目录(绝对 path) 2=菜单(通常相对) —— 统一规范化
+      const p = n.path.startsWith('/') ? n.path : (parentPath ? `${parentPath.replace(/\/$/, '')}/${n.path}` : n.path)
+      // 排除带 ':param' 的详情路径（不参与菜单匹配）
+      if (!p.includes(':')) acc.add(p)
+      collectBackendPaths(n.children, p, acc)
+    } else {
+      // 无 path 的按钮级节点（type=3）只贡献 perms，不贡献 path
+      collectBackendPaths(n.children, parentPath, acc)
+    }
+  }
+  return acc
+}
+
+/** 节点自身权限校验（perms / roles 二者任一命中即通过） */
+function nodeAllowed(item: MenuConfig): boolean {
   if (item.roles && item.roles.length) {
     if (!item.roles.some((r) => auth.roles.includes(r))) return false
+    return true // 角色命中即放行，无需再查 perms
   }
   if (item.perms) {
     const list = Array.isArray(item.perms) ? item.perms : [item.perms]
-    if (!list.some((p) => auth.hasPermission(p))) return false
+    return list.some((p) => auth.hasPermission(p))
   }
   return true
 }
 
-function filterMenus(items: MenuConfig[]): MenuConfig[] {
+/** 后端已授权 path 过滤前端元数据（递归） */
+function filterByBackend(items: MenuConfig[], backendPaths: Set<string>, backendPerms: Set<string>): MenuConfig[] {
+  const out: MenuConfig[] = []
+  for (const item of items) {
+    const childOk = item.children && item.children.length
+      ? filterByBackend(item.children, backendPaths, backendPerms)
+      : undefined
+
+    // 命中后端授权（path 或 perm 任一命中，兼容 button 级 perm）
+    const hitBackend =
+      backendPaths.has(item.path) ||
+      backendPerms.has(String(item.perms || '')) ||
+      (Array.isArray(item.perms) && item.perms.some((p) => backendPerms.has(p)))
+
+    if (childOk && childOk.length) {
+      // 目录：有可见子节点即展示（目录自身无需命中后端）
+      out.push({ ...item, children: childOk })
+    } else if (childOk === undefined) {
+      // 叶子：必须命中后端授权
+      if (hitBackend) out.push(item)
+    }
+  }
+  return out
+}
+
+/** 静态权限过滤（后端菜单不可用时的兜底） */
+function filterByLocal(items: MenuConfig[]): MenuConfig[] {
   const out: MenuConfig[] = []
   for (const item of items) {
     if (item.children && item.children.length) {
-      const children = filterMenus(item.children)
-      if (children.length && menuVisible(item)) {
-        out.push({ ...item, children })
-      }
-    } else if (menuVisible(item)) {
+      const children = filterByLocal(item.children)
+      if (children.length && nodeAllowed(item)) out.push({ ...item, children })
+    } else if (nodeAllowed(item)) {
       out.push(item)
     }
   }
   return out
 }
 
-const visibleMenus = computed(() => filterMenus(allMenus))
+const menusReady = ref(false)
+
+const dynamicMenus = computed(() => {
+  const backendPaths = collectBackendPaths(auth.menus as MenuNode[])
+  if (!backendPaths.size) return filterByLocal(allMenus)
+  const backendPerms = new Set<string>(auth.permissions)
+  const fromBackend = filterByBackend(allMenus, backendPaths, backendPerms)
+  return fromBackend.length ? fromBackend : filterByLocal(allMenus)
+})
+
+// 双保险：后端空结果时也用本地过滤推导一次（避免误判）
+const visibleMenus = computed(() => {
+  const backendPaths = collectBackendPaths(auth.menus as MenuNode[])
+  if (backendPaths.size) return dynamicMenus.value
+  return filterByLocal(allMenus)
+})
+
+async function loadMenus() {
+  try {
+    await auth.fetchMenus()
+  } catch (e) {
+    // 后端菜单接口失败不阻断进入系统：回退到本地静态权限过滤
+    console.warn('[AdminLayout] fetchMenus failed, fallback to local permission filter', e)
+  } finally {
+    menusReady.value = true
+  }
+}
+
+onMounted(() => {
+  loadMenus()
+  setupResponsive()
+})
+
+// =============================================================================
+// 响应式：<1024px 自动折叠侧边栏（宽屏恢复时不自动展开，尊重用户手动选择）
+// -----------------------------------------------------------------------------
+let mql: MediaQueryList | null = null
+let mqlHandler: ((e: MediaQueryListEvent) => void) | null = null
+
+function setupResponsive() {
+  mql = window.matchMedia('(max-width: 1023px)')
+  mqlHandler = (e: MediaQueryListEvent) => {
+    if (e.matches && !app.sidebarCollapsed) {
+      app.sidebarCollapsed = true
+    }
+  }
+  mql.addEventListener('change', mqlHandler)
+  // 初始化时若已处于小屏（如浏览器窗口较小打开页面），立即折叠
+  if (mql.matches && !app.sidebarCollapsed) {
+    app.sidebarCollapsed = true
+  }
+}
+
+onBeforeUnmount(() => {
+  mql?.removeEventListener('change', mqlHandler as EventListener)
+})
 
 async function onMenuSelect(index: string) {
   if (route.path === index) return
@@ -76,6 +185,10 @@ async function onMenuSelect(index: string) {
 
 function goProfile() {
   router.push('/profile')
+}
+
+function goNotify() {
+  router.push('/notify/record')
 }
 
 async function onLogout() {
@@ -111,6 +224,55 @@ function closeTag(v: { path: string }) {
   if (route.path === v.path) {
     const last = visitedViews.value[visitedViews.value.length - 1]
     router.push(last?.path || '/dashboard')
+  }
+}
+
+// =============================================================================
+// Tabs：业务标题 + 右键关闭菜单
+// -----------------------------------------------------------------------------
+// 详情页复用同一 Tab（store 按 name 去重），标题带业务标识：
+//   订单详情 → 订单 BBD...001（不再出现「订单详情×N」）
+// 详情页通过 route.query.__title 传入业务标题（由各详情页在数据加载后设置）
+// =============================================================================
+
+/** Tab 标题：优先页面自报的业务标题（query.__title），否则取路由 meta */
+function tagTitle(v: { path: string; title: string; name?: string }): string {
+  if (route.path === v.path && route.query.__title) return route.query.__title as string
+  return v.title
+}
+
+interface TagContext {
+  visible: boolean
+  x: number
+  y: number
+  current: TagItem
+}
+const tagContext = ref<TagContext | null>(null)
+
+function openTagContext(v: TagItem, e: MouseEvent) {
+  tagContext.value = { visible: true, x: e.clientX, y: e.clientY, current: v }
+}
+
+function hideTagContext() {
+  tagContext.value = null
+}
+
+async function handleTagCommand(command: string) {
+  const ctx = tagContext.value
+  tagContext.value = null
+  if (!ctx) return
+  const current = ctx.current
+  if (command === 'close-current') {
+    closeTag(current)
+  } else if (command === 'close-others') {
+    app.removeOtherViews(current.path)
+    if (!visitedViews.value.some((v) => v.path === route.path)) {
+      router.push(current.path)
+    }
+  } else if (command === 'close-all') {
+    app.removeAllViews()
+    const remaining = visitedViews.value.find((v) => v.affix)
+    if (!remaining) router.push('/dashboard')
   }
 }
 
@@ -162,10 +324,8 @@ const userInitial = computed(() => {
               <component :is="isFullscreen ? Aim : FullScreen" />
             </el-icon>
           </el-tooltip>
-          <el-tooltip content="通知">
-            <el-badge :value="3" class="topbar-icon-badge">
-              <el-icon class="topbar-icon"><Bell /></el-icon>
-            </el-badge>
+          <el-tooltip content="通知记录">
+            <el-icon class="topbar-icon" @click="goNotify"><Bell /></el-icon>
           </el-tooltip>
           <el-dropdown>
             <div class="user-area">
@@ -182,18 +342,33 @@ const userInitial = computed(() => {
         </div>
       </el-header>
 
-      <div class="tags-view">
+      <div class="tags-view" @click.self="hideTagContext">
         <el-tag
-          v-for="v in visitedViews"
+          v-for="(v, i) in visitedViews"
           :key="v.path"
           :closable="!v.affix"
           :type="v.path === route.path ? 'primary' : 'info'"
           effect="light"
+          class="tags-view__item"
           @click="router.push(v.path)"
           @close="closeTag(v)"
+          @contextmenu.prevent="openTagContext(v, $event)"
         >
-          {{ v.title }}
+          {{ tagTitle(v) }}
         </el-tag>
+        <!-- 自绘右键菜单（fixed 定位） -->
+        <teleport to="body">
+          <div
+            v-if="tagContext"
+            class="tag-context-menu"
+            :style="{ left: tagContext.x + 'px', top: tagContext.y + 'px' }"
+            @click.stop
+          >
+            <div class="tag-context-menu__item" :class="{ 'is-disabled': tagContext.current.affix }" @click="handleTagCommand('close-current')">关闭当前</div>
+            <div class="tag-context-menu__item" @click="handleTagCommand('close-others')">关闭其他</div>
+            <div class="tag-context-menu__item" @click="handleTagCommand('close-all')">关闭全部</div>
+          </div>
+        </teleport>
       </div>
 
       <el-main class="main-content">
@@ -225,6 +400,13 @@ export interface MenuConfig {
 /** 全量菜单（带权限标注，展示前经 filterMenus 过滤） */
 export const allMenus: MenuConfig[] = [
   { path: '/dashboard', title: '数据看板', icon: 'DataLine', perms: 'dashboard:view' },
+  {
+    path: '/customer-portal',
+    title: '客户自助业务',
+    icon: 'Service',
+    perms: 'customer-portal:admin',
+    children: [{ path: '/customer-portal/operations', title: '业务处理台', icon: 'Service', perms: 'customer-portal:admin' }]
+  },
   {
     path: '/customer',
     title: '客户管理',
@@ -357,7 +539,7 @@ export const allMenus: MenuConfig[] = [
 
 .topbar {
   height: $header-height;
-  background: #fff;
+  background: var(--el-bg-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -392,16 +574,67 @@ export const allMenus: MenuConfig[] = [
   }
 }
 
+// —— 响应式：<1024px 折叠侧边栏由 JS matchMedia 控制；这里做顶栏细节适配 ——
+@media (max-width: 1023px) {
+  .topbar {
+    padding: 0 12px;
+    .topbar-left {
+      gap: 10px;
+      .topbar-breadcrumb {
+        :deep(.el-breadcrumb__inner) {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 140px;
+        }
+      }
+    }
+    .topbar-right {
+      gap: 10px;
+      .username {
+        display: none; // 小屏隐藏用户名，保留头像
+      }
+    }
+  }
+  .main-content {
+    padding: 12px;
+    overflow-x: auto; // 页面内容横向溢出时整体可滚动
+  }
+}
+
 .tags-view {
   height: $tags-view-height;
-  background: #fff;
-  border-bottom: 1px solid #e6e6e6;
+  background: var(--el-bg-color);
+  border-bottom: 1px solid var(--el-border-color-lighter);
   padding: 4px 12px;
   display: flex;
   align-items: center;
   gap: 6px;
   overflow-x: auto;
   white-space: nowrap;
+  .tags-view__item {
+    cursor: pointer;
+    user-select: none;
+  }
+}
+
+/* Tab 右键菜单（fixed 自绘） */
+.tag-context-menu {
+  position: fixed;
+  z-index: 3000;
+  min-width: 120px;
+  background: var(--el-bg-color);
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  padding: 4px 0;
+  &__item {
+    padding: 8px 16px;
+    font-size: 13px;
+    color: var(--el-text-color-primary);
+    cursor: pointer;
+    &:hover { background: var(--el-color-primary-light-9); color: var(--el-color-primary); }
+    &.is-disabled { color: var(--el-text-color-disabled); cursor: not-allowed; &:hover { background: transparent; color: var(--el-text-color-disabled); } }
+  }
 }
 
 .main-content {

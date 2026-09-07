@@ -54,7 +54,7 @@ const state = computed<PanelState>(() => {
 
     <div class="bbpms-panel__body">
       <div v-if="state === 'error'" class="bbpms-panel__state">
-        <el-icon :size="32" color="#f56c6c"><WarningFilled /></el-icon>
+        <el-icon :size="32" color="var(--el-color-danger)"><WarningFilled /></el-icon>
         <p class="bbpms-panel__state-title">加载失败</p>
         <p class="bbpms-panel__state-desc">{{ error }}</p>
         <el-button type="primary" size="small" @click="emit('retry')">{{ retryText }}</el-button>
@@ -163,7 +163,7 @@ const state = computed<PanelState>(() => {
     display: block;
     height: 14px;
     border-radius: 4px;
-    background: linear-gradient(90deg, #f0f2f5 25%, #e6e8eb 37%, #f0f2f5 63%);
+    background: linear-gradient(90deg, var(--el-fill-color) 25%, var(--el-border-color-lighter) 37%, var(--el-fill-color) 63%);
     background-size: 400% 100%;
     animation: panel-shimmer 1.2s ease infinite;
   }

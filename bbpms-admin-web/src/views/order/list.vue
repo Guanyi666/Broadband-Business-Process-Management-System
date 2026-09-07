@@ -3,6 +3,7 @@ import { ref, onMounted, onActivated, reactive, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { pageOrders, cancelOrder, resubmitOrder } from '@/api/order'
+import { getOverview } from '@/api/dashboard'
 import type { OrderItem, OrderStatus } from '@/types/order'
 import { formatDate } from '@/utils/format'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -17,6 +18,45 @@ const loading = ref(false)
 const list = ref<OrderItem[]>([])
 const total = ref(0)
 const actionLoading = ref('')
+
+// ---------- 统计摘要（复用看板 overview 状态分布，存量全量口径） ----------
+const summary = ref<Record<string, number>>({})
+const summaryLoading = ref(false)
+
+async function loadSummary() {
+  if (!auth.hasPermission('dashboard:view')) return // 无看板权限则不显示统计
+  summaryLoading.value = true
+  try {
+    const data = await getOverview(7)
+    const dist: Record<string, number> = { ALL: 0 }
+    for (const item of data.orderStatusDist ?? []) {
+      dist[item.status] = Number(item.count || 0)
+      dist.ALL += Number(item.count || 0)
+    }
+    summary.value = dist
+  } catch {
+    // 统计摘要失败静默降级（不阻断列表主功能）
+    summary.value = {}
+  } finally {
+    summaryLoading.value = false
+  }
+}
+
+function summaryCount(key: string): number | null {
+  return summaryLoading.value ? null : summary.value[key] ?? null
+}
+
+const summaryTabs: { key: string; label: string }[] = [
+  { key: 'ALL', label: '全部' },
+  { key: 'CREATED', label: '待审核' },
+  { key: 'AUDITED', label: '已审核' },
+  { key: 'WAIT_DISPATCH', label: '待派单' },
+  { key: 'DISPATCHED', label: '已派单' },
+  { key: 'INSTALLING', label: '安装中' },
+  { key: 'FINISHED', label: '已完成' },
+  { key: 'REJECTED', label: '已驳回' },
+  { key: 'CANCELLED', label: '已取消' }
+]
 
 const validStatuses: OrderStatus[] = ['CREATED', 'REJECTED', 'AUDITED', 'WAIT_DISPATCH', 'DISPATCHED', 'INSTALLING', 'FINISHED', 'CLOSED', 'CANCELLED']
 
@@ -33,18 +73,6 @@ const query = reactive({
   keyword: '',
   dateRange: [] as string[]
 })
-
-const statusOptions: { label: string; value: OrderStatus }[] = [
-  { label: '待审核', value: 'CREATED' },
-  { label: '已驳回', value: 'REJECTED' },
-  { label: '已审核', value: 'AUDITED' },
-  { label: '待派单', value: 'WAIT_DISPATCH' },
-  { label: '已派单', value: 'DISPATCHED' },
-  { label: '安装中', value: 'INSTALLING' },
-  { label: '已完成', value: 'FINISHED' },
-  { label: '已归档', value: 'CLOSED' },
-  { label: '已取消', value: 'CANCELLED' }
-]
 
 /** 套餐名称中文化兜底（后端已映射；此处兼容旧接口/缓存数据） */
 const packageNameZh = (row: OrderItem): string => {
@@ -164,7 +192,10 @@ function onRowClick(row: OrderItem) {
   router.push(`/order/detail/${row.id}`)
 }
 
-onMounted(fetchData)
+onMounted(() => {
+  fetchData()
+  loadSummary()
+})
 onActivated(fetchData)
 </script>
 
@@ -180,8 +211,18 @@ onActivated(fetchData)
 
     <div class="app-card">
         <el-tabs v-model="activeTab" class="mb-16">
-          <el-tab-pane label="全部" name="ALL" />
-          <el-tab-pane v-for="item in statusOptions" :key="item.value" :label="item.label" :name="item.value" />
+          <el-tab-pane
+            v-for="item in summaryTabs"
+            :key="item.key"
+            :name="item.key"
+          >
+            <template #label>
+              <span class="summary-tab">
+                {{ item.label }}
+                <span v-if="summaryCount(item.key) !== null" class="summary-tab__count">{{ summaryCount(item.key) }}</span>
+              </span>
+            </template>
+          </el-tab-pane>
         </el-tabs>
 
       <div class="page-toolbar">
@@ -245,3 +286,32 @@ onActivated(fetchData)
     </div>
   </div>
 </template>
+
+<style scoped lang="scss">
+// 统计摘要 Tab：标签 + 计数徽标
+.summary-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  &__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background: var(--el-fill-color-light, #f5f7fa);
+    color: var(--el-text-color-secondary, #909399);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  // 激活态计数高亮
+  .is-active &__count {
+    background: var(--el-color-primary-light-9, #ecf5ff);
+    color: var(--el-color-primary, #409eff);
+  }
+}
+</style>

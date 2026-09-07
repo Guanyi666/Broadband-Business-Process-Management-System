@@ -1,27 +1,167 @@
-// theme color tokens
-$primary-color: #409eff;
-$success-color: #67c23a;
-$warning-color: #e6a23c;
-$danger-color: #f56c6c;
-$info-color: #909399;
+// =============================================================================
+// BBPMS Design Tokens (SCSS)
+// -----------------------------------------------------------------------------
+// 编译期变量，供 .vue 的 <style lang="scss"> 使用（vite additionalData 已全局注入）
+//
+// 约定：
+//   1. 本文件是「色值唯一定义处」，业务样式禁止再写死 #xxx —— 一律引用 token
+//   2. 运行时可切换的主题变量见 theme.scss（--bbpms-* / --el-* CSS 变量）
+//   3. 文件末尾「旧变量别名」区保留历史命名，确保既有页面零破坏
+// =============================================================================
 
+// -----------------------------------------------------------------------------
+// 1. 品牌与语义色
+// -----------------------------------------------------------------------------
+$color-primary: #409eff;
+$color-success: #67c23a;
+$color-warning: #e6a23c;
+$color-danger: #f56c6c;
+$color-error: #f56c6c;
+$color-info: #909399;
+
+// 业务语义色（与 BBPMSStatusTag 状态颜色字典一一对应）
+$color-processing: #409eff; // 进行中：已派单 / 已接单 / 处理中
+$color-pending: #e6a23c; // 待处理：待审核 / 待派单 / 待接单
+$color-done: #67c23a; // 已完成：成功 / 已完成 / 正常
+$color-exception: #f56c6c; // 异常：已驳回 / 停滞 / 失败 / 超时
+$color-neutral: #909399; // 中性：已取消 / 已归档 / 未知
+
+// -----------------------------------------------------------------------------
+// 2. 中性色与层级（背景 / 表面 / 边框 / 填充）
+// -----------------------------------------------------------------------------
+$bg-page: #f0f2f5; // 内容区底色
+$bg-base: #ffffff; // 卡片、面板、表格表面
+$bg-surface: #ffffff; // 浮层表面（下拉、弹窗）
+$bg-hover: #f5f7fa; // 行 / 项 hover
+$bg-active: #ecf5ff; // 选中态
+$bg-disabled: #f5f7fa; // 禁用底色
+$bg-mask: rgba(0, 0, 0, 0.5); // 遮罩
+
+$border-base: #dcdfe6; // 常规边框
+$border-light: #e4e7ed; // 弱化边框
+$border-lighter: #ebeef5; // 分割线
+$border-extra-light: #f2f6fc;
+$divider: #ebeef5;
+
+$fill-base: #f0f2f5;
+$fill-light: #f5f7fa;
+$fill-lighter: #fafafa;
+
+// -----------------------------------------------------------------------------
+// 3. 文本色
+// -----------------------------------------------------------------------------
+$text-primary: #303133; // 标题、正文
+$text-regular: #606266; // 次要正文
+$text-secondary: #909399; // 辅助说明、时间
+$text-placeholder: #a8abb2; // 占位符
+$text-disabled: #c0c4cc; // 禁用
+$text-inverse: #ffffff; // 深色底上的文字
+
+// -----------------------------------------------------------------------------
+// 4. 字体
+// -----------------------------------------------------------------------------
+$font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+  Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+$font-family-number: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+$font-size-xs: 12px; // 辅助、角标
+$font-size-sm: 13px; // 表格内容
+$font-size-base: 14px; // 正文（默认）
+$font-size-md: 16px; // 小标题
+$font-size-lg: 18px; // 卡片数值
+$font-size-xl: 20px; // 页面标题
+$font-size-xxl: 24px; // 大屏 KPI
+
+$line-height-tight: 1.3; // 标题
+$line-height-base: 1.5; // 正文
+
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// -----------------------------------------------------------------------------
+// 5. 间距（4pt 基准）
+// -----------------------------------------------------------------------------
+$spacing-0: 0;
+$spacing-1: 4px;
+$spacing-2: 8px;
+$spacing-3: 12px;
+$spacing-4: 16px;
+$spacing-5: 20px;
+$spacing-6: 24px;
+$spacing-8: 32px;
+$spacing-10: 40px;
+
+// -----------------------------------------------------------------------------
+// 6. 圆角
+// -----------------------------------------------------------------------------
+$radius-sm: 2px;
+$radius-base: 4px;
+$radius-md: 6px;
+$radius-lg: 8px;
+$radius-xl: 12px;
+$radius-pill: 999px;
+$radius-circle: 50%;
+
+// -----------------------------------------------------------------------------
+// 7. 阴影（三级 elevation）
+// -----------------------------------------------------------------------------
+$shadow-1: 0 1px 3px rgba(0, 0, 0, 0.06); // 静态卡片
+$shadow-2: 0 2px 8px rgba(0, 0, 0, 0.08); // hover 卡片
+$shadow-3: 0 8px 24px rgba(31, 45, 61, 0.12); // 浮层：下拉 / 弹窗
+$shadow-base: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
+$shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+
+// -----------------------------------------------------------------------------
+// 8. 动效
+// -----------------------------------------------------------------------------
+$duration-fast: 150ms; // hover / 颜色过渡
+$duration-base: 250ms; // 展开收起
+$duration-slow: 350ms; // Drawer / Dialog
+$ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+$ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+// -----------------------------------------------------------------------------
+// 9. 层级
+// -----------------------------------------------------------------------------
+$z-dropdown: 1000;
+$z-sticky: 1020;
+$z-drawer: 2000;
+$z-dialog: 2000;
+$z-message: 3000;
+
+// -----------------------------------------------------------------------------
+// 10. 布局尺寸
+// -----------------------------------------------------------------------------
+$header-height: 56px;
+$tags-view-height: 34px;
+$breadcrumb-height: 40px;
+$sidebar-width: 220px;
+$sidebar-collapse-width: 64px;
+$content-bg: #f0f2f5;
+
+// -----------------------------------------------------------------------------
+// 11. 侧边栏（暗色导航）
+// -----------------------------------------------------------------------------
 $sidebar-bg: #001529;
 $sidebar-text: #bfcbd9;
 $sidebar-active-bg: #1890ff;
 $sidebar-active-text: #ffffff;
-$sidebar-width: 220px;
-$sidebar-collapse-width: 64px;
 
-$header-height: 56px;
-$tags-view-height: 34px;
-$breadcrumb-height: 40px;
+// -----------------------------------------------------------------------------
+// 12. 断点
+// -----------------------------------------------------------------------------
+$breakpoint-sm: 768px;
+$breakpoint-md: 1024px;
+$breakpoint-lg: 1280px;
+$breakpoint-xl: 1440px;
 
-$content-bg: #f0f2f5;
-
-$font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
-  Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-$font-size-base: 14px;
-
-$radius-base: 4px;
-$shadow-base: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
-$shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+// =============================================================================
+// 旧变量别名（向后兼容，既有页面仍在用；新代码请勿使用）
+// =============================================================================
+$primary-color: $color-primary;
+$success-color: $color-success;
+$warning-color: $color-warning;
+$danger-color: $color-danger;
+$info-color: $color-info;

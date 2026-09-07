@@ -53,7 +53,7 @@ onMounted(fetchData)
         <el-table-column prop="username" label="用户名" width="120" />
         <el-table-column prop="phone" label="手机号" width="130" />
         <el-table-column label="状态" width="100">
-          <template #default="{ row }"><BBPMSStatusTag :status="row.status" :label="row.status" /></template>
+          <template #default="{ row }"><BBPMSStatusTag :status="row.status" /></template>
         </el-table-column>
         <el-table-column prop="workload" label="当前负载" width="100" />
         <el-table-column prop="rating" label="评分" width="100" />

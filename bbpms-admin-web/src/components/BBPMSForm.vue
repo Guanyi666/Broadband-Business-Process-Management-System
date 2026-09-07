@@ -56,7 +56,7 @@ defineExpose({ formRef, submit, reset })
 
 <style scoped lang="scss">
 .bbpms-form {
-  background: #fff;
+  background: var(--el-bg-color);
   border-radius: $radius-base;
   padding: 20px;
 }

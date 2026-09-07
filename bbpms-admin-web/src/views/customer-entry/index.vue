@@ -42,12 +42,12 @@ async function logout() {
   gap: 16px;
   padding: 44px 40px;
   text-align: center;
-  background: #fff;
+  background: var(--el-bg-color);
   border-radius: 16px;
   box-shadow: 0 16px 40px rgba(24, 144, 255, 0.14);
-  h1 { margin: 0; color: #303133; }
-  p { margin: 0 0 8px; color: #606266; line-height: 1.7; }
-  small { color: #909399; }
+  h1 { margin: 0; color: var(--el-text-color-primary); }
+  p { margin: 0 0 8px; color: var(--el-text-color-regular); line-height: 1.7; }
+  small { color: var(--el-text-color-secondary); }
 }
 .logo {
   width: 64px;

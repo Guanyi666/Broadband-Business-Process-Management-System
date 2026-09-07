@@ -246,14 +246,14 @@ onActivated(refresh)
   justify-content: space-between;
   align-items: center;
   padding: 14px 16px;
-  background: #fff;
+  background: var(--el-bg-color);
   border-radius: $radius-base;
   box-shadow: $shadow-card;
-  color: #606266;
-  strong { color: #303133; font-size: 24px; }
+  color: var(--el-text-color-regular);
+  strong { color: var(--el-text-color-primary); font-size: 24px; }
 }
 .board-col {
-  background: #f5f7fa;
+  background: var(--el-fill-color-light);
   border-radius: $radius-base;
   overflow: hidden;
   &-header {
@@ -261,8 +261,8 @@ onActivated(refresh)
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    background: #fff;
-    border-bottom: 1px solid #ebeef5;
+    background: var(--el-bg-color);
+    border-bottom: 1px solid var(--el-border-color-lighter);
     font-weight: 600;
   }
   &-body {
@@ -272,7 +272,7 @@ onActivated(refresh)
   }
 }
 .order-card, .installer-card {
-  background: #fff;
+  background: var(--el-bg-color);
   border-radius: $radius-base;
   padding: 12px;
   margin-bottom: 8px;
@@ -280,17 +280,17 @@ onActivated(refresh)
   transition: box-shadow 0.2s;
   &:hover { box-shadow: $shadow-card; }
 }
-.order-no { font-weight: 600; color: #303133; }
-.order-meta { color: #909399; font-size: 12px; margin-top: 4px; }
-.order-addr { color: #606266; font-size: 13px; margin-top: 4px; }
-.order-time { color: #e6a23c; font-size: 12px; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+.order-no { font-weight: 600; color: var(--el-text-color-primary); }
+.order-meta { color: var(--el-text-color-secondary); font-size: 12px; margin-top: 4px; }
+.order-addr { color: var(--el-text-color-regular); font-size: 13px; margin-top: 4px; }
+.order-time { color: var(--el-color-warning); font-size: 12px; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
 
 .installer-name {
   display: flex; align-items: center; gap: 8px;
   font-weight: 600;
 }
 .installer-stats {
-  display: flex; gap: 16px; font-size: 12px; color: #606266; margin-top: 6px;
+  display: flex; gap: 16px; font-size: 12px; color: var(--el-text-color-regular); margin-top: 6px;
 }
 .installer-loc { font-size: 11px; margin-top: 4px; }
 </style>

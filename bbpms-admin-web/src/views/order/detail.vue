@@ -20,6 +20,7 @@ const router = useRouter()
 const detail = ref<any>(null)
 const loading = ref(false)
 const track = ref<OrderTrack | null>(null)
+const workorder = ref<{ id: number; workNo: string; status: string; installerName?: string; scheduledAt?: string } | null>(null)
 
 /** 后端 /track 未就绪时，用已有 timeline 兜底为右轨事件（不伪造，仅映射字段） */
 const legacyEvents = computed<TrackEvent[]>(() =>
@@ -58,6 +59,16 @@ async function fetchData() {
   loading.value = true
   try {
     detail.value = await getOrderDetail(route.params.id as string)
+    // Tab 标题带业务标识：订单详情 → 订单 BBD...001
+    if (detail.value?.orderNo) {
+      router.replace({ query: { ...route.query, __title: `订单 ${detail.value.orderNo}` } })
+    }
+    // 关联工单（订单 → 工单互跳）
+    try {
+      workorder.value = await getWorkorderByOrder(route.params.id as string)
+    } catch {
+      workorder.value = null // 订单尚未派单 / 无工单：保持空态
+    }
     await loadTrack()
   } finally {
     loading.value = false
@@ -100,7 +111,7 @@ const canReassign = computed(() => ['AUDITED', 'WAIT_DISPATCH'].includes(detail.
 
 <template>
   <div class="app-container" v-loading="loading">
-    <PageHeader :title="`订单 ${detail?.orderNo || ''}`">
+    <PageHeader :title="`订单 ${detail?.orderNo || ''}`" back>
       <template #extra>
         <PermissionButton permission="order:audit">
           <el-button v-if="canAudit" type="primary" @click="onAudit">审核</el-button>
@@ -145,13 +156,19 @@ const canReassign = computed(() => ['AUDITED', 'WAIT_DISPATCH'].includes(detail.
       </div>
 
       <div class="app-card">
-        <h3>工单信息</h3>
-        <el-empty v-if="!detail?.workorder" description="Not dispatched yet" :image-size="60" />
+        <h3>关联工单</h3>
+        <el-empty v-if="!workorder" description="尚未派单" :image-size="60">
+          <p class="empty-hint">订单审核通过后将自动生成工单</p>
+        </el-empty>
         <el-descriptions v-else :column="1" border>
-          <el-descriptions-item label="工单号">{{ detail.workorder.workorderNo }}</el-descriptions-item>
-          <el-descriptions-item label="状态"><BBPMSStatusTag :status="detail.workorder.status" /></el-descriptions-item>
-          <el-descriptions-item label="装维人员">{{ detail.workorder.installerName || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="预约时间">{{ formatDate(detail.workorder.scheduledAt) }}</el-descriptions-item>
+          <el-descriptions-item label="工单号">
+            <router-link :to="`/workorder/detail/${workorder.id}`" class="link-primary">
+              {{ workorder.workNo }} →
+            </router-link>
+          </el-descriptions-item>
+          <el-descriptions-item label="状态"><BBPMSStatusTag :status="workorder.status" /></el-descriptions-item>
+          <el-descriptions-item label="装维人员">{{ workorder.installerName || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="预约时间">{{ formatDate(workorder.scheduledAt) }}</el-descriptions-item>
         </el-descriptions>
       </div>
     </div>
@@ -172,6 +189,16 @@ const canReassign = computed(() => ['AUDITED', 'WAIT_DISPATCH'].includes(detail.
   grid-template-columns: 2fr 1fr 1fr;
   gap: 16px;
   margin-bottom: 16px;
+}
+.link-primary {
+  color: var(--bbpms-color-primary);
+  font-weight: 500;
+  &:hover { text-decoration: underline; }
+}
+.empty-hint {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--bbpms-text-secondary);
 }
 @media (max-width: 1280px) {
   .card-grid {

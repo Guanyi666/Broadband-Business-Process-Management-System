@@ -6,8 +6,8 @@ body {
   height: 100%;
   font-family: $font-family-base;
   font-size: $font-size-base;
-  color: #303133;
-  background: #ffffff;
+  color: $text-primary;
+  background: $bg-base;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -26,19 +26,21 @@ a {
 }
 
 .app-card {
-  background: #fff;
+  background: var(--bbpms-bg-base);
+  border: 1px solid var(--bbpms-border-lighter);
   border-radius: $radius-base;
   box-shadow: $shadow-card;
   padding: 20px;
   margin-bottom: 16px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform $duration-base $ease-out, box-shadow $duration-base $ease-out,
+    background-color $duration-base $ease-out, border-color $duration-base $ease-out;
 }
 
 /* 卡片 Hover 浮起微阴影（UI 质感升级） */
 .app-card.is-hoverable,
 .app-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(31, 45, 61, 0.08), 0 2px 6px rgba(31, 45, 61, 0.06);
+  box-shadow: var(--bbpms-shadow-2);
 }
 
 /* 列表项 Hover 浮起（用于可点击表格/卡片行） */
@@ -46,7 +48,7 @@ a {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(31, 45, 61, 0.08);
+    box-shadow: var(--bbpms-shadow-2);
   }
 }
 
@@ -74,7 +76,7 @@ a {
 .mt-16 { margin-top: 16px; }
 .mt-24 { margin-top: 24px; }
 .mb-16 { margin-bottom: 16px; }
-.text-muted { color: #909399; }
+.text-muted { color: var(--el-text-color-secondary); }
 
 .page-toolbar {
   display: flex;
@@ -96,8 +98,8 @@ a {
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #c0c4cc;
-  border-radius: 4px;
+  background: $text-disabled;
+  border-radius: $radius-base;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -116,7 +118,80 @@ a {
 // —— 区块分组标题（Dashboard / 列表页统一使用）——
 .section-title {
   margin: 0 0 16px;
-  font-size: 15px;
-  font-weight: 600;
-  color: #303133;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: var(--bbpms-text-primary);
+}
+
+// =============================================================================
+// 文本工具类（统一层级，禁止页面再写死颜色）
+// =============================================================================
+.text-primary { color: var(--bbpms-text-primary); }
+.text-regular { color: var(--bbpms-text-regular); }
+.text-secondary { color: var(--bbpms-text-secondary); }
+.text-placeholder { color: var(--bbpms-text-placeholder); }
+.text-disabled { color: var(--bbpms-text-disabled); }
+.text-success { color: var(--bbpms-color-success); }
+.text-warning { color: var(--bbpms-color-warning); }
+.text-danger { color: var(--bbpms-color-danger); }
+
+.text-xs { font-size: $font-size-xs; }
+.text-sm { font-size: $font-size-sm; }
+.text-md { font-size: $font-size-md; }
+.text-lg { font-size: $font-size-lg; }
+.text-semibold { font-weight: $font-weight-semibold; }
+.text-number { font-family: $font-family-number; font-variant-numeric: tabular-nums; }
+
+// =============================================================================
+// 空状态（统一空态容器：主文案 + 说明 + 操作）
+// 文案约定：筛选无果 →「当前筛选条件下暂无数据」+ 提供「重置筛选」
+//          无权限 →「暂无访问权限」；加载失败 →「数据加载失败」+「重新加载」
+// =============================================================================
+.bbpms-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-2;
+  padding: $spacing-8 $spacing-4;
+  color: var(--bbpms-text-secondary);
+  text-align: center;
+
+  &__title {
+    font-size: $font-size-base;
+    color: var(--bbpms-text-regular);
+  }
+  &__desc {
+    font-size: $font-size-xs;
+    color: var(--bbpms-text-secondary);
+    max-width: 320px;
+    line-height: $line-height-base;
+  }
+}
+
+// =============================================================================
+// 错误态（加载失败 + 重试）
+// =============================================================================
+.bbpms-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-3;
+  padding: $spacing-8 $spacing-4;
+  color: var(--bbpms-text-secondary);
+  text-align: center;
+
+  &__text {
+    margin: 0;
+    font-size: $font-size-sm;
+    color: var(--bbpms-text-regular);
+  }
+}
+
+// =============================================================================
+// 骨架屏容器（列表/详情加载占位，避免白屏）
+// =============================================================================
+.bbpms-skeleton {
+  padding: $spacing-4;
 }

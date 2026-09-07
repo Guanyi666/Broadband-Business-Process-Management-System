@@ -5,6 +5,7 @@ import { ElMessage } from 'element-plus'
 import { getOrderDetail, auditOrder } from '@/api/order'
 import { formatDate, maskName, maskPhone } from '@/utils/format'
 import PageHeader from '@/components/PageHeader.vue'
+import BBPMSStatusTag from '@/components/BBPMSStatusTag.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -56,7 +57,7 @@ onMounted(fetchOrder)
       <h3>订单摘要</h3>
       <el-descriptions v-if="order" :column="2" border>
         <el-descriptions-item label="订单号">{{ order.orderNo }}</el-descriptions-item>
-        <el-descriptions-item label="状态">{{ order.status }}</el-descriptions-item>
+        <el-descriptions-item label="状态"><BBPMSStatusTag :status="order.status" /></el-descriptions-item>
         <el-descriptions-item label="客户">{{ maskName(order.customerName) }}</el-descriptions-item>
         <el-descriptions-item label="手机号">{{ maskPhone(order.customerPhone) }}</el-descriptions-item>
         <el-descriptions-item label="套餐">{{ order.packageName }}</el-descriptions-item>

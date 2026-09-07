@@ -21,7 +21,7 @@ async function refresh() {
     updateMarkers()
   } catch (error: any) {
     locations.value = []
-    loadError.value = error?.message || 'Installer locations could not be loaded.'
+    loadError.value = error?.message || '装维位置信息加载失败，请稍后重试'
   } finally {
     loading.value = false
   }
@@ -30,7 +30,7 @@ async function refresh() {
 async function initMap() {
   const key = import.meta.env.VITE_AMAP_KEY
   if (!key || key.startsWith('__') || !mapEl.value) {
-    mapError.value = 'Map key is not configured. Installer location data is shown in the list below.'
+    mapError.value = '未配置地图密钥，装维位置数据将以列表形式展示'
     return
   }
   await new Promise<void>((resolve, reject) => {
@@ -38,7 +38,7 @@ async function initMap() {
     const script = document.createElement('script')
     script.src = `https://webapi.amap.com/maps?v=2.0&key=${key}`
     script.onload = () => resolve()
-    script.onerror = () => reject(new Error('Map service failed to load'))
+    script.onerror = () => reject(new Error('地图服务加载失败'))
     document.head.appendChild(script)
   })
   const AMap = (window as any).AMap
@@ -90,7 +90,7 @@ onMounted(async () => {
   try {
     await initMap()
   } catch (error: any) {
-    mapError.value = error?.message || 'Map service failed to load.'
+    mapError.value = error?.message || '地图服务加载失败，请稍后重试'
   }
   timer = setInterval(refresh, 15000)
 })
@@ -116,7 +116,7 @@ onBeforeUnmount(() => {
       <div ref="mapEl" class="map" />
     </div>
     <div class="app-card location-list">
-      <el-table :data="locations" stripe empty-text="No installer locations">
+      <el-table :data="locations" stripe empty-text="暂无装维位置信息">
         <el-table-column prop="name" label="装维人员" min-width="140" />
         <el-table-column prop="phone" label="手机号" min-width="130" />
         <el-table-column label="状态" width="100">
@@ -134,7 +134,7 @@ onBeforeUnmount(() => {
 <style scoped lang="scss">
 .map-wrapper {
   position: relative;
-  background: #fff;
+  background: var(--el-bg-color);
   border-radius: $radius-base;
   overflow: hidden;
   height: 70vh;

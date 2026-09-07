@@ -19,6 +19,13 @@ export const useAppStore = defineStore('app', () => {
   }
 
   function addVisitedView(view: TagItem) {
+    // 同一路由名只保留一个 Tab（详情页复用，避免「订单详情×N」）
+    const dup = visitedViews.value.findIndex((v) => v.name && view.name && v.name === view.name)
+    if (dup > -1) {
+      // 复用 Tab：更新标题/路径为最新业务对象
+      visitedViews.value[dup] = { ...visitedViews.value[dup], ...view }
+      return
+    }
     if (visitedViews.value.some((v) => v.path === view.path)) return
     visitedViews.value.push(view)
   }

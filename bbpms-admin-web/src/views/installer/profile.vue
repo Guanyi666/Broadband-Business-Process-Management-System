@@ -25,7 +25,7 @@ onMounted(fetchData)
 
 <template>
   <div class="app-container" v-loading="loading">
-    <PageHeader :title="detail?.name || '装维人员'" />
+    <PageHeader :title="detail?.name || '装维人员'" back />
     <div class="app-card" v-if="detail">
       <el-descriptions :column="2" border>
         <el-descriptions-item label="ID">{{ detail.id }}</el-descriptions-item>
