@@ -36,6 +36,8 @@ const stateText = (s: CustomerTrackStage): string => {
   if (s.time) return s.time
   if (s.state === 'SKIP') return s.remark || '系统自动跳过'
   if (s.state === 'EXCEPTION') return '异常'
+  // 已完成但时间字段缺失（历史数据）：明确展示已完成，避免显示「待处理」造成流程断裂的误解
+  if (s.state === 'DONE') return '已完成'
   return '待处理'
 }
 

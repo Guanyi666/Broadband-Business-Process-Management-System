@@ -442,6 +442,10 @@ public class TrackServiceImpl implements TrackService {
                 s.setState(CURRENT);
             } else if (times[i] != null) {
                 s.setState(DONE);
+            } else if (idx < currentIndex) {
+                // 流程已推进到该节点之后：该步骤确实已完成（历史数据缺时间字段，如审核时间未回写），
+                // 标记为已完成，避免前序灰色而后序已完成的断裂观感（如订单审核显示灰色却已派单）
+                s.setState(DONE);
             } else {
                 s.setState(PENDING);
             }

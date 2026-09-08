@@ -104,6 +104,8 @@ function stageIcon(state: StageState): string {
 function stagePendingText(stage: TrackStage): string {
   if (stage.state === 'SKIP') return stage.remark || '系统自动跳过'
   if (stage.state === 'EXCEPTION') return '异常'
+  // 已完成但时间字段缺失（历史数据）：明确说已完成，不能显示「待处理」造成流程断裂的误解
+  if (stage.state === 'DONE') return '已完成'
   return '待处理'
 }
 
@@ -170,6 +172,7 @@ function eventSourceText(source?: string): string {
           <template v-if="stage.time">{{ formatDate(stage.time, 'MM-DD HH:mm') }}</template>
           <template v-else-if="stage.state === 'SKIP'">已跳过</template>
           <template v-else-if="stage.state === 'EXCEPTION'">异常</template>
+          <template v-else-if="stage.state === 'DONE'">已完成</template>
           <template v-else>待处理</template>
         </span>
         <span v-if="index < stages.length - 1" class="steps__line" aria-hidden="true" />

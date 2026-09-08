@@ -285,7 +285,7 @@ public class CustomerPortalService {
         times[0] = order.getCreateTime();
         times[1] = order.getAuditTime();
         times[2] = order.getDispatchTime() != null ? order.getDispatchTime()
-                : (wo != null ? wo.getCreateTime() : null); // 派单时间（工单创建兜底）
+                : (wo != null ? wo.getDispatchTime() : null); // 已派单：取真实派单时间（工单创建不等于已派单）
         times[3] = wo != null ? wo.getStartTime() : null;    // 装维上门/施工
         times[4] = (wo != null ? wo.getFinishTime() : null) != null ? wo.getFinishTime() : order.getCompletedTime();
 
@@ -308,6 +308,10 @@ public class CustomerPortalService {
             } else if (idx == current && !terminal) {
                 s.setState("CURRENT");
             } else if (times[i] != null) {
+                s.setState("DONE");
+            } else if (idx < current) {
+                // 流程已推进到该节点之后：该步骤确实已完成（历史数据缺时间字段），
+                // 标记为已完成，避免前序灰色而后序已完成的断裂观感（如已审核显示灰色却已派单）
                 s.setState("DONE");
             } else {
                 s.setState("PENDING");
@@ -480,7 +484,8 @@ public class CustomerPortalService {
     private PortalDtos.CustomerOrderSummaryVO toOrderSummary(BroadbandOrder order) {
         PortalDtos.CustomerOrderSummaryVO vo = new PortalDtos.CustomerOrderSummaryVO();
         vo.setId(order.getId()); vo.setOrderNo(order.getOrderNo());
-        vo.setPackageCode(order.getPackageCode()); vo.setPackageName(order.getPackageName());
+        vo.setPackageCode(order.getPackageCode());
+        vo.setPackageName(packageNameDictService.toChinese(order.getPackageCode(), order.getPackageName()));
         vo.setInstallAddress(order.getInstallAddress()); vo.setStatus(order.getStatus());
         vo.setStatusLabel(customerStatusLabel(order.getStatus()));
         vo.setResourceStatus(order.getResourceStatus()); vo.setCompletedTime(order.getCompletedTime());
