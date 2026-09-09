@@ -218,9 +218,9 @@ INSERT IGNORE INTO `net_region` (`id`, `name`, `code`, `sort`, `status`) VALUES
 
 -- 小区（可安装 / 资源不足 / 暂无覆盖 三种）
 INSERT IGNORE INTO `net_community` (`id`, `region_id`, `name`, `address`, `lat`, `lng`, `grid_code`, `sort`, `status`) VALUES
-(1, 1, '朝阳区演示小区',   '北京市朝阳区建国路1号',    39.929000, 116.430000, 'BJ-CY-001', 1, 1),
-(2, 1, '海淀区演示小区',   '北京市海淀区中关村大街1号', 39.984000, 116.310000, 'BJ-HD-001', 2, 1),
-(3, 1, '望京演示小区',     '北京市朝阳区望京街10号',   39.996200, 116.480600, 'BJ-CY-002', 3, 1);
+(1, 1, '朝阳区建国里小区',   '北京市朝阳区建国路1号',    39.929000, 116.430000, 'BJ-CY-001', 1, 1),
+(2, 1, '海淀区中关村小区',   '北京市海淀区中关村大街1号', 39.984000, 116.310000, 'BJ-HD-001', 2, 1),
+(3, 1, '朝阳区望京小区',     '北京市朝阳区望京街10号',   39.996200, 116.480600, 'BJ-CY-002', 3, 1);
 
 -- 楼栋
 INSERT IGNORE INTO `net_building` (`id`, `community_id`, `name`, `total_floors`, `sort`, `status`) VALUES
@@ -247,7 +247,7 @@ INSERT IGNORE INTO `net_olt` (`id`, `name`, `region_id`, `ip`, `vendor`, `model`
 (1, 'OLT-BJ-CY-01', 1, '10.1.1.1', 'Huawei', 'MA5800', 1);
 
 INSERT IGNORE INTO `net_pon` (`id`, `olt_id`, `name`, `total_ports`, `used_ports`) VALUES
-(1, 1, '1/1/1', 32, 0),
+(1, 1, '1/1/1', 32, 1),
 (2, 1, '1/1/2', 32, 0);
 
 -- ONU：1 台库存、1 台绑定 102（模拟已安装在线）

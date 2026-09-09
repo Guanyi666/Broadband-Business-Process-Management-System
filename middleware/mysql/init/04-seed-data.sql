@@ -10,8 +10,8 @@ USE `bbpms`;
 -- Departments (2 root)
 -- ----------------------------------------------------------------------------
 INSERT IGNORE INTO `sys_dept` (`id`, `parent_id`, `name`, `leader`, `phone`, `path`, `sort`, `status`) VALUES
-(1, 0, 'BBPMS Root',     'admin',  '13800000000', '/1/',     1, 1),
-(2, 1, 'Operations Dept', 'disp1',  '13800000001', '/1/2/',   1, 1);
+(1, 0, 'BBPMS 总部',     'admin',  '13800000000', '/1/',     1, 1),
+(2, 1, '运营部', 'disp1',  '13800000001', '/1/2/',   1, 1);
 
 -- ----------------------------------------------------------------------------
 -- Roles (6 standard roles)
@@ -237,17 +237,17 @@ INSERT IGNORE INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES
 -- Users (all password = admin123)
 -- BCrypt hash: $2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2
 -- ----------------------------------------------------------------------------
-INSERT IGNORE INTO `sys_user` (`id`, `username`, `password`, `nickname`, `phone`, `dept_id`, `user_type`, `status`) VALUES
-(1,  'admin',    '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', 'Super Admin', '13800000000', 1, 1, 1),
-(2,  'cs1',      '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', 'CS Alice',    '13800000001', 2, 2, 1),
-(3,  'cs2',      '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', 'CS Bob',      '13800000002', 2, 2, 1),
-(4,  'audit1',   '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', 'Auditor Tom',  '13800000010', 2, 3, 1),
-(5,  'disp1',    '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', 'Dispatcher 1', '13800000020', 2, 4, 1),
-(6,  'install1', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', 'Installer A',  '13800000030', 2, 5, 1),
-(7,  'install2', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', 'Installer B',  '13800000031', 2, 5, 1),
-(8,  'install3', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', 'Installer C',  '13800000032', 2, 5, 1),
-(9,  'install4', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', 'Installer D',  '13800000033', 2, 5, 1),
-(10, 'install5', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', 'Installer E',  '13800000034', 2, 5, 1);
+INSERT IGNORE INTO `sys_user` (`id`, `username`, `password`, `real_name`, `nickname`, `phone`, `dept_id`, `user_type`, `status`) VALUES
+(1,  'admin',    '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '王建国', '超级管理员', '13800000000', 1, 1, 1),
+(2,  'cs1',      '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '李文静', '客服专员',    '13800000001', 2, 2, 1),
+(3,  'cs2',      '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '陈思远', '客服专员',      '13800000002', 2, 2, 1),
+(4,  'audit1',   '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '赵明远', '审核专员',  '13800000010', 2, 3, 1),
+(5,  'disp1',    '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '孙志强', '调度专员', '13800000020', 2, 4, 1),
+(6,  'install1', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '周建军', '装维工程师',  '13800000030', 2, 5, 1),
+(7,  'install2', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '吴海涛', '装维工程师',  '13800000031', 2, 5, 1),
+(8,  'install3', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '郑晓东', '装维工程师',  '13800000032', 2, 5, 1),
+(9,  'install4', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '钱文博', '装维工程师',  '13800000033', 2, 5, 1),
+(10, 'install5', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '冯永强', '装维工程师',  '13800000034', 2, 5, 1);
 
 -- User-Role bindings
 INSERT IGNORE INTO `sys_user_role` (`user_id`, `role_id`) VALUES
@@ -261,11 +261,11 @@ INSERT IGNORE INTO `sys_user_role` (`user_id`, `role_id`) VALUES
 -- Installer Profiles
 -- ----------------------------------------------------------------------------
 INSERT IGNORE INTO `installer_profile` (`user_id`, `skill_tags`, `service_area`, `current_lat`, `current_lng`, `on_duty`, `workload`, `level`, `score`) VALUES
-(6,  '["FTTH","GPON","IPTV"]',     '["BJ-CY","BJ-HD"]', 39.929000, 116.430000, 0, 0, 3, 4.85),
+(6,  '["FTTH","GPON","IPTV"]',     '["BJ-CY","BJ-HD"]', 39.929000, 116.430000, 1, 0, 3, 4.85),
 (7,  '["FTTH","GPON"]',           '["BJ-CY","BJ-CP"]', 39.915000, 116.420000, 0, 1, 2, 4.60),
-(8,  '["FTTH","GPON","FTTR"]',      '["BJ-HD","BJ-SY"]', 39.940000, 116.450000, 0, 0, 4, 4.92),
+(8,  '["FTTH","GPON","FTTR"]',      '["BJ-HD","BJ-SY"]', 39.940000, 116.450000, 1, 0, 4, 4.92),
 (9,  '["FTTH","GPON","IPTV","FTTR"]','["BJ-CY","BJ-HD","BJ-SY"]', 39.920000, 116.440000, 0, 2, 5, 4.95),
-(10, '["FTTH"]',                   '["BJ-CP"]',         39.910000, 116.410000, 0, 0, 1, 4.50);
+(10, '["FTTH"]',                   '["BJ-CP"]',         39.910000, 116.410000, 1, 0, 1, 4.50);
 
 -- ----------------------------------------------------------------------------
 -- Demo Customer
@@ -288,33 +288,33 @@ INSERT IGNORE INTO `broadband_order`
     (`id`, `order_no`, `customer_id`, `package_code`, `package_name`, `install_address`,
      `expected_install_date`, `status`, `cs_id`, `auditor_id`, `audit_time`, `audit_remark`,
      `dispatch_time`, `completed_time`, `cancelled_time`, `cancel_reason`, `create_time`, `update_time`) VALUES
-(1001, 'BBDEMO20260001', 1, 'PKG_100M', '100M Broadband', '北京市朝阳区建国路1号', NOW() + INTERVAL 1 DAY, 'CREATED',       2, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NOW() - INTERVAL 1 HOUR, NOW() - INTERVAL 1 HOUR),
-(1002, 'BBDEMO20260002', 2, 'PKG_300M', '300M Broadband', '北京市海淀区中关村大街1号', NOW() + INTERVAL 1 DAY, 'WAIT_DISPATCH', 2, 4, NOW() - INTERVAL 3 HOUR, '资料完整，审核通过', NULL, NULL, NULL, NULL, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 3 HOUR),
-(1003, 'BBDEMO20260003', 3, 'PKG_500M', '500M Broadband', '北京市朝阳区望京街10号', NOW() + INTERVAL 2 DAY, 'DISPATCHED',    3, 4, NOW() - INTERVAL 1 DAY, '审核通过', NOW() - INTERVAL 6 HOUR, NULL, NULL, NULL, NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 6 HOUR),
-(1004, 'BBDEMO20260004', 4, 'PKG_1G',   '1G Broadband',   '北京市昌平区回龙观东大街8号', NOW() + INTERVAL 4 HOUR, 'INSTALLING', 2, 4, NOW() - INTERVAL 2 DAY, '加急安装', NOW() - INTERVAL 1 DAY, NULL, NULL, NULL, NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 2 HOUR),
-(1005, 'BBDEMO20260005', 5, 'PKG_300M', '300M Broadband', '北京市顺义区新顺南大街12号', NOW() - INTERVAL 1 DAY, 'FINISHED',    3, 4, NOW() - INTERVAL 4 DAY, '审核通过', NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 1 DAY, NULL, NULL, NOW() - INTERVAL 5 DAY, NOW() - INTERVAL 1 DAY),
-(1006, 'BBDEMO20260006', 6, 'PKG_500M', '500M Broadband', '北京市海淀区学院路20号', NOW() - INTERVAL 6 DAY, 'CLOSED',       2, 4, NOW() - INTERVAL 9 DAY, '审核通过', NOW() - INTERVAL 8 DAY, NOW() - INTERVAL 6 DAY, NULL, NULL, NOW() - INTERVAL 10 DAY, NOW() - INTERVAL 5 DAY),
-(1007, 'BBDEMO20260007', 1, 'PKG_1G',   '1G Broadband',   '北京市朝阳区建国路1号', NOW() + INTERVAL 3 DAY, 'CANCELLED',    2, NULL, NULL, NULL, NULL, NULL, NOW() - INTERVAL 2 DAY, '客户变更安装计划', NOW() - INTERVAL 4 DAY, NOW() - INTERVAL 2 DAY),
-(1008, 'BBDEMO20260008', 3, 'PKG_100M', '100M Broadband', '北京市朝阳区望京街10号', NOW() + INTERVAL 1 DAY, 'AUDITED',      3, 4, NOW() - INTERVAL 30 MINUTE, '等待调度处理', NULL, NULL, NULL, NULL, NOW() - INTERVAL 2 HOUR, NOW() - INTERVAL 30 MINUTE);
+(1001, 'BBDEMO20260001', 1, 'PKG_100M', '畅享宽带 100M', '北京市朝阳区建国路1号', NOW() + INTERVAL 1 DAY, 'CREATED',       2, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NOW() - INTERVAL 1 HOUR, NOW() - INTERVAL 1 HOUR),
+(1002, 'BBDEMO20260002', 2, 'PKG_300M', '家庭宽带 300M', '北京市海淀区中关村大街1号', NOW() + INTERVAL 1 DAY, 'WAIT_DISPATCH', 2, 4, NOW() - INTERVAL 3 HOUR, '资料完整，审核通过', NULL, NULL, NULL, NULL, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 3 HOUR),
+(1003, 'BBDEMO20260003', 3, 'PKG_500M', '家庭宽带 500M', '北京市朝阳区望京街10号', NOW() + INTERVAL 2 DAY, 'DISPATCHED',    3, 4, NOW() - INTERVAL 1 DAY, '审核通过', NOW() - INTERVAL 10 MINUTE, NULL, NULL, NULL, NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 10 MINUTE),
+(1004, 'BBDEMO20260004', 4, 'PKG_1G',   '千兆宽带 1000M',   '北京市昌平区回龙观东大街8号', NOW() + INTERVAL 4 HOUR, 'INSTALLING', 2, 4, NOW() - INTERVAL 2 DAY, '加急安装', NOW() - INTERVAL 1 DAY, NULL, NULL, NULL, NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 2 HOUR),
+(1005, 'BBDEMO20260005', 5, 'PKG_300M', '家庭宽带 300M', '北京市顺义区新顺南大街12号', NOW() - INTERVAL 1 DAY, 'FINISHED',    3, 4, NOW() - INTERVAL 4 DAY, '审核通过', NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 1 DAY, NULL, NULL, NOW() - INTERVAL 5 DAY, NOW() - INTERVAL 1 DAY),
+(1006, 'BBDEMO20260006', 6, 'PKG_500M', '家庭宽带 500M', '北京市海淀区学院路20号', NOW() - INTERVAL 6 DAY, 'CLOSED',       2, 4, NOW() - INTERVAL 9 DAY, '审核通过', NOW() - INTERVAL 8 DAY, NOW() - INTERVAL 6 DAY, NULL, NULL, NOW() - INTERVAL 10 DAY, NOW() - INTERVAL 5 DAY),
+(1007, 'BBDEMO20260007', 1, 'PKG_1G',   '千兆宽带 1000M',   '北京市朝阳区建国路1号', NOW() + INTERVAL 3 DAY, 'CANCELLED',    2, NULL, NULL, NULL, NULL, NULL, NOW() - INTERVAL 2 DAY, '客户变更安装计划', NOW() - INTERVAL 4 DAY, NOW() - INTERVAL 2 DAY),
+(1008, 'BBDEMO20260008', 3, 'PKG_100M', '畅享宽带 100M', '北京市朝阳区望京街10号', NOW() + INTERVAL 1 DAY, 'AUDITED',      3, 4, NOW() - INTERVAL 30 MINUTE, '等待调度处理', NULL, NULL, NULL, NULL, NOW() - INTERVAL 2 HOUR, NOW() - INTERVAL 30 MINUTE);
 
 INSERT IGNORE INTO `appointment`
-    (`id`, `order_id`, `appointment_time`, `contact_phone`, `remark`, `confirmed`, `create_time`, `update_time`) VALUES
-(1101, 1001, NOW() + INTERVAL 1 DAY, '13900000001', '工作日上门', 0, NOW() - INTERVAL 1 HOUR, NOW() - INTERVAL 1 HOUR),
-(1102, 1002, NOW() + INTERVAL 1 DAY, '13900000002', '提前电话联系', 1, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 3 HOUR),
-(1103, 1003, NOW() + INTERVAL 2 DAY, '13900000003', '物业已报备', 1, NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 6 HOUR),
-(1104, 1004, NOW() + INTERVAL 4 HOUR, '13900000004', '加急工单', 1, NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 2 HOUR),
-(1105, 1005, NOW() - INTERVAL 1 DAY, '13900000005', '已完成', 1, NOW() - INTERVAL 5 DAY, NOW() - INTERVAL 1 DAY),
-(1106, 1006, NOW() - INTERVAL 6 DAY, '13900000006', '已归档', 1, NOW() - INTERVAL 10 DAY, NOW() - INTERVAL 5 DAY);
+    (`id`, `order_id`, `appointment_time`, `contact_phone`, `remark`, `confirmed`, `status`, `reschedule_count`, `create_time`, `update_time`) VALUES
+(1101, 1001, NOW() + INTERVAL 1 DAY, '13900000001', '工作日上门', 0, 'PENDING',   0, NOW() - INTERVAL 1 HOUR, NOW() - INTERVAL 1 HOUR),
+(1102, 1002, NOW() + INTERVAL 1 DAY, '13900000002', '提前电话联系', 1, 'CONFIRMED', 0, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 3 HOUR),
+(1103, 1003, NOW() + INTERVAL 2 DAY, '13900000003', '物业已报备', 1, 'CONFIRMED', 0, NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 6 HOUR),
+(1104, 1004, NOW() + INTERVAL 4 HOUR, '13900000004', '加急工单', 1, 'CONFIRMED', 0, NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 2 HOUR),
+(1105, 1005, NOW() - INTERVAL 1 DAY, '13900000005', '已完成', 1, 'CONFIRMED', 0, NOW() - INTERVAL 5 DAY, NOW() - INTERVAL 1 DAY),
+(1106, 1006, NOW() - INTERVAL 6 DAY, '13900000006', '已归档', 1, 'CONFIRMED', 0, NOW() - INTERVAL 10 DAY, NOW() - INTERVAL 5 DAY);
 
 INSERT IGNORE INTO `work_order`
     (`id`, `work_no`, `order_id`, `installer_id`, `dispatcher_id`, `status`, `dispatch_time`,
      `accept_time`, `start_time`, `finish_time`, `install_address`, `customer_phone`, `package_name`,
      `priority`, `expected_finish_time`, `last_active_at`, `create_time`, `update_time`) VALUES
-(2002, 'WODEMO20260002', 1002, NULL, 5, 'PENDING', NULL, NULL, NULL, NULL, '北京市海淀区中关村大街1号', '13900000002', '300M Broadband', 3, NOW() + INTERVAL 1 DAY, NULL, NOW() - INTERVAL 3 HOUR, NOW() - INTERVAL 3 HOUR),
-(2003, 'WODEMO20260003', 1003, 6, 5, 'DISPATCHED', NOW() - INTERVAL 6 HOUR, NULL, NULL, NULL, '北京市朝阳区望京街10号', '13900000003', '500M Broadband', 3, NOW() + INTERVAL 1 DAY, NOW() - INTERVAL 10 MINUTE, NOW() - INTERVAL 6 HOUR, NOW() - INTERVAL 10 MINUTE),
-(2004, 'WODEMO20260004', 1004, 7, 5, 'IN_PROGRESS', NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 22 HOUR, NOW() - INTERVAL 2 HOUR, NULL, '北京市昌平区回龙观东大街8号', '13900000004', '1G Broadband', 1, NOW() + INTERVAL 4 HOUR, NOW() - INTERVAL 5 MINUTE, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 5 MINUTE),
-(2005, 'WODEMO20260005', 1005, 8, 5, 'COMPLETED', NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 3 DAY + INTERVAL 20 MINUTE, NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 1 DAY, '北京市顺义区新顺南大街12号', '13900000005', '300M Broadband', 3, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 1 DAY),
-(2006, 'WODEMO20260006', 1006, 9, 5, 'COMPLETED', NOW() - INTERVAL 8 DAY, NOW() - INTERVAL 8 DAY + INTERVAL 50 MINUTE, NOW() - INTERVAL 7 DAY, NOW() - INTERVAL 6 DAY, '北京市海淀区学院路20号', '13900000006', '500M Broadband', 2, NOW() - INTERVAL 6 DAY, NOW() - INTERVAL 6 DAY, NOW() - INTERVAL 8 DAY, NOW() - INTERVAL 6 DAY);
+(2002, 'WODEMO20260002', 1002, NULL, 5, 'PENDING', NULL, NULL, NULL, NULL, '北京市海淀区中关村大街1号', '13900000002', '家庭宽带 300M', 3, NOW() + INTERVAL 1 DAY, NULL, NOW() - INTERVAL 3 HOUR, NOW() - INTERVAL 3 HOUR),
+(2003, 'WODEMO20260003', 1003, 6, 5, 'DISPATCHED', NOW() - INTERVAL 10 MINUTE, NULL, NULL, NULL, '北京市朝阳区望京街10号', '13900000003', '家庭宽带 500M', 3, NOW() + INTERVAL 1 DAY, NOW() - INTERVAL 10 MINUTE, NOW() - INTERVAL 10 MINUTE, NOW() - INTERVAL 10 MINUTE),
+(2004, 'WODEMO20260004', 1004, 7, 5, 'IN_PROGRESS', NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 22 HOUR, NOW() - INTERVAL 2 HOUR, NULL, '北京市昌平区回龙观东大街8号', '13900000004', '千兆宽带 1000M', 1, NOW() + INTERVAL 4 HOUR, NOW() - INTERVAL 5 MINUTE, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 5 MINUTE),
+(2005, 'WODEMO20260005', 1005, 8, 5, 'COMPLETED', NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 3 DAY + INTERVAL 20 MINUTE, NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 1 DAY, '北京市顺义区新顺南大街12号', '13900000005', '家庭宽带 300M', 3, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 1 DAY),
+(2006, 'WODEMO20260006', 1006, 9, 5, 'COMPLETED', NOW() - INTERVAL 8 DAY, NOW() - INTERVAL 8 DAY + INTERVAL 50 MINUTE, NOW() - INTERVAL 7 DAY, NOW() - INTERVAL 6 DAY, '北京市海淀区学院路20号', '13900000006', '家庭宽带 500M', 2, NOW() - INTERVAL 6 DAY, NOW() - INTERVAL 6 DAY, NOW() - INTERVAL 8 DAY, NOW() - INTERVAL 6 DAY);
 
 -- Keep a few installers online so the dispatch board and map are demonstrable.
 UPDATE `installer_profile` SET `on_duty` = 1 WHERE `user_id` IN (6, 7, 9);

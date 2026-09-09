@@ -48,8 +48,14 @@ public class OrderVO {
     @Schema(description = "客服ID")
     private Long csId;
 
+    @Schema(description = "客服姓名（realName 优先，username 兜底）")
+    private String csName;
+
     @Schema(description = "审核员ID")
     private Long auditorId;
+
+    @Schema(description = "审核人姓名（realName 优先，username 兜底）")
+    private String auditByName;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Schema(description = "审核时间")

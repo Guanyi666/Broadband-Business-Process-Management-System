@@ -167,7 +167,9 @@ const canReassign = computed(() => ['AUDITED', 'WAIT_DISPATCH'].includes(detail.
             </router-link>
           </el-descriptions-item>
           <el-descriptions-item label="状态"><BBPMSStatusTag :status="workorder.status" /></el-descriptions-item>
-          <el-descriptions-item label="装维人员">{{ workorder.installerName || '-' }}</el-descriptions-item>
+          <!-- 待派发工单不显示装维人员（状态-字段联动：PENDING → 无装维） -->
+          <el-descriptions-item v-if="workorder.status !== 'PENDING'" label="装维人员">{{ workorder.installerName || '-' }}</el-descriptions-item>
+          <el-descriptions-item v-else label="装维人员"><span class="field-muted">待派发</span></el-descriptions-item>
           <el-descriptions-item label="预约时间">{{ formatDate(workorder.scheduledAt) }}</el-descriptions-item>
         </el-descriptions>
       </div>
@@ -194,6 +196,10 @@ const canReassign = computed(() => ['AUDITED', 'WAIT_DISPATCH'].includes(detail.
   color: var(--bbpms-color-primary);
   font-weight: 500;
   &:hover { text-decoration: underline; }
+}
+.field-muted {
+  color: var(--bbpms-text-secondary, #909399);
+  font-size: 12px;
 }
 .empty-hint {
   margin: 4px 0 0;

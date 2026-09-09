@@ -36,6 +36,8 @@ import com.bbpms.order.service.OrderTimelineService;
 import com.bbpms.order.vo.AppointmentVO;
 import com.bbpms.order.vo.CustomerVO;
 import com.bbpms.order.vo.OrderVO;
+import com.bbpms.user.entity.SysUser;
+import com.bbpms.user.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -45,9 +47,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -73,6 +80,7 @@ public class OrderServiceImpl implements OrderService {
     private final AppointmentMapper appointmentMapper;
     private final CustomerMapper customerMapper;
     private final CustomerService customerService;
+    private final SysUserMapper sysUserMapper;
     private final OrderProperties orderProperties;
     private final OrderStateMachine orderStateMachine;
     private final ApplicationEventPublisher publisher;
@@ -518,7 +526,35 @@ public class OrderServiceImpl implements OrderService {
         // 套餐名称中文化：历史数据为英文（100M Broadband），统一映射为中文展示；
         // 数据库字典（运营可维护）优先，PackageNameMap 代码兜底；packageCode 保留原值可溯源
         vo.setPackageName(packageNameDictService.toChinese(o.getPackageCode(), o.getPackageName()));
+        // 客户姓名装配（列表/详情共用；客户表姓名可能为密文，走脱敏解密）
+        if (o.getCustomerId() != null) {
+            Customer cust = customerMapper.selectById(o.getCustomerId());
+            if (cust != null && cust.getName() != null) {
+                vo.setCustomerName(CryptoUtils.maskPhone(decryptOrLegacyPlaintext(cust.getName(), orderProperties.getSm4Key())));
+            }
+        }
+        // 客服/审核人姓名装配（realName 优先，username 兜底）
+        Map<Long, SysUser> users = loadUsersByIds(o.getCsId(), o.getAuditorId());
+        SysUser cs = users.get(o.getCsId());
+        if (cs != null) vo.setCsName(displayName(cs));
+        SysUser auditor = users.get(o.getAuditorId());
+        if (auditor != null) vo.setAuditByName(displayName(auditor));
         return vo;
+    }
+
+    private Map<Long, SysUser> loadUsersByIds(Long... ids) {
+        Set<Long> unique = Arrays.stream(ids)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (unique.isEmpty()) return Collections.emptyMap();
+        return sysUserMapper.selectBatchIds(unique).stream()
+                .collect(Collectors.toMap(SysUser::getId, Function.identity(), (l, r) -> l));
+    }
+
+    private String displayName(SysUser user) {
+        if (user == null) return null;
+        return user.getRealName() == null || user.getRealName().isBlank()
+                ? user.getUsername() : user.getRealName();
     }
 
     public AppointmentVO toAppointmentVO(Appointment a) {

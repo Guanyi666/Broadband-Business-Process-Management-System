@@ -124,6 +124,25 @@ async function submitReassign() {
 }
 
 onMounted(fetchData)
+
+/**
+ * 工单状态 ↔ 展示字段联动规则：
+ * - PENDING（待派发）：无装维人员、无派单/接单/开始/完成时间
+ * - DISPATCHED（已派单）：装维人员 + 派单时间
+ * - ACCEPTED（已接单）：+ 接单时间
+ * - IN_PROGRESS / STALLED（施工中/停滞）：+ 开始时间
+ * - COMPLETED / FAILED / CANCELLED / AUTO_CANCELLED：+ 完成时间（终态）
+ */
+const fieldVisible = computed(() => {
+  const status = detail.value?.status
+  return {
+    installer: !['PENDING'].includes(status),                       // 待派发不显示装维
+    dispatchTime: ['DISPATCHED', 'ACCEPTED', 'IN_PROGRESS', 'STALLED', 'REASSIGNING', 'COMPLETED', 'FAILED', 'CANCELLED', 'AUTO_CANCELLED'].includes(status),
+    acceptTime: ['ACCEPTED', 'IN_PROGRESS', 'STALLED', 'COMPLETED', 'FAILED', 'CANCELLED', 'AUTO_CANCELLED'].includes(status),
+    startTime: ['IN_PROGRESS', 'STALLED', 'COMPLETED', 'FAILED'].includes(status),
+    finishTime: ['COMPLETED', 'FAILED'].includes(status)
+  }
+})
 </script>
 
 <template>
@@ -148,15 +167,18 @@ onMounted(fetchData)
             {{ detail.orderNo || `#${detail.orderId}` }} →
           </router-link>
         </el-descriptions-item>
-        <el-descriptions-item label="装维人员">{{ detail.installerName || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="装维人员">
+          <template v-if="fieldVisible.installer">{{ detail.installerName || '-' }}</template>
+          <template v-else><span class="field-muted">待派发</span></template>
+        </el-descriptions-item>
         <el-descriptions-item label="调度员">{{ detail.dispatcherName || '-' }}</el-descriptions-item>
         <el-descriptions-item label="客户电话">{{ detail.customerPhone || '-' }}</el-descriptions-item>
         <el-descriptions-item label="套餐">{{ detail.packageName || '-' }}</el-descriptions-item>
         <el-descriptions-item label="地址">{{ detail.installAddress || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="派单时间">{{ formatDate(detail.dispatchTime) }}</el-descriptions-item>
-        <el-descriptions-item label="已接单">{{ formatDate(detail.acceptTime) }}</el-descriptions-item>
-        <el-descriptions-item label="开始时间">{{ formatDate(detail.startTime) }}</el-descriptions-item>
-        <el-descriptions-item label="完成时间">{{ formatDate(detail.finishTime) }}</el-descriptions-item>
+        <el-descriptions-item v-if="fieldVisible.dispatchTime" label="派单时间">{{ formatDate(detail.dispatchTime) }}</el-descriptions-item>
+        <el-descriptions-item v-if="fieldVisible.acceptTime" label="已接单">{{ formatDate(detail.acceptTime) }}</el-descriptions-item>
+        <el-descriptions-item v-if="fieldVisible.startTime" label="开始时间">{{ formatDate(detail.startTime) }}</el-descriptions-item>
+        <el-descriptions-item v-if="fieldVisible.finishTime" label="完成时间">{{ formatDate(detail.finishTime) }}</el-descriptions-item>
       </el-descriptions>
     </div>
 
@@ -196,5 +218,9 @@ onMounted(fetchData)
   color: var(--bbpms-color-primary);
   font-weight: 500;
   &:hover { text-decoration: underline; }
+}
+.field-muted {
+  color: var(--bbpms-text-secondary, #909399);
+  font-size: 12px;
 }
 </style>

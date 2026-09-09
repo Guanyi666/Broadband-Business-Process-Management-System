@@ -41,11 +41,11 @@ WHERE o.order_no IN ('BBDEMO20260001','BBDEMO20260008') AND o.cs_id IS NULL;
 INSERT INTO broadband_order
   (id, order_no, customer_id, package_code, package_name, install_address,
    status, cs_id, dispatch_time, completed_time, create_time, update_time, create_by, update_by, deleted, version)
-SELECT 1099, 'BBDEMO20260099', c.id, 'FIBER_500M', '光纤500M', '上海市浦东新区演示路99号',
-       'INSTALLING', NULL, DATE_SUB(NOW(), INTERVAL 6 HOUR), NULL,
+SELECT 1099, 'BBDEMO20260099', 4, 'FIBER_500M', '光纤 500M 宽带', '北京市昌平区龙泽园街道智慧路88号',
+       'INSTALLING', 2, DATE_SUB(NOW(), INTERVAL 6 HOUR), NULL,
        DATE_SUB(NOW(), INTERVAL 1 DAY), NOW(), 2, 2, 0, 0
 FROM customer c LIMIT 1
-ON DUPLICATE KEY UPDATE status = 'INSTALLING';
+ON DUPLICATE KEY UPDATE status = 'INSTALLING', cs_id = 2;
 
 INSERT INTO work_order
   (id, work_no, order_id, installer_id, dispatcher_id, status,
@@ -54,7 +54,7 @@ INSERT INTO work_order
    priority, expected_finish_time, last_active_at, stall_reason, cancel_type)
 SELECT 9011, 'WODEMO20260901', 1099, 9, 4, 'STALLED',
        DATE_SUB(NOW(), INTERVAL 5 HOUR), DATE_SUB(NOW(), INTERVAL 4 HOUR), DATE_SUB(NOW(), INTERVAL 3 HOUR),
-       '上海市浦东新区演示路99号', '13900009999',
+       '北京市昌平区龙泽园街道智慧路88号', '13900000004',
        DATE_SUB(NOW(), INTERVAL 6 HOUR), NOW(), 4, 4, 0, 0,
        1, DATE_SUB(NOW(), INTERVAL 2 HOUR), DATE_SUB(NOW(), INTERVAL 5 HOUR), '现场缺少入户设备，待备货', NULL
 FROM dual
@@ -73,16 +73,16 @@ ON DUPLICATE KEY UPDATE status = 'STALLED';
 
 -- 部门：2 已存在于 04；补 3/4/5
 INSERT IGNORE INTO `sys_dept` (`id`, `parent_id`, `name`, `leader`, `phone`, `path`, `sort`, `status`) VALUES
-(3, 1, 'Field Ops A',  'disp1', '13800000003', '/1/3/',   2, 1),
-(4, 1, 'Branch B',     'cs2',   '13800000004', '/1/4/',   3, 1),
-(5, 3, 'Sub Team 5',   'instA', '13800000005', '/1/3/5/', 1, 1);
+(3, 1, '现场作业一组',  'disp1', '13800000003', '/1/3/',   2, 1),
+(4, 1, '昌平分部',     'cs2',   '13800000004', '/1/4/',   3, 1),
+(5, 3, '装维五小队',   'instA', '13800000005', '/1/3/5/', 1, 1);
 
 -- 用户：补各部门的代表账号（均在各自部门）
-INSERT IGNORE INTO `sys_user` (`id`, `username`, `password`, `nickname`, `phone`, `dept_id`, `user_type`, `status`) VALUES
-(11, 'disp2',    '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', 'Dispatcher B', '13800000021', 3, 4, 1),
-(12, 'audit2',   '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', 'Auditor B',    '13800000011', 3, 3, 1),
-(13, 'disp3',    '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', 'Dispatcher C', '13800000022', 4, 4, 1),
-(14, 'disp4',    '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', 'Dispatcher D', '13800000023', 5, 4, 1);
+INSERT IGNORE INTO `sys_user` (`id`, `username`, `password`, `real_name`, `nickname`, `phone`, `dept_id`, `user_type`, `status`) VALUES
+(11, 'disp2',    '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '刘志鹏', '调度专员', '13800000021', 3, 4, 1),
+(12, 'audit2',   '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '杨立群', '审核专员',    '13800000011', 3, 3, 1),
+(13, 'disp3',    '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '何建明', '调度专员', '13800000022', 4, 4, 1),
+(14, 'disp4',    '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '罗文斌', '调度专员', '13800000023', 5, 4, 1);
 
 -- disp2/audit2/disp3 挂到各自角色（幂等）
 INSERT IGNORE INTO `sys_user_role` (`user_id`, `role_id`) VALUES
@@ -127,16 +127,35 @@ INSERT IGNORE INTO `broadband_order`
     (`id`, `order_no`, `customer_id`, `package_code`, `package_name`, `install_address`,
      `expected_install_date`, `status`, `cs_id`, `auditor_id`, `audit_time`, `audit_remark`,
      `create_time`, `update_time`, `create_by`, `update_by`, `deleted`, `version`) VALUES
-(2010, 'BBDEMO20260201', 2, 'PKG_500M', '500M Broadband', '北京市海淀区部门3路1号', NOW() + INTERVAL 2 DAY, 'CREATED', 2, NULL, NULL, NULL, NOW() - INTERVAL 2 HOUR, NOW() - INTERVAL 2 HOUR, 12, 12, 0, 0),
-(2020, 'BBDEMO20260202', 4, 'PKG_300M', '300M Broadband', '北京市昌平区部门5路2号', NOW() + INTERVAL 3 DAY, 'CREATED', 2, NULL, NULL, NULL, NOW() - INTERVAL 3 HOUR, NOW() - INTERVAL 3 HOUR, 11, 11, 0, 0),
-(2030, 'BBDEMO20260203', 3, 'PKG_1G',   '1G Broadband',   '北京市朝阳区部门4路3号', NOW() + INTERVAL 1 DAY, 'CREATED', 2, NULL, NULL, NULL, NOW() - INTERVAL 4 HOUR, NOW() - INTERVAL 4 HOUR, 13, 13, 0, 0),
-(2040, 'BBDEMO20260204', 1, 'PKG_500M', '500M Broadband', '北京市东城区部门5子队4号', NOW() + INTERVAL 1 DAY, 'CREATED', 2, NULL, NULL, NULL, NOW() - INTERVAL 5 HOUR, NOW() - INTERVAL 5 HOUR, 14, 14, 0, 0);
+(2010, 'BBDEMO20260201', 2, 'PKG_500M', '家庭宽带 500M', '北京市海淀区部门3路1号', NOW() + INTERVAL 2 DAY, 'DISPATCHED', 2, 4, NOW() - INTERVAL 1 DAY, '部门数据权限演示', NOW() - INTERVAL 2 HOUR, NOW() - INTERVAL 2 HOUR, 12, 12, 0, 0),
+(2020, 'BBDEMO20260202', 4, 'PKG_300M', '家庭宽带 300M', '北京市昌平区部门5路2号', NOW() + INTERVAL 3 DAY, 'DISPATCHED', 2, 4, NOW() - INTERVAL 1 DAY, '部门数据权限演示', NOW() - INTERVAL 3 HOUR, NOW() - INTERVAL 3 HOUR, 11, 11, 0, 0),
+(2030, 'BBDEMO20260203', 3, 'PKG_1G',   '千兆宽带 1000M',   '北京市朝阳区部门4路3号', NOW() + INTERVAL 1 DAY, 'DISPATCHED', 2, 4, NOW() - INTERVAL 1 DAY, '部门数据权限演示', NOW() - INTERVAL 1 HOUR, NOW() - INTERVAL 1 HOUR, 13, 13, 0, 0),
+(2040, 'BBDEMO20260204', 1, 'PKG_500M', '家庭宽带 500M', '北京市东城区部门5子队4号', NOW() + INTERVAL 1 DAY, 'DISPATCHED', 2, 4, NOW() - INTERVAL 1 DAY, '部门数据权限演示', NOW() - INTERVAL 5 HOUR, NOW() - INTERVAL 5 HOUR, 14, 14, 0, 0);
 
 INSERT IGNORE INTO `work_order`
     (`id`, `work_no`, `order_id`, `installer_id`, `dispatcher_id`, `status`, `dispatch_time`,
      `create_time`, `update_time`, `create_by`, `update_by`, `deleted`, `version`,
      `priority`, `expected_finish_time`, `install_address`, `customer_phone`, `package_name`) VALUES
-(2010, 'WODEMO20260201', 2010, 6, 12, 'DISPATCHED', NOW() - INTERVAL 1 HOUR, NOW() - INTERVAL 1 HOUR, NOW() - INTERVAL 1 HOUR, 12, 12, 0, 0, 3, NOW() + INTERVAL 1 DAY, '北京市海淀区部门3路1号', '13900000002', '500M Broadband'),
-(2020, 'WODEMO20260202', 2020, 7, 11, 'DISPATCHED', NOW() - INTERVAL 2 HOUR, NOW() - INTERVAL 2 HOUR, NOW() - INTERVAL 2 HOUR, 11, 11, 0, 0, 3, NOW() + INTERVAL 1 DAY, '北京市昌平区部门5路2号', '13900000004', '300M Broadband'),
-(2030, 'WODEMO20260203', 2030, 8, 13, 'DISPATCHED', NOW() - INTERVAL 3 HOUR, NOW() - INTERVAL 3 HOUR, NOW() - INTERVAL 3 HOUR, 13, 13, 0, 0, 3, NOW() + INTERVAL 1 DAY, '北京市朝阳区部门4路3号', '13900000003', '1G Broadband'),
-(2040, 'WODEMO20260204', 2040, 9, 14, 'DISPATCHED', NOW() - INTERVAL 4 HOUR, NOW() - INTERVAL 4 HOUR, NOW() - INTERVAL 4 HOUR, 14, 14, 0, 0, 3, NOW() + INTERVAL 1 DAY, '北京市东城区部门5子队4号', '13900000001', '500M Broadband');
+(2010, 'WODEMO20260201', 2010, 6, 12, 'DISPATCHED', NOW() - INTERVAL 5 MINUTE, NOW() - INTERVAL 5 MINUTE, NOW() - INTERVAL 5 MINUTE, 12, 12, 0, 0, 3, NOW() + INTERVAL 1 DAY, '北京市海淀区部门3路1号', '13900000002', '家庭宽带 500M'),
+(2020, 'WODEMO20260202', 2020, 7, 11, 'DISPATCHED', NOW() - INTERVAL 5 MINUTE, NOW() - INTERVAL 5 MINUTE, NOW() - INTERVAL 5 MINUTE, 11, 11, 0, 0, 3, NOW() + INTERVAL 1 DAY, '北京市昌平区部门5路2号', '13900000004', '家庭宽带 300M'),
+(2030, 'WODEMO20260203', 2030, 8, 13, 'DISPATCHED', NOW() - INTERVAL 5 MINUTE, NOW() - INTERVAL 5 MINUTE, NOW() - INTERVAL 5 MINUTE, 13, 13, 0, 0, 3, NOW() + INTERVAL 1 DAY, '北京市朝阳区部门4路3号', '13900000003', '千兆宽带 1000M'),
+(2040, 'WODEMO20260204', 2040, 9, 14, 'DISPATCHED', NOW() - INTERVAL 5 MINUTE, NOW() - INTERVAL 5 MINUTE, NOW() - INTERVAL 5 MINUTE, 14, 14, 0, 0, 3, NOW() + INTERVAL 1 DAY, '北京市东城区部门5子队4号', '13900000001', '家庭宽带 500M');
+
+-- ============================================================
+-- 08) 安装记录（对应已完工工单 2005/2006 的真实履约数据）
+--     2005：installer 8（install3），2006：installer 9（install4）
+--     与 net_onu / net_pon 资源台账对应（ONU SN 关联）
+-- ============================================================
+INSERT IGNORE INTO `install_record`
+    (`work_order_id`, `installer_id`, `onu_sn`, `olt_port`, `signal_db`,
+     `start_lat`, `start_lng`, `complete_lat`, `complete_lng`,
+     `photos`, `signature_url`, `customer_signature_name`, `remark`,
+     `submit_time`, `status`) VALUES
+(2005, 8, 'HBH-ONY-0001', '1/1/1', -18.50,
+ 39.940000, 116.450000, 39.996200, 116.480600,
+ JSON_ARRAY('https://oss.example.com/inst/2005-1.jpg', 'https://oss.example.com/inst/2005-2.jpg'),
+ 'https://oss.example.com/sign/2005.png', '陈晨', '光纤入户，光衰正常', NOW() - INTERVAL 1 DAY, 'COMPLETED'),
+(2006, 9, 'HBH-ONY-0002', '1/1/2', -20.10,
+ 39.920000, 116.440000, 39.987100, 116.352500,
+ JSON_ARRAY('https://oss.example.com/inst/2006-1.jpg'),
+ 'https://oss.example.com/sign/2006.png', '刘洋', '千兆设备更换，测速达标', NOW() - INTERVAL 6 DAY, 'COMPLETED');

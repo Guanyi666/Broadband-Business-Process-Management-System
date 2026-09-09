@@ -26,6 +26,10 @@ spring:
 
 # BBPMS dev overrides
 bbpms:
+  workorder:
+    sla:
+      # 开发/演示环境关闭 SLA 自动取消重派，避免无人接单导致演示工单被 auto-cancel 死循环
+      enabled: false
   jwt:
     # Dev-only fallback; override in prod via env vars
     rsa-private-key: ${BBPMS_RSA_PRIVATE_KEY:}

@@ -17,6 +17,8 @@ import com.bbpms.common.statemachine.WorkOrderStateMachine;
 import com.bbpms.common.util.SnowflakeIdGenerator;
 import com.bbpms.order.service.OrderService;
 import com.bbpms.dispatch.config.DispatchProperties;
+import com.bbpms.user.entity.SysUser;
+import com.bbpms.user.mapper.SysUserMapper;
 import com.bbpms.user.service.InstallerProfileService;
 import com.bbpms.workorder.config.WorkOrderProperties;
 import com.bbpms.workorder.dto.WorkOrderCreateReq;
@@ -38,7 +40,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -69,6 +76,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
     private final InstallerProfileService installerProfileService;
     private final DispatchProperties dispatchProperties;
     private final SnowflakeIdGenerator snowflakeIdGenerator;
+    private final SysUserMapper sysUserMapper;
 
     public WorkOrderServiceImpl(WorkOrderMapper workOrderMapper,
                                 WorkOrderTimelineMapper timelineMapper,
@@ -79,7 +87,8 @@ public class WorkOrderServiceImpl implements WorkOrderService {
                                 WorkOrderProperties workOrderProperties,
                                 InstallerProfileService installerProfileService,
                                 DispatchProperties dispatchProperties,
-                                @Qualifier("workorderSnowflakeIdGenerator") SnowflakeIdGenerator snowflakeIdGenerator) {
+                                @Qualifier("workorderSnowflakeIdGenerator") SnowflakeIdGenerator snowflakeIdGenerator,
+                                SysUserMapper sysUserMapper) {
         this.workOrderMapper = workOrderMapper;
         this.timelineMapper = timelineMapper;
         this.timelineService = timelineService;
@@ -90,6 +99,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         this.installerProfileService = installerProfileService;
         this.dispatchProperties = dispatchProperties;
         this.snowflakeIdGenerator = snowflakeIdGenerator;
+        this.sysUserMapper = sysUserMapper;
     }
 
     /* ============================================================ */
@@ -563,6 +573,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
                     vo.setPackageName(summary.getPackageName());
                 }
             }
+            enrichInstallerName(name -> vo.setInstallerName(name), wo);
         } catch (Exception ignore) {
             // enrich is non-essential
         }
@@ -576,7 +587,27 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         WorkOrderStatus s = wo.getStatusEnum();
         vo.setStatus(s);
         vo.setStatusDesc(s == null ? null : s.getDesc());
+        enrichInstallerName(vo::setInstallerName, wo);
         return vo;
+    }
+
+    /**
+     * 装维员姓名装配：installer_id -> sys_user.real_name（realName 优先，username 兜底）。
+     * 未派单（installer_id 为空）时保持 null，前端据此显示「待派发」。
+     */
+    private void enrichInstallerName(java.util.function.Consumer<String> setter, WorkOrder wo) {
+        if (wo == null || wo.getInstallerId() == null) return;
+        try {
+            List<SysUser> users = sysUserMapper.selectBatchIds(List.of(wo.getInstallerId()));
+            if (users != null && !users.isEmpty()) {
+                SysUser u = users.get(0);
+                String name = (u.getRealName() == null || u.getRealName().isBlank())
+                        ? u.getUsername() : u.getRealName();
+                setter.accept(name);
+            }
+        } catch (Exception ignore) {
+            // 装配非关键，失败不阻断主流程
+        }
     }
 
     /* ============================================================ */
