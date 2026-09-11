@@ -40,6 +40,7 @@ class WorkOrderServiceImplTest {
     @Mock private OrderService orderService;
     @Mock private ApplicationEventPublisher publisher;
     @Mock private InstallerProfileService installerProfileService;
+    @Mock private com.bbpms.user.mapper.SysUserMapper sysUserMapper;
     private WorkOrderServiceImpl service;
 
     @BeforeEach
@@ -47,7 +48,8 @@ class WorkOrderServiceImplTest {
         service = new WorkOrderServiceImpl(
                 workOrderMapper, timelineMapper, timelineService, orderService,
                 new WorkOrderStateMachine(), publisher, new WorkOrderProperties(),
-                installerProfileService, new DispatchProperties(), new SnowflakeIdGenerator(1, 1));
+                installerProfileService, new DispatchProperties(), new SnowflakeIdGenerator(1, 1),
+                sysUserMapper);
     }
 
     @Test

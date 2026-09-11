@@ -80,7 +80,7 @@ public class AuthController {
         MeVO vo = new MeVO();
         vo.setId(user.getId());
         vo.setUsername(info.getUsername());
-        String displayName = firstNonBlank(user.getNickname(), user.getRealName(), info.getUsername());
+        String displayName = firstNonBlank(user.getRealName(), user.getNickname(), info.getUsername());
         vo.setName(displayName);
         vo.setNickname(displayName);
         vo.setAvatar(user.getAvatar());

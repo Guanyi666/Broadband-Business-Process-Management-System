@@ -472,8 +472,7 @@ export const allMenus: MenuConfig[] = [
     icon: 'Avatar',
     perms: 'installer:view',
     children: [
-      { path: '/installer/list', title: '装维列表', icon: 'List', perms: 'installer:view' },
-      { path: '/installer/map', title: '装维地图', icon: 'MapLocation', perms: 'installer:view' }
+      { path: '/installer/list', title: '装维列表', icon: 'List', perms: 'installer:view' }
     ]
   },
   {

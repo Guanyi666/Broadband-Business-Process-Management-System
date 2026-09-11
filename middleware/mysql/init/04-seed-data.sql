@@ -52,7 +52,6 @@ INSERT IGNORE INTO `sys_menu` (`id`, `parent_id`, `name`, `path`, `component`, `
 -- Installer
 (40, 0, 'Installer', '/installer', 'Layout', 1, 'installer:view', 'peoples', 40, 1, 1),
 (41, 40, 'Installer List', 'list', 'installer/list', 2, 'installer:view', NULL, 1, 1, 1),
-(42, 40, 'Installer Map', 'map', 'installer/map', 2, 'installer:view', NULL, 2, 1, 1),
 
 -- System (RBAC)
 (50, 0, 'System', '/system', 'Layout', 1, 'system:view', 'setting', 50, 1, 1),

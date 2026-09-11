@@ -1,4 +1,3 @@
-import AMapLoader from '@amap/amap-jsapi-loader'
 import { showToast } from 'vant'
 
 export interface GeoPosition {
@@ -7,8 +6,6 @@ export interface GeoPosition {
   accuracy: number
   address?: string
 }
-
-const AMap_KEY = import.meta.env.VITE_AMAP_KEY
 
 export function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371000
@@ -37,13 +34,5 @@ export async function getCurrentPosition(): Promise<GeoPosition> {
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
     )
-  })
-}
-
-export async function loadAMap(): Promise<unknown> {
-  return AMapLoader.load({
-    key: AMap_KEY,
-    version: '2.0',
-    plugins: ['AMap.Geolocation', 'AMap.Geocoder', 'AMap.Marker']
   })
 }

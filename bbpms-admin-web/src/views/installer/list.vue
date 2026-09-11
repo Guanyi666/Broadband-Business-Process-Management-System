@@ -38,19 +38,13 @@ onMounted(fetchData)
 
 <template>
   <div class="app-container">
-    <PageHeader title="装维人员">
-      <template #extra>
-        <el-button @click="router.push('/installer/map')">
-          <el-icon><MapLocation /></el-icon> 装维地图
-        </el-button>
-      </template>
-    </PageHeader>
+    <PageHeader title="装维人员" />
 
     <div class="app-card">
       <el-table v-loading="loading" :data="list" stripe @row-click="onRowClick">
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="name" label="名称" />
-        <el-table-column prop="username" label="用户名" width="120" />
+        <el-table-column prop="name" label="姓名" />
+        <el-table-column prop="username" label="账号" width="120" />
         <el-table-column prop="phone" label="手机号" width="130" />
         <el-table-column label="状态" width="100">
           <template #default="{ row }"><BBPMSStatusTag :status="row.status" /></template>

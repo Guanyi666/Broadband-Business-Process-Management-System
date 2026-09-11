@@ -7,7 +7,6 @@ import { createCustomer, searchCustomers } from '@/api/customer'
 import { checkResource, type CheckResult } from '@/api/resource'
 import type { Customer } from '@/api/customer'
 import PageHeader from '@/components/PageHeader.vue'
-import BBPMSMapPicker from '@/components/BBPMSMapPicker.vue'
 
 const router = useRouter()
 
@@ -43,7 +42,6 @@ const form = reactive({
   customerIdCard: '',
   packageId: '',
   address: '',
-  location: undefined as { lng: number; lat: number; address?: string } | undefined,
   appointmentAt: '' as string,
   remark: ''
 })
@@ -194,13 +192,6 @@ async function onSubmit() {
               {{ checkResult.status === 'RESOURCE_OK' ? '可安装' : (checkResult.status === 'RESOURCE_INSUFFICIENT' ? '资源不足' : '暂无覆盖') }}
             </el-tag>
             <span v-if="checkResult" class="text-muted" style="font-size: 12px">{{ checkResult.message }}</span>
-          </div>
-        </el-form-item>
-
-        <el-form-item label="地图选点">
-          <BBPMSMapPicker v-model="form.location" />
-          <div class="text-muted mt-8" style="font-size: 12px">
-            可选——点击地图设置安装位置坐标
           </div>
         </el-form-item>
 

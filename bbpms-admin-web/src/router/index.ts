@@ -165,12 +165,6 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '装维列表', icon: 'List', requiresAuth: true, permission: 'installer:view' }
       },
       {
-        path: 'map',
-        name: 'InstallerMap',
-        component: () => import('@/views/installer/map.vue'),
-        meta: { title: '装维地图', icon: 'MapLocation', requiresAuth: true, permission: 'installer:view' }
-      },
-      {
         path: 'profile/:id',
         name: 'InstallerProfile',
         component: () => import('@/views/installer/profile.vue'),

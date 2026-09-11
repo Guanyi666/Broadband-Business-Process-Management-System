@@ -42,8 +42,6 @@ bbpms:
       secret-key: ${ALIYUN_SECRET_KEY:}
       sign-name: BBPMS
       endpoint: dysmsapi.aliyuncs.com
-  amap:
-    api-key: ${AMAP_API_KEY:}
 
 logging:
   level:

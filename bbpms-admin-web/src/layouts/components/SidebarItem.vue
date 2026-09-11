@@ -80,4 +80,20 @@ export default { name: 'SidebarItem' }
   gap: 8px;
   width: 100%;
 }
+
+/* 折叠态：仅保留图标，隐藏标题文字与展开箭头。
+   Element Plus 的折叠样式要求 span 为 .el-sub-menu__title 的直接子级，
+   此处因包了一层 div 而使该选择器失效，需显式处理，
+   否则侧边栏收起后会残留"客""订""工"等单字（如截图所示）。 */
+:deep(.el-menu--collapse) .sidebar-submenu-title {
+  justify-content: center;
+  gap: 0;
+  width: auto;
+}
+:deep(.el-menu--collapse) .sidebar-submenu-title > span {
+  display: none;
+}
+:deep(.el-menu--collapse) .el-sub-menu__icon-arrow {
+  display: none;
+}
 </style>

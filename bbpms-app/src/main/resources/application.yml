@@ -67,8 +67,6 @@ bbpms:
     gps-threshold-meters: 200
     photos-min-count: 3
     signal-warn-dbm: -27
-  amap:
-    direction-url: https://restapi.amap.com/v3/direction/driving
   # =============================================================================
   # Attendance / Leave / Work-order SLA (Phase 3-6)
   # =============================================================================

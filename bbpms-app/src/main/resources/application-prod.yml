@@ -42,8 +42,6 @@ bbpms:
       endpoint: dysmsapi.aliyuncs.com
   bss:
     mock-enabled: false
-  amap:
-    api-key: ${AMAP_API_KEY}
 
 logging:
   level:

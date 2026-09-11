@@ -14,9 +14,11 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.stream.Collectors;
 
@@ -79,6 +81,19 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public R<Void> handleDenied(AccessDeniedException ex) {
         return R.fail(ResultCode.FORBIDDEN, ex.getMessage());
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public R<Void> handleNotFound(NoResourceFoundException ex) {
+        // 未匹配到任何 Controller 的请求：返回 404，避免被兜底分支误报为 500
+        return R.fail(ResultCode.NOT_FOUND, "接口不存在");
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+    public R<Void> handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex) {
+        return R.fail(ResultCode.BAD_REQUEST, "请求方法不支持: " + ex.getMethod());
     }
 
     @ExceptionHandler(Exception.class)

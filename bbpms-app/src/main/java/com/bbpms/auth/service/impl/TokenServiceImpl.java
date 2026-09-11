@@ -60,10 +60,13 @@ public class TokenServiceImpl implements TokenService {
         vo.setUserId(info.getUserId());
         vo.setUsername(info.getUsername());
         // Lightweight user summary for the H5 client; the full profile is at /api/auth/me.
+        // name 使用 displayName（真实姓名优先），避免 H5 直接显示 install1 这类登录名。
+        String displayName = info.getDisplayName() == null || info.getDisplayName().isBlank()
+                ? info.getUsername() : info.getDisplayName();
         vo.setUser(java.util.Map.of(
                 "id", info.getUserId(),
                 "username", info.getUsername() == null ? "" : info.getUsername(),
-                "name", info.getUsername(),
+                "name", displayName,
                 "roles", info.getRoles() == null ? java.util.List.of() : info.getRoles(),
                 "permissions", info.getPermissions() == null ? java.util.List.of() : info.getPermissions()));
         return vo;

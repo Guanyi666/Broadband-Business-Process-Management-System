@@ -27,7 +27,7 @@
             <span v-if="checked" :class="checked.status === 'RESOURCE_OK' ? 'ok' : 'bad'">{{ checked.message }}</span>
           </div>
         </div>
-        <van-button block round type="primary" native-type="submit" :loading="submitting" :disabled="checked?.status !== 'RESOURCE_OK'">提交报装申请</van-button>
+        <van-button block round type="primary" native-type="submit" :loading="submitting">提交报装申请</van-button>
       </div>
     </van-form>
   </div>

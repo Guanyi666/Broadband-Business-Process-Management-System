@@ -19,16 +19,6 @@
         <OrderProgress :track="track" @urged="onUrged" />
       </div>
 
-      <!-- 原始操作轨迹（补充事件流） -->
-      <div v-if="timeline.length" class="card">
-        <div class="card-title">操作记录</div>
-        <van-steps direction="vertical" :active="0" active-color="#1267e5">
-          <van-step v-for="item in timeline" :key="`${item.eventTime}-${item.eventType}`">
-            <h4>{{ item.description || item.eventType }}</h4><p>{{ format(item.eventTime) }} {{ item.operatorName || '' }}</p>
-          </van-step>
-        </van-steps>
-      </div>
-
       <div class="actions">
         <van-button v-if="canResubmit" type="danger" plain @click="router.push(`/orders/${id}/resubmit`)">修改后重提</van-button>
         <van-button v-if="canReschedule" plain type="primary" @click="router.push(`/orders/${id}/appointment`)">预约改期</van-button>

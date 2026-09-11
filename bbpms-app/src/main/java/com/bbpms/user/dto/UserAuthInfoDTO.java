@@ -26,4 +26,7 @@ public class UserAuthInfoDTO {
     /** Department of the user (sys_user.dept_id) — carried into the JWT so the
      *  DataScopeInnerInterceptor can build DEPT / DEPT_AND_CHILD filters later. */
     private Long deptId;
+
+    /** 显示名（realName 优先，nickname、username 兜底），供前端/H5 展示中文姓名。 */
+    private String displayName;
 }

@@ -246,6 +246,19 @@ public class WorkOrderServiceImpl implements WorkOrderService {
     /*  accept / start / complete                                    */
     /* ============================================================ */
 
+    /**
+     * 装维操作归属校验：只有工单当前负责人才能接单/开工/完工。
+     * 未派单（installer_id 为空，理论上不会进入这些状态）时不拦截。
+     * 管理员/调度员的干预走 updateStatus / reassign 路径，不经过本校验。
+     */
+    private void assertInstallerOwnership(WorkOrder wo, Long installerId) {
+        if (wo == null || wo.getInstallerId() == null) return;
+        if (installerId == null || !wo.getInstallerId().equals(installerId)) {
+            throw new BizException(ResultCode.FORBIDDEN,
+                    "只能操作分配给自己的工单（当前负责人 id=" + wo.getInstallerId() + "）");
+        }
+    }
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationLog(value = "接单", module = "workorder")
@@ -255,6 +268,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         }
         WorkOrder current = mustLoad(workOrderId);
         assertTransition(current.getStatusEnum(), WorkOrderStatus.ACCEPTED);
+        assertInstallerOwnership(current, installerId);
 
         WorkOrder update = new WorkOrder();
         update.setId(workOrderId);
@@ -270,6 +284,16 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         appendTimeline(workOrderId, current.getStatusEnum(), WorkOrderStatus.ACCEPTED,
                 installerId, "INSTALLER", "installer accepted the work order");
 
+        // 同步父订单：DISPATCHED --ACCEPT--> INSTALLING（订单状态机合法事件）
+        if (current.getOrderId() != null) {
+            try {
+                orderService.updateStatus(current.getOrderId(), OrderStatus.INSTALLING, installerId);
+            } catch (Exception ex) {
+                log.warn("Parent order flip to INSTALLING failed orderId={}: {}",
+                        current.getOrderId(), ex.getMessage());
+            }
+        }
+
         WorkOrder reloaded = workOrderMapper.selectById(workOrderId);
         publisher.publishEvent(new BbpmsEvents.WorkOrderAcceptedEvent(reloaded.getId(), installerId));
         return toVO(reloaded);
@@ -284,6 +308,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         }
         WorkOrder current = mustLoad(workOrderId);
         assertTransition(current.getStatusEnum(), WorkOrderStatus.IN_PROGRESS);
+        assertInstallerOwnership(current, installerId);
 
         WorkOrder update = new WorkOrder();
         update.setId(workOrderId);
@@ -310,6 +335,7 @@ public class WorkOrderServiceImpl implements WorkOrderService {
         }
         WorkOrder current = mustLoad(workOrderId);
         assertTransition(current.getStatusEnum(), WorkOrderStatus.COMPLETED);
+        assertInstallerOwnership(current, installerId);
 
         WorkOrder update = new WorkOrder();
         update.setId(workOrderId);

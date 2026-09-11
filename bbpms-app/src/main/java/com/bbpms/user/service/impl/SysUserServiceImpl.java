@@ -171,7 +171,17 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         info.setPermissions(baseMapper.selectUserPermissions(userId));
         info.setDataScope(baseMapper.selectUserDataScope(userId));
         info.setDeptId(user.getDeptId());
+        // 显示名：真实姓名优先（昵称、登录名兜底）——避免前端/H5 直接显示 install1 这类登录名
+        info.setDisplayName(firstNonBlank(user.getRealName(), user.getNickname(), user.getUsername()));
         return info;
+    }
+
+    private static String firstNonBlank(String... values) {
+        if (values == null) return null;
+        for (String v : values) {
+            if (v != null && !v.isBlank()) return v;
+        }
+        return null;
     }
 
     @Override

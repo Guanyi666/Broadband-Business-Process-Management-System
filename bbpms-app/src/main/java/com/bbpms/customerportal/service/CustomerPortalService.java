@@ -52,6 +52,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import lombok.extern.slf4j.Slf4j;
+
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -59,6 +61,7 @@ import java.util.List;
 import java.util.Set;
 
 /** Customer self-service application service. Every read starts from the authenticated binding. */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CustomerPortalService {
@@ -321,6 +324,25 @@ public class CustomerPortalService {
             stages.add(s);
         }
 
+        // 连续性约束（与 TrackServiceImpl.assignStates 对齐）：第一个未完成节点之后，
+        // 即便时间字段非空（历史脏数据 / SLA 取消残留）也不得显示为已完成，
+        // 杜绝「前序未完成、后续已完成」的时序跳跃（如已派单却显示已完成）。
+        int blockedUntil = Integer.MAX_VALUE;
+        for (int i = 0; i < stages.size(); i++) {
+            String st = stages.get(i).getState();
+            if ("PENDING".equals(st) || "EXCEPTION".equals(st)) {
+                blockedUntil = Math.min(blockedUntil, i + 1);
+            }
+        }
+        for (int i = 0; i < stages.size(); i++) {
+            int idx = i + 1;
+            CustomerTrackVO.Stage s = stages.get(i);
+            if (idx > blockedUntil && "DONE".equals(s.getState()) && times[i] != null) {
+                s.setState("PENDING");
+                s.setTime(null); // 未真正推进到的节点不展示时间，避免误导
+            }
+        }
+
         CustomerTrackVO vo = new CustomerTrackVO();
         vo.setOrderNo(order.getOrderNo());
         vo.setStatus(order.getStatus());
@@ -380,8 +402,10 @@ public class CustomerPortalService {
         checkReq.setAddress(req.getInstallAddress());
         checkReq.setRoomNo(req.getRoomNo());
         ResourceCheckResp checked = resourceCheckService.check(checkReq);
+        // 资源核查降级为「仅提示」：不再拦截下单，核查结果记入订单 resourceStatus/checkRemark 供前端提示
         if (!"RESOURCE_OK".equals(checked.getStatus())) {
-            throw new BizException(ResultCode.ADDRESS_NOT_COVERED, checked.getMessage());
+            log.info("资源核查未通过（不拦截下单）: address={}, status={}, msg={}",
+                    req.getInstallAddress(), checked.getStatus(), checked.getMessage());
         }
 
         Long userId = SecurityUtils.requireUserId();
@@ -429,8 +453,10 @@ public class CustomerPortalService {
         ResourceCheckReq checkReq = new ResourceCheckReq();
         checkReq.setAddress(req.getInstallAddress());
         ResourceCheckResp checked = resourceCheckService.check(checkReq);
+        // 资源核查降级为「仅提示」：重新提交同样不拦截
         if (!"RESOURCE_OK".equals(checked.getStatus())) {
-            throw new BizException(ResultCode.ADDRESS_NOT_COVERED, checked.getMessage());
+            log.info("资源核查未通过（不拦截重提）: address={}, status={}, msg={}",
+                    req.getInstallAddress(), checked.getStatus(), checked.getMessage());
         }
         Long uid = SecurityUtils.requireUserId();
         order.setInstallAddress(req.getInstallAddress());

@@ -388,6 +388,15 @@ public class OrderServiceImpl implements OrderService {
 
     /* ===================== updateStatus (internal API) ===================== */
 
+    /**
+     * 订单状态的线性推进链。跨状态对齐时用它补全中间态，避免出现
+     * "审计日志 from_status 与实际不符 / 订单 dispatch_time 丢失 /
+     * 工单已施工而订单仍停在 AUDITED" 等一致性问题。
+     */
+    private static final List<OrderStatus> ORDER_CHAIN = List.of(
+            OrderStatus.CREATED, OrderStatus.AUDITED, OrderStatus.WAIT_DISPATCH,
+            OrderStatus.DISPATCHED, OrderStatus.INSTALLING, OrderStatus.FINISHED, OrderStatus.CLOSED);
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long orderId, OrderStatus status, Long operatorId) {
@@ -395,8 +404,32 @@ public class OrderServiceImpl implements OrderService {
             throw new BizException(ResultCode.BAD_REQUEST, "orderId 和 status 必填");
         }
         BroadbandOrder order = mustLoad(orderId);
-        String before = order.getStatus();
+        OrderStatus current = OrderStatus.fromCode(order.getStatus());
+        Long actor = operatorId != null ? operatorId : SecurityUtils.getCurrentUserId();
 
+        if (current == status) return; // 幂等：状态已一致，不重复写入
+
+        // 取消：直接落终态，不补全中间态
+        if (status == OrderStatus.CANCELLED) {
+            applyStatus(order, status, actor, "订单取消（工单联动）");
+            return;
+        }
+
+        int from = current == null ? -1 : ORDER_CHAIN.indexOf(current);
+        int to = ORDER_CHAIN.indexOf(status);
+        if (from >= 0 && to > from) {
+            // 正向推进：逐级补全中间态，保证订单状态与工单流转一致、审计时间线完整
+            for (int i = from + 1; i <= to; i++) {
+                applyStatus(order, ORDER_CHAIN.get(i), actor, "状态对齐（工单联动）");
+            }
+        } else {
+            // 回退 / 跨链（REJECTED、PENDING_CS_CONFIRM、CS_REJECTED 等）：保持原语义直接设置
+            applyStatus(order, status, actor, "external update by module caller");
+        }
+    }
+
+    private void applyStatus(BroadbandOrder order, OrderStatus status, Long operatorId, String remark) {
+        String before = order.getStatus();
         order.setStatus(status.name());
         if (status == OrderStatus.DISPATCHED) {
             order.setDispatchTime(LocalDateTime.now());
@@ -405,11 +438,9 @@ public class OrderServiceImpl implements OrderService {
         } else if (status == OrderStatus.CANCELLED) {
             order.setCancelledTime(LocalDateTime.now());
         }
-        order.setUpdateBy(operatorId != null ? operatorId : SecurityUtils.getCurrentUserId());
+        order.setUpdateBy(operatorId);
         orderMapper.updateById(order);
-
-        appendAuditLog(order.getId(), order.getUpdateBy(),
-                before, status.name(), "external update by module caller");
+        appendAuditLog(order.getId(), operatorId, before, status.name(), remark);
     }
 
     @Override
