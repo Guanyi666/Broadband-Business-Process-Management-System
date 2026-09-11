@@ -201,7 +201,8 @@ INSERT IGNORE INTO `broadband_package`
 (`id`, `code`, `name`, `speed_mbps`, `monthly_fee`, `description`, `status`, `sort`) VALUES
 (1, 'PKG_100M',  '畅享宽带 100M',  100,  69.00, '适合日常上网和高清视频', 1, 1),
 (2, 'PKG_300M',  '家庭宽带 300M',  300,  99.00, '适合多人家庭和在线学习', 1, 2),
-(3, 'PKG_1000M', '千兆宽带 1000M', 1000, 159.00, '适合游戏、直播和智能家庭', 1, 3);
+(3, 'PKG_1000M', '千兆宽带 1000M', 1000, 159.00, '适合游戏、直播和智能家庭', 1, 3),
+(4, 'PKG_500M',  '家庭宽带 500M',  500,  129.00, '适合高带宽需求的多设备家庭', 1, 4);
 
 -- Demo customer account: customer1 / admin123, bound to demo customer id=1.
 INSERT IGNORE INTO `sys_user`
