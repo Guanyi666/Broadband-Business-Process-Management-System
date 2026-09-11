@@ -209,7 +209,7 @@ async function onSubmit() {
             v-model="form.appointmentAt"
             type="datetime"
             placeholder="选择预约时间"
-            value-format="YYYY-MM-DD HH:mm:ss"
+            value-format="YYYY-MM-DDTHH:mm:ss"
             style="width: 100%"
           />
         </el-form-item>

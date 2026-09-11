@@ -16,14 +16,30 @@ async function adapt<T>(p: Promise<PageResp<T> | null>): Promise<PageResult<T>> 
   return { list: res?.records ?? [], total: res?.total ?? 0, pageNum: res?.pageNum ?? 1, pageSize: res?.pageSize ?? 10 }
 }
 
-export function pageOperationLogs(params: PageQuery & { module?: string; status?: string; dateRange?: string[] }) {
-  return adapt(
-    request<PageResp<OperationLog>>({
-      url: '/logs/operation/page',
-      method: 'GET',
-      params
-    })
-  )
+export async function pageOperationLogs(params: PageQuery & { module?: string; status?: string; dateRange?: string[] }) {
+  const backendParams = {
+    ...params,
+    status: params.status === 'SUCCESS' ? 1 : params.status === 'FAILED' ? 0 : undefined
+  }
+  const res = await request<PageResp<any>>({
+    url: '/logs/operation/page',
+    method: 'GET',
+    params: backendParams
+  })
+  return {
+    list: (res?.records ?? []).map((item: any) => ({
+      ...item,
+      requestUrl: item.requestUri,
+      operatorId: item.userId,
+      operatorName: item.username || (item.userId ? `用户 ${item.userId}` : '系统'),
+      status: item.error ? 'FAILED' : (Number(item.status) === 1 ? 'SUCCESS' : 'FAILED'),
+      durationMs: item.costMs,
+      createdAt: item.createTime
+    })),
+    total: res?.total ?? 0,
+    pageNum: res?.pageNum ?? 1,
+    pageSize: res?.pageSize ?? 10
+  } as PageResult<OperationLog>
 }
 
 function terminalFromUserAgent(userAgent?: string) {

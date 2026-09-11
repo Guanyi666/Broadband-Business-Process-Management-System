@@ -9,6 +9,14 @@ CLAUDE.md
 
 .workbuddy/
 
+# --- Codex local files ---
+/.codex/
+/.codex-cache/
+/.codex-tmp/
+/.agents/
+/AGENTS.md
+/AGENTS.local.md
+
 # --- OS junk ---
 .DS_Store
 Thumbs.db
@@ -61,3 +69,7 @@ docker-compose.override.yml
 # --- 清理临时归档（确认后可删除） ---
 temporary_backup/
 .workbuddy/
+
+/.codex/
+/.codex-*/
+/.agents/

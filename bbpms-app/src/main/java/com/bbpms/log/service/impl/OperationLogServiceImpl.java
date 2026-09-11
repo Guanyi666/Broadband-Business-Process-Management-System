@@ -25,6 +25,7 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationLogMapper, Ope
         if (req.getUserId() != null) qw.eq(OperationLog::getUserId, req.getUserId());
         if (req.getModule() != null && !req.getModule().isBlank()) qw.eq(OperationLog::getModule, req.getModule());
         if (req.getAction() != null && !req.getAction().isBlank()) qw.like(OperationLog::getAction, req.getAction());
+        if (req.getStatus() != null) qw.eq(OperationLog::getStatus, req.getStatus());
         qw.orderByDesc(OperationLog::getCreateTime);
         Page<OperationLog> result = baseMapper.selectPage(page, qw);
         PageResp<OperationLog> resp = new PageResp<>();

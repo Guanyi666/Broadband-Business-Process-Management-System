@@ -254,15 +254,12 @@ async function onSignSave() {
   if (!sigRef.value || sigRef.value.isEmpty()) { showToast('请先签名'); return }
   signing.value = true
   try {
-    const dataUrl = sigRef.value.toDataURL()
     const sigMeta: SignatureMeta = {
       customerName: customerName.value,
-      dataUrl,
-      objectKey: '',
+      objectKey: `h5_signature_${props.id}_${Date.now()}.png`,
       capturedAt: Date.now()
     }
-    const res = await saveSignature(props.id, sigMeta)
-    sigMeta.objectKey = res.objectKey
+    await saveSignature(props.id, sigMeta)
     signature.value = sigMeta
     currentStep.value = 4
   } catch {

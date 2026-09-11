@@ -41,7 +41,7 @@
         <mybatis-plus.version>3.5.7</mybatis-plus.version>
         <redisson.version>3.27.2</redisson.version>
         <hutool.version>5.8.27</hutool.version>
-        <lombok.version>1.18.32</lombok.version>
+        <lombok.version>1.18.38</lombok.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <knife4j.version>4.5.0</knife4j.version>
 

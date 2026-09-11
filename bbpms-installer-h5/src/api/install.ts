@@ -1,20 +1,27 @@
-import { get, post } from './http'
+import { post } from './http'
 import type { InstallInfo, PhotoMeta, SignatureMeta } from '@/types/install'
 
 export function arriveAtSite(
   orderId: string | number,
   payload: { lng: number; lat: number; address: string }
 ): Promise<void> {
-  return post<void>(`/install/${orderId}/arrive`, payload)
+  return post<void>(`/install/${orderId}/arrive`, { ...payload, workOrderId: Number(orderId) })
 }
 export function saveInstallInfo(orderId: string | number, payload: InstallInfo): Promise<void> {
-  return post<void>(`/install/${orderId}/info`, payload)
+  return post<void>(`/install/${orderId}/info`, { ...payload, workOrderId: Number(orderId) })
 }
 export function uploadPhoto(orderId: string | number, payload: PhotoMeta): Promise<void> {
-  return post<void>(`/install/${orderId}/photos`, payload)
+  return post<void>(`/install/${orderId}/photos`, {
+    workOrderId: Number(orderId),
+    objectKey: payload.objectKey
+  })
 }
-export function saveSignature(orderId: string | number, payload: SignatureMeta): Promise<{ objectKey: string }> {
-  return post(`/install/${orderId}/signature`, payload)
+export function saveSignature(orderId: string | number, payload: SignatureMeta): Promise<void> {
+  return post<void>(`/install/${orderId}/signature`, {
+    workOrderId: Number(orderId),
+    customerName: payload.customerName,
+    objectKey: payload.objectKey
+  })
 }
 /**
  * Backend InstallCompleteReq: {workOrderId, orderId, info, photos, signature, lat, lng, distance, remark}.
@@ -29,5 +36,16 @@ export function submitComplete(
     info: InstallInfo; photos: PhotoMeta[]; signature: SignatureMeta; remark?: string
   }
 ): Promise<void> {
-  return post<void>(`/install/${orderId}/complete`, payload)
+  const workOrderId = Number(orderId)
+  return post<void>(`/install/${orderId}/complete`, {
+    ...payload,
+    workOrderId,
+    info: { ...payload.info, workOrderId },
+    photos: payload.photos.map((photo) => ({ workOrderId, objectKey: photo.objectKey })),
+    signature: {
+      workOrderId,
+      customerName: payload.signature.customerName,
+      objectKey: payload.signature.objectKey
+    }
+  })
 }

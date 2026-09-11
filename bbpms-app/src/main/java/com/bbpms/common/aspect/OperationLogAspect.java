@@ -59,6 +59,7 @@ public class OperationLogAspect {
                 evt.setModule(module);
                 evt.setAction(value);
                 evt.setCostMs(cost);
+                evt.setStatus(error == null ? 1 : 0);
                 if (error != null) evt.setError(error.getMessage());
                 publisher.publishEvent(evt);
             } catch (Exception ex) {
